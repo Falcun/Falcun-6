@@ -1,0 +1,55 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/chunk/CompiledChunk.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/chunk/CompiledChunk.java
+@@ -1,15 +1,13 @@
+ package net.minecraft.client.renderer.chunk;
+ 
+ import com.google.common.collect.Lists;
++import java.util.BitSet;
+ import java.util.List;
+ import net.minecraft.client.renderer.WorldRenderer;
+ import net.minecraft.tileentity.TileEntity;
+ import net.minecraft.util.EnumFacing;
+ import net.minecraft.util.EnumWorldBlockLayer;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
+ 
+-@SideOnly(Side.CLIENT)
+ public class CompiledChunk
+ {
+     public static final CompiledChunk field_178502_a = new CompiledChunk()
+@@ -26,13 +24,18 @@
+         {
+             return false;
+         }
++        public void setAnimatedSprites(EnumWorldBlockLayer p_setAnimatedSprites_1_, BitSet p_setAnimatedSprites_2_)
++        {
++            throw new UnsupportedOperationException();
++        }
+     };
+-    private final boolean[] field_178500_b = new boolean[EnumWorldBlockLayer.values().length];
+-    private final boolean[] field_178501_c = new boolean[EnumWorldBlockLayer.values().length];
++    private final boolean[] field_178500_b = new boolean[RenderChunk.ENUM_WORLD_BLOCK_LAYERS.length];
++    private final boolean[] field_178501_c = new boolean[RenderChunk.ENUM_WORLD_BLOCK_LAYERS.length];
+     private boolean field_178498_d = true;
+     private final List<TileEntity> field_178499_e = Lists.<TileEntity>newArrayList();
+     private SetVisibility field_178496_f = new SetVisibility();
+     private WorldRenderer.State field_178497_g;
++    private BitSet[] animatedSprites = new BitSet[RenderChunk.ENUM_WORLD_BLOCK_LAYERS.length];
+ 
+     public boolean func_178489_a()
+     {
+@@ -89,4 +92,14 @@
+     {
+         this.field_178497_g = p_178494_1_;
+     }
++
++    public BitSet getAnimatedSprites(EnumWorldBlockLayer p_getAnimatedSprites_1_)
++    {
++        return this.animatedSprites[p_getAnimatedSprites_1_.ordinal()];
++    }
++
++    public void setAnimatedSprites(EnumWorldBlockLayer p_setAnimatedSprites_1_, BitSet p_setAnimatedSprites_2_)
++    {
++        this.animatedSprites[p_setAnimatedSprites_1_.ordinal()] = p_setAnimatedSprites_2_;
++    }
+ }

@@ -1,0 +1,278 @@
+--- ../src-base/minecraft/net/minecraft/entity/DataWatcher.java
++++ ../src-work/minecraft/net/minecraft/entity/DataWatcher.java
+@@ -14,18 +14,23 @@
+ import net.minecraft.util.BlockPos;
+ import net.minecraft.util.ReportedException;
+ import net.minecraft.util.Rotations;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import net.minecraft.world.biome.BiomeGenBase;
+ import org.apache.commons.lang3.ObjectUtils;
+ 
+ public class DataWatcher
+ {
+     private final Entity field_151511_a;
++
++    /** When isBlank is true the DataWatcher is not watching any objects */
+     private boolean field_92086_a = true;
+     private static final Map < Class<?>, Integer > field_75697_a = Maps. < Class<?>, Integer > newHashMap();
+     private final Map<Integer, DataWatcher.WatchableObject> field_75695_b = Maps.<Integer, DataWatcher.WatchableObject>newHashMap();
++
++    /** true if one or more object was changed */
+     private boolean field_75696_c;
+     private ReadWriteLock field_75694_d = new ReentrantReadWriteLock();
++    public BiomeGenBase spawnBiome = BiomeGenBase.field_76772_c;
++    public BlockPos spawnPosition = BlockPos.field_177992_a;
+ 
+     public DataWatcher(Entity p_i45313_1_)
+     {
+@@ -58,6 +63,9 @@
+         }
+     }
+ 
++    /**
++     * Add a new object for the DataWatcher to watch, using the specified data type.
++     */
+     public void func_82709_a(int p_82709_1_, int p_82709_2_)
+     {
+         DataWatcher.WatchableObject datawatcher$watchableobject = new DataWatcher.WatchableObject(p_82709_2_, p_82709_1_, (Object)null);
+@@ -67,6 +75,9 @@
+         this.field_92086_a = false;
+     }
+ 
++    /**
++     * gets the bytevalue of a watchable object
++     */
+     public byte func_75683_a(int p_75683_1_)
+     {
+         return ((Byte)this.func_75691_i(p_75683_1_).func_75669_b()).byteValue();
+@@ -77,6 +88,9 @@
+         return ((Short)this.func_75691_i(p_75693_1_).func_75669_b()).shortValue();
+     }
+ 
++    /**
++     * gets a watchable object and returns it as a Integer
++     */
+     public int func_75679_c(int p_75679_1_)
+     {
+         return ((Integer)this.func_75691_i(p_75679_1_).func_75669_b()).intValue();
+@@ -87,16 +101,25 @@
+         return ((Float)this.func_75691_i(p_111145_1_).func_75669_b()).floatValue();
+     }
+ 
++    /**
++     * gets a watchable object and returns it as a String
++     */
+     public String func_75681_e(int p_75681_1_)
+     {
+         return (String)this.func_75691_i(p_75681_1_).func_75669_b();
+     }
+ 
++    /**
++     * Get a watchable object as an ItemStack.
++     */
+     public ItemStack func_82710_f(int p_82710_1_)
+     {
+         return (ItemStack)this.func_75691_i(p_82710_1_).func_75669_b();
+     }
+ 
++    /**
++     * is threadsafe, unless it throws an exception, then
++     */
+     private DataWatcher.WatchableObject func_75691_i(int p_75691_1_)
+     {
+         this.field_75694_d.readLock().lock();
+@@ -142,11 +165,18 @@
+         this.field_75696_c = true;
+     }
+ 
++    /**
++     * true if one or more object was changed
++     */
+     public boolean func_75684_a()
+     {
+         return this.field_75696_c;
+     }
+ 
++    /**
++     * Writes the list of watched objects (entity attribute of type {byte, short, int, float, string, ItemStack,
++     * ChunkCoordinates}) to the specified PacketBuffer
++     */
+     public static void func_151507_a(List<DataWatcher.WatchableObject> p_151507_0_, PacketBuffer p_151507_1_) throws IOException
+     {
+         if (p_151507_0_ != null)
+@@ -222,6 +252,10 @@
+         return list;
+     }
+ 
++    /**
++     * Writes a watchable object (entity attribute of type {byte, short, int, float, string, ItemStack,
++     * ChunkCoordinates}) to the specified PacketBuffer
++     */
+     private static void func_151510_a(PacketBuffer p_151510_0_, DataWatcher.WatchableObject p_151510_1_) throws IOException
+     {
+         int i = (p_151510_1_.func_75674_c() << 5 | p_151510_1_.func_75672_a() & 31) & 255;
+@@ -232,28 +266,35 @@
+             case 0:
+                 p_151510_0_.writeByte(((Byte)p_151510_1_.func_75669_b()).byteValue());
+                 break;
++
+             case 1:
+                 p_151510_0_.writeShort(((Short)p_151510_1_.func_75669_b()).shortValue());
+                 break;
++
+             case 2:
+                 p_151510_0_.writeInt(((Integer)p_151510_1_.func_75669_b()).intValue());
+                 break;
++
+             case 3:
+                 p_151510_0_.writeFloat(((Float)p_151510_1_.func_75669_b()).floatValue());
+                 break;
++
+             case 4:
+                 p_151510_0_.func_180714_a((String)p_151510_1_.func_75669_b());
+                 break;
++
+             case 5:
+                 ItemStack itemstack = (ItemStack)p_151510_1_.func_75669_b();
+                 p_151510_0_.func_150788_a(itemstack);
+                 break;
++
+             case 6:
+                 BlockPos blockpos = (BlockPos)p_151510_1_.func_75669_b();
+                 p_151510_0_.writeInt(blockpos.func_177958_n());
+                 p_151510_0_.writeInt(blockpos.func_177956_o());
+                 p_151510_0_.writeInt(blockpos.func_177952_p());
+                 break;
++
+             case 7:
+                 Rotations rotations = (Rotations)p_151510_1_.func_75669_b();
+                 p_151510_0_.writeFloat(rotations.func_179415_b());
+@@ -282,27 +323,34 @@
+                 case 0:
+                     datawatcher$watchableobject = new DataWatcher.WatchableObject(j, k, Byte.valueOf(p_151508_0_.readByte()));
+                     break;
++
+                 case 1:
+                     datawatcher$watchableobject = new DataWatcher.WatchableObject(j, k, Short.valueOf(p_151508_0_.readShort()));
+                     break;
++
+                 case 2:
+                     datawatcher$watchableobject = new DataWatcher.WatchableObject(j, k, Integer.valueOf(p_151508_0_.readInt()));
+                     break;
++
+                 case 3:
+                     datawatcher$watchableobject = new DataWatcher.WatchableObject(j, k, Float.valueOf(p_151508_0_.readFloat()));
+                     break;
++
+                 case 4:
+                     datawatcher$watchableobject = new DataWatcher.WatchableObject(j, k, p_151508_0_.func_150789_c(32767));
+                     break;
++
+                 case 5:
+                     datawatcher$watchableobject = new DataWatcher.WatchableObject(j, k, p_151508_0_.func_150791_c());
+                     break;
++
+                 case 6:
+                     int l = p_151508_0_.readInt();
+                     int i1 = p_151508_0_.readInt();
+                     int j1 = p_151508_0_.readInt();
+                     datawatcher$watchableobject = new DataWatcher.WatchableObject(j, k, new BlockPos(l, i1, j1));
+                     break;
++
+                 case 7:
+                     float f = p_151508_0_.readFloat();
+                     float f1 = p_151508_0_.readFloat();
+@@ -316,7 +364,6 @@
+         return list;
+     }
+ 
+-    @SideOnly(Side.CLIENT)
+     public void func_75687_a(List<DataWatcher.WatchableObject> p_75687_1_)
+     {
+         this.field_75694_d.writeLock().lock();
+@@ -359,48 +406,48 @@
+     }
+ 
+     public static class WatchableObject
++    {
++        private final int field_75678_a;
++        private final int field_75676_b;
++        private Object field_75677_c;
++        private boolean field_75675_d;
++
++        public WatchableObject(int p_i1603_1_, int p_i1603_2_, Object p_i1603_3_)
+         {
+-            private final int field_75678_a;
+-            private final int field_75676_b;
+-            private Object field_75677_c;
+-            private boolean field_75675_d;
++            this.field_75676_b = p_i1603_2_;
++            this.field_75677_c = p_i1603_3_;
++            this.field_75678_a = p_i1603_1_;
++            this.field_75675_d = true;
++        }
+ 
+-            public WatchableObject(int p_i1603_1_, int p_i1603_2_, Object p_i1603_3_)
+-            {
+-                this.field_75676_b = p_i1603_2_;
+-                this.field_75677_c = p_i1603_3_;
+-                this.field_75678_a = p_i1603_1_;
+-                this.field_75675_d = true;
+-            }
++        public int func_75672_a()
++        {
++            return this.field_75676_b;
++        }
+ 
+-            public int func_75672_a()
+-            {
+-                return this.field_75676_b;
+-            }
++        public void func_75673_a(Object p_75673_1_)
++        {
++            this.field_75677_c = p_75673_1_;
++        }
+ 
+-            public void func_75673_a(Object p_75673_1_)
+-            {
+-                this.field_75677_c = p_75673_1_;
+-            }
++        public Object func_75669_b()
++        {
++            return this.field_75677_c;
++        }
+ 
+-            public Object func_75669_b()
+-            {
+-                return this.field_75677_c;
+-            }
++        public int func_75674_c()
++        {
++            return this.field_75678_a;
++        }
+ 
+-            public int func_75674_c()
+-            {
+-                return this.field_75678_a;
+-            }
++        public boolean func_75670_d()
++        {
++            return this.field_75675_d;
++        }
+ 
+-            public boolean func_75670_d()
+-            {
+-                return this.field_75675_d;
+-            }
+-
+-            public void func_75671_a(boolean p_75671_1_)
+-            {
+-                this.field_75675_d = p_75671_1_;
+-            }
++        public void func_75671_a(boolean p_75671_1_)
++        {
++            this.field_75675_d = p_75671_1_;
+         }
++    }
+ }

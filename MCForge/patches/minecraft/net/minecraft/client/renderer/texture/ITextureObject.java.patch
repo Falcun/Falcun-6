@@ -1,0 +1,17 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/texture/ITextureObject.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/texture/ITextureObject.java
+@@ -4,6 +4,7 @@
+ import net.minecraft.client.resources.IResourceManager;
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
++import net.optifine.shaders.MultiTexID;
+ 
+ @SideOnly(Side.CLIENT)
+ public interface ITextureObject
+@@ -15,4 +16,6 @@
+     void func_110551_a(IResourceManager p_110551_1_) throws IOException;
+ 
+     int func_110552_b();
++
++	MultiTexID getMultiTexID();
+ }

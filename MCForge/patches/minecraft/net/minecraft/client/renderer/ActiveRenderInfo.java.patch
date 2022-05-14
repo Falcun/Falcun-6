@@ -1,0 +1,22 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/ActiveRenderInfo.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/ActiveRenderInfo.java
+@@ -2,6 +2,8 @@
+ 
+ import java.nio.FloatBuffer;
+ import java.nio.IntBuffer;
++
++import net.mattbenson.Wrapper;
+ import net.minecraft.block.Block;
+ import net.minecraft.block.BlockLiquid;
+ import net.minecraft.block.state.IBlockState;
+@@ -66,6 +68,10 @@
+         BlockPos blockpos = new BlockPos(vec3);
+         IBlockState iblockstate = p_180786_0_.func_180495_p(blockpos);
+         Block block = iblockstate.func_177230_c();
++        
++        if(Wrapper.getInstance().isClearWater()) {
++        	return block;
++        }
+ 
+         if (block.func_149688_o().func_76224_d())
+         {

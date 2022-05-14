@@ -1,0 +1,16 @@
+--- ../src-base/minecraft/net/minecraft/util/Util.java
++++ ../src-work/minecraft/net/minecraft/util/Util.java
+@@ -24,11 +24,11 @@
+         }
+         catch (ExecutionException executionexception)
+         {
+-            p_181617_1_.fatal((String)"Error executing task", (Throwable)executionexception);
++            //logger.fatal((String)"Error executing task", (Throwable)executionexception);
+         }
+         catch (InterruptedException interruptedexception)
+         {
+-            p_181617_1_.fatal((String)"Error executing task", (Throwable)interruptedexception);
++            //logger.fatal((String)"Error executing task", (Throwable)interruptedexception);
+         }
+ 
+         return (V)null;

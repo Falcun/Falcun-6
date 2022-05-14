@@ -1,0 +1,50 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/texture/AbstractTexture.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/texture/AbstractTexture.java
+@@ -1,10 +1,10 @@
+ package net.minecraft.client.renderer.texture;
+ 
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import net.minecraft.client.renderer.GlStateManager;
++import net.optifine.shaders.MultiTexID;
++import net.optifine.shaders.ShadersTex;
+ import org.lwjgl.opengl.GL11;
+ 
+-@SideOnly(Side.CLIENT)
+ public abstract class AbstractTexture implements ITextureObject
+ {
+     protected int field_110553_a = -1;
+@@ -12,6 +12,7 @@
+     protected boolean field_174941_c;
+     protected boolean field_174938_d;
+     protected boolean field_174939_e;
++    public MultiTexID multiTex;
+ 
+     public void func_174937_a(boolean p_174937_1_, boolean p_174937_2_)
+     {
+@@ -31,6 +32,7 @@
+             j = 9728;
+         }
+ 
++        GlStateManager.func_179144_i(this.func_110552_b());
+         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, i);
+         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, j);
+     }
+@@ -59,10 +61,17 @@
+ 
+     public void func_147631_c()
+     {
++        ShadersTex.deleteTextures(this, this.field_110553_a);
++
+         if (this.field_110553_a != -1)
+         {
+             TextureUtil.func_147942_a(this.field_110553_a);
+             this.field_110553_a = -1;
+         }
+     }
++
++    public MultiTexID getMultiTexID()
++    {
++        return ShadersTex.getMultiTexID(this);
++    }
+ }

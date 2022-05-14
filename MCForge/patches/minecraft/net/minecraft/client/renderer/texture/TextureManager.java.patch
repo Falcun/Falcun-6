@@ -1,0 +1,159 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/texture/TextureManager.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/texture/TextureManager.java
+@@ -3,6 +3,8 @@
+ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
+ import java.io.IOException;
++import java.util.HashSet;
++import java.util.Iterator;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Map.Entry;
+@@ -11,14 +13,16 @@
+ import net.minecraft.client.resources.IResourceManagerReloadListener;
+ import net.minecraft.crash.CrashReport;
+ import net.minecraft.crash.CrashReportCategory;
++import net.minecraft.src.Config;
+ import net.minecraft.util.ReportedException;
+ import net.minecraft.util.ResourceLocation;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import net.optifine.CustomGuis;
++import net.optifine.EmissiveTextures;
++import net.optifine.RandomEntities;
++import net.optifine.shaders.ShadersTex;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+-@SideOnly(Side.CLIENT)
+ public class TextureManager implements ITickable, IResourceManagerReloadListener
+ {
+     private static final Logger field_147646_a = LogManager.getLogger();
+@@ -34,15 +38,37 @@
+ 
+     public void func_110577_a(ResourceLocation p_110577_1_)
+     {
++        if (Config.isRandomEntities())
++        {
++            p_110577_1_ = RandomEntities.getTextureLocation(p_110577_1_);
++        }
++
++        if (Config.isCustomGuis())
++        {
++            p_110577_1_ = CustomGuis.getTextureLocation(p_110577_1_);
++        }
++
+         ITextureObject itextureobject = (ITextureObject)this.field_110585_a.get(p_110577_1_);
+ 
++        if (EmissiveTextures.isActive())
++        {
++            itextureobject = EmissiveTextures.getEmissiveTexture(itextureobject, this.field_110585_a);
++        }
++
+         if (itextureobject == null)
+         {
+             itextureobject = new SimpleTexture(p_110577_1_);
+             this.func_110579_a(p_110577_1_, itextureobject);
+         }
+ 
+-        TextureUtil.func_94277_a(itextureobject.func_110552_b());
++        if (Config.isShaders())
++        {
++            ShadersTex.bindTexture(itextureobject);
++        }
++        else
++        {
++            TextureUtil.func_94277_a(itextureobject.func_110552_b());
++        }
+     }
+ 
+     public boolean func_110580_a(ResourceLocation p_110580_1_, ITickableTextureObject p_110580_2_)
+@@ -75,7 +101,7 @@
+         }
+         catch (Throwable throwable)
+         {
+-            final ITextureObject p_110579_2_f = p_110579_2_;
++            final ITextureObject textureObjf = p_110579_2_;
+             CrashReport crashreport = CrashReport.func_85055_a(throwable, "Registering texture");
+             CrashReportCategory crashreportcategory = crashreport.func_85058_a("Resource location being registered");
+             crashreportcategory.func_71507_a("Resource location", p_110579_1_);
+@@ -83,7 +109,7 @@
+             {
+                 public String call() throws Exception
+                 {
+-                    return p_110579_2_f.getClass().getName();
++                    return textureObjf.getClass().getName();
+                 }
+             });
+             throw new ReportedException(crashreport);
+@@ -100,6 +126,11 @@
+ 
+     public ResourceLocation func_110578_a(String p_110578_1_, DynamicTexture p_110578_2_)
+     {
++        if (p_110578_1_.equals("logo"))
++        {
++            p_110578_2_ = Config.getMojangLogoTexture(p_110578_2_);
++        }
++
+         Integer integer = (Integer)this.field_110584_c.get(p_110578_1_);
+ 
+         if (integer == null)
+@@ -131,15 +162,57 @@
+ 
+         if (itextureobject != null)
+         {
++            this.field_110585_a.remove(p_147645_1_);
+             TextureUtil.func_147942_a(itextureobject.func_110552_b());
+         }
+     }
+ 
+     public void func_110549_a(IResourceManager p_110549_1_)
+     {
+-        for (Entry<ResourceLocation, ITextureObject> entry : this.field_110585_a.entrySet())
++        Config.dbg("*** Reloading textures ***");
++        Config.log("Resource packs: " + Config.getResourcePackNames());
++        Iterator iterator = this.field_110585_a.keySet().iterator();
++
++        while (iterator.hasNext())
+         {
++            ResourceLocation resourcelocation = (ResourceLocation)iterator.next();
++            String s = resourcelocation.func_110623_a();
++
++            if (s.startsWith("mcpatcher/") || s.startsWith("optifine/") || EmissiveTextures.isEmissive(resourcelocation))
++            {
++                ITextureObject itextureobject = (ITextureObject)this.field_110585_a.get(resourcelocation);
++
++                if (itextureobject instanceof AbstractTexture)
++                {
++                    AbstractTexture abstracttexture = (AbstractTexture)itextureobject;
++                    abstracttexture.func_147631_c();
++                }
++
++                iterator.remove();
++            }
++        }
++
++        EmissiveTextures.update();
++
++        for (Object e : new HashSet(this.field_110585_a.entrySet()))
++        {
++            Entry<ResourceLocation, ITextureObject> entry = (Entry<ResourceLocation, ITextureObject>) e;
+             this.func_110579_a((ResourceLocation)entry.getKey(), (ITextureObject)entry.getValue());
+         }
+     }
++
++    public void reloadBannerTextures()
++    {
++        for (Object e : new HashSet(this.field_110585_a.entrySet()))
++        {
++            Entry<ResourceLocation, ITextureObject> entry = (Entry<ResourceLocation, ITextureObject>) e;
++            ResourceLocation resourcelocation = (ResourceLocation)entry.getKey();
++            ITextureObject itextureobject = (ITextureObject)entry.getValue();
++
++            if (itextureobject instanceof LayeredColorMaskTexture)
++            {
++                this.func_110579_a(resourcelocation, itextureobject);
++            }
++        }
++    }
+ }

@@ -1,0 +1,29 @@
+--- ../src-base/minecraft/net/minecraft/client/gui/GuiSleepMP.java
++++ ../src-work/minecraft/net/minecraft/client/gui/GuiSleepMP.java
+@@ -1,6 +1,9 @@
+ package net.minecraft.client.gui;
+ 
+ import java.io.IOException;
++
++import net.mattbenson.Wrapper;
++import net.mattbenson.events.types.render.gui.GuiActionPerformedEvent;
+ import net.minecraft.client.network.NetHandlerPlayClient;
+ import net.minecraft.client.resources.I18n;
+ import net.minecraft.network.play.client.C0BPacketEntityAction;
+@@ -32,7 +35,7 @@
+ 
+             if (!s.isEmpty())
+             {
+-                this.field_146297_k.field_71439_g.func_71165_d(s);
++                this.func_175275_f(s); // Forge: fix vanilla not adding messages to the sent list while sleeping
+             }
+ 
+             this.field_146415_a.func_146180_a("");
+@@ -48,6 +51,7 @@
+         }
+         else
+         {
++        	Wrapper.getInstance().GuiActionPerformedEvent(this, p_146284_1_);
+             super.func_146284_a(p_146284_1_);
+         }
+     }

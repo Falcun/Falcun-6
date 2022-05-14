@@ -1,0 +1,24 @@
+--- ../src-base/minecraft/net/minecraft/client/main/Main.java
++++ ../src-work/minecraft/net/minecraft/client/main/Main.java
+@@ -14,6 +14,7 @@
+ import joptsimple.OptionParser;
+ import joptsimple.OptionSet;
+ import joptsimple.OptionSpec;
++import net.mattbenson.assets.FalcunUpdater;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.util.Session;
+ import net.minecraftforge.fml.relauncher.Side;
+@@ -24,6 +25,13 @@
+ {
+     public static void main(String[] p_main_0_)
+     {
++    	if(p_main_0_ != null) {
++	    	p_main_0_ = new FalcunUpdater(p_main_0_).run();
++	    	
++	    	if(p_main_0_ == null) {
++	    		return;
++	    	}
++    	}
+         System.setProperty("java.net.preferIPv4Stack", "true");
+         OptionParser optionparser = new OptionParser();
+         optionparser.allowsUnrecognizedOptions();

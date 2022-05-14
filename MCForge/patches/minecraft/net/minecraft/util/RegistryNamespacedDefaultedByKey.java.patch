@@ -1,0 +1,18 @@
+--- ../src-base/minecraft/net/minecraft/util/RegistryNamespacedDefaultedByKey.java
++++ ../src-work/minecraft/net/minecraft/util/RegistryNamespacedDefaultedByKey.java
+@@ -38,4 +38,15 @@
+         V v = super.func_148754_a(p_148754_1_);
+         return (V)(v == null ? this.field_148761_e : v);
+     }
++
++    public int getIdResource(K itemName)
++    {
++        V obj = func_82594_a(itemName);
++        if (obj == null)
++        {
++            return -1;
++        }
++
++        return func_148757_b(obj);
++    }
+ }

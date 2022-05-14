@@ -1,0 +1,846 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/BlockModelRenderer.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/BlockModelRenderer.java
+@@ -2,6 +2,7 @@
+ 
+ import java.util.BitSet;
+ import java.util.List;
++
+ import net.minecraft.block.Block;
+ import net.minecraft.block.state.IBlockState;
+ import net.minecraft.client.Minecraft;
+@@ -9,23 +10,39 @@
+ import net.minecraft.client.renderer.texture.TextureUtil;
+ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+ import net.minecraft.client.resources.model.IBakedModel;
+-import net.minecraft.crash.CrashReport;
+-import net.minecraft.crash.CrashReportCategory;
++import net.minecraft.src.Config;
+ import net.minecraft.util.BlockPos;
+ import net.minecraft.util.EnumFacing;
++import net.minecraft.util.EnumWorldBlockLayer;
+ import net.minecraft.util.MathHelper;
+-import net.minecraft.util.ReportedException;
+ import net.minecraft.util.Vec3i;
+ import net.minecraft.world.IBlockAccess;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import net.optifine.BetterSnow;
++import net.optifine.CustomColors;
++import net.optifine.model.BlockModelCustomizer;
++import net.optifine.model.ListQuadsOverlay;
++import net.optifine.reflect.Reflector;
++import net.optifine.render.RenderEnv;
++import net.optifine.shaders.SVertexBuilder;
++import net.optifine.shaders.Shaders;
+ 
+-@SideOnly(Side.CLIENT)
+ public class BlockModelRenderer
+ {
++    private static float aoLightValueOpaque = 0.2F;
++    private static boolean separateAoLightValue = false;
++    private static final EnumWorldBlockLayer[] OVERLAY_LAYERS = new EnumWorldBlockLayer[] {EnumWorldBlockLayer.CUTOUT, EnumWorldBlockLayer.CUTOUT_MIPPED, EnumWorldBlockLayer.TRANSLUCENT};
++
++    public BlockModelRenderer()
++    {
++        if (Reflector.ForgeModContainer_forgeLightPipelineEnabled.exists())
++        {
++            Reflector.setFieldValue(Reflector.ForgeModContainer_forgeLightPipelineEnabled, Boolean.valueOf(false));
++        }
++    }
++
+     public boolean func_178259_a(IBlockAccess p_178259_1_, IBakedModel p_178259_2_, IBlockState p_178259_3_, BlockPos p_178259_4_, WorldRenderer p_178259_5_)
+     {
+-        Block block = p_178259_3_.func_177230_c();
++        Block block = p_178259_3_.func_177230_c();        
+         block.func_180654_a(p_178259_1_, p_178259_4_);
+         return this.func_178267_a(p_178259_1_, p_178259_2_, p_178259_3_, p_178259_4_, p_178259_5_, true);
+     }
+@@ -36,47 +53,76 @@
+ 
+         try
+         {
+-            Block block = p_178267_3_.func_177230_c();
+-            return flag ? this.func_178265_a(p_178267_1_, p_178267_2_, block, p_178267_4_, p_178267_5_, p_178267_6_) : this.func_178258_b(p_178267_1_, p_178267_2_, block, p_178267_4_, p_178267_5_, p_178267_6_);
++            if (Config.isShaders())
++            {
++                SVertexBuilder.pushEntity(p_178267_3_, p_178267_4_, p_178267_1_, p_178267_5_);
++            }
++
++            RenderEnv renderenv = p_178267_5_.getRenderEnv(p_178267_3_, p_178267_4_);
++            p_178267_2_ = BlockModelCustomizer.getRenderModel(p_178267_2_, p_178267_3_, renderenv);
++            boolean flag1 = flag ? this.renderModelSmooth(p_178267_1_, p_178267_2_, p_178267_3_, p_178267_4_, p_178267_5_, p_178267_6_) : this.renderModelFlat(p_178267_1_, p_178267_2_, p_178267_3_, p_178267_4_, p_178267_5_, p_178267_6_);
++
++            if (flag1)
++            {
++                this.renderOverlayModels(p_178267_1_, p_178267_2_, p_178267_3_, p_178267_4_, p_178267_5_, p_178267_6_, 0L, renderenv, flag);
++            }
++
++            if (Config.isShaders())
++            {
++                SVertexBuilder.popEntity(p_178267_5_);
++            }
++
++            return flag1;
+         }
+         catch (Throwable throwable)
+         {
+-            CrashReport crashreport = CrashReport.func_85055_a(throwable, "Tesselating block model");
+-            CrashReportCategory crashreportcategory = crashreport.func_85058_a("Block model being tesselated");
+-            CrashReportCategory.func_175750_a(crashreportcategory, p_178267_4_, p_178267_3_);
+-            crashreportcategory.func_71507_a("Using AO", Boolean.valueOf(flag));
++        	/*/
++            CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Tesselating block model");
++            CrashReportCategory crashreportcategory = crashreport.makeCategory("Block model being tesselated");
++            CrashReportCategory.addBlockInfo(crashreportcategory, blockPosIn, blockStateIn);
++            crashreportcategory.addCrashSection("Using AO", Boolean.valueOf(flag));
+             throw new ReportedException(crashreport);
++            /*/
+         }
++		return flag;
+     }
+ 
+     public boolean func_178265_a(IBlockAccess p_178265_1_, IBakedModel p_178265_2_, Block p_178265_3_, BlockPos p_178265_4_, WorldRenderer p_178265_5_, boolean p_178265_6_)
+     {
++        IBlockState iblockstate = p_178265_1_.func_180495_p(p_178265_4_);
++        return this.renderModelSmooth(p_178265_1_, p_178265_2_, iblockstate, p_178265_4_, p_178265_5_, p_178265_6_);
++    }
++
++    private boolean renderModelSmooth(IBlockAccess p_renderModelSmooth_1_, IBakedModel p_renderModelSmooth_2_, IBlockState p_renderModelSmooth_3_, BlockPos p_renderModelSmooth_4_, WorldRenderer p_renderModelSmooth_5_, boolean p_renderModelSmooth_6_)
++    {
+         boolean flag = false;
+-        float[] afloat = new float[EnumFacing.values().length * 2];
+-        BitSet bitset = new BitSet(3);
+-        BlockModelRenderer.AmbientOcclusionFace blockmodelrenderer$ambientocclusionface = new BlockModelRenderer.AmbientOcclusionFace();
++        Block block = p_renderModelSmooth_3_.func_177230_c();
++        RenderEnv renderenv = p_renderModelSmooth_5_.getRenderEnv(p_renderModelSmooth_3_, p_renderModelSmooth_4_);
++        EnumWorldBlockLayer enumworldblocklayer = p_renderModelSmooth_5_.getBlockLayer();
+ 
+-        for (EnumFacing enumfacing : EnumFacing.values())
++        for (EnumFacing enumfacing : EnumFacing.field_82609_l)
+         {
+-            List<BakedQuad> list = p_178265_2_.func_177551_a(enumfacing);
++            List<BakedQuad> list = p_renderModelSmooth_2_.func_177551_a(enumfacing);
+ 
+             if (!list.isEmpty())
+             {
+-                BlockPos blockpos = p_178265_4_.func_177972_a(enumfacing);
++                BlockPos blockpos = p_renderModelSmooth_4_.func_177972_a(enumfacing);
+ 
+-                if (!p_178265_6_ || p_178265_3_.func_176225_a(p_178265_1_, blockpos, enumfacing))
++                if (!p_renderModelSmooth_6_ || block.func_176225_a(p_renderModelSmooth_1_, blockpos, enumfacing))
+                 {
+-                    this.func_178263_a(p_178265_1_, p_178265_3_, p_178265_4_, p_178265_5_, list, afloat, bitset, blockmodelrenderer$ambientocclusionface);
++                    list = BlockModelCustomizer.getRenderQuads(list, p_renderModelSmooth_1_, p_renderModelSmooth_3_, p_renderModelSmooth_4_, enumfacing, enumworldblocklayer, 0L, renderenv);
++                    this.renderQuadsSmooth(p_renderModelSmooth_1_, p_renderModelSmooth_3_, p_renderModelSmooth_4_, p_renderModelSmooth_5_, list, renderenv);
+                     flag = true;
+                 }
+             }
+         }
+ 
+-        List<BakedQuad> list1 = p_178265_2_.func_177550_a();
++        List<BakedQuad> list1 = p_renderModelSmooth_2_.func_177550_a();
+ 
+         if (list1.size() > 0)
+         {
+-            this.func_178263_a(p_178265_1_, p_178265_3_, p_178265_4_, p_178265_5_, list1, afloat, bitset, blockmodelrenderer$ambientocclusionface);
++            list1 = BlockModelCustomizer.getRenderQuads(list1, p_renderModelSmooth_1_, p_renderModelSmooth_3_, p_renderModelSmooth_4_, (EnumFacing)null, enumworldblocklayer, 0L, renderenv);
++            this.renderQuadsSmooth(p_renderModelSmooth_1_, p_renderModelSmooth_3_, p_renderModelSmooth_4_, p_renderModelSmooth_5_, list1, renderenv);
+             flag = true;
+         }
+ 
+@@ -85,47 +131,61 @@
+ 
+     public boolean func_178258_b(IBlockAccess p_178258_1_, IBakedModel p_178258_2_, Block p_178258_3_, BlockPos p_178258_4_, WorldRenderer p_178258_5_, boolean p_178258_6_)
+     {
++        IBlockState iblockstate = p_178258_1_.func_180495_p(p_178258_4_);
++        return this.renderModelFlat(p_178258_1_, p_178258_2_, iblockstate, p_178258_4_, p_178258_5_, p_178258_6_);
++    }
++
++    public boolean renderModelFlat(IBlockAccess p_renderModelFlat_1_, IBakedModel p_renderModelFlat_2_, IBlockState p_renderModelFlat_3_, BlockPos p_renderModelFlat_4_, WorldRenderer p_renderModelFlat_5_, boolean p_renderModelFlat_6_)
++    {
+         boolean flag = false;
+-        BitSet bitset = new BitSet(3);
++        Block block = p_renderModelFlat_3_.func_177230_c();
++        RenderEnv renderenv = p_renderModelFlat_5_.getRenderEnv(p_renderModelFlat_3_, p_renderModelFlat_4_);
++        EnumWorldBlockLayer enumworldblocklayer = p_renderModelFlat_5_.getBlockLayer();
+ 
+-        for (EnumFacing enumfacing : EnumFacing.values())
++        for (EnumFacing enumfacing : EnumFacing.field_82609_l)
+         {
+-            List<BakedQuad> list = p_178258_2_.func_177551_a(enumfacing);
++            List<BakedQuad> list = p_renderModelFlat_2_.func_177551_a(enumfacing);
+ 
+             if (!list.isEmpty())
+             {
+-                BlockPos blockpos = p_178258_4_.func_177972_a(enumfacing);
++                BlockPos blockpos = p_renderModelFlat_4_.func_177972_a(enumfacing);
+ 
+-                if (!p_178258_6_ || p_178258_3_.func_176225_a(p_178258_1_, blockpos, enumfacing))
++                if (!p_renderModelFlat_6_ || block.func_176225_a(p_renderModelFlat_1_, blockpos, enumfacing))
+                 {
+-                    int i = p_178258_3_.func_176207_c(p_178258_1_, blockpos);
+-                    this.func_178260_a(p_178258_1_, p_178258_3_, p_178258_4_, enumfacing, i, false, p_178258_5_, list, bitset);
++                    int i = block.func_176207_c(p_renderModelFlat_1_, blockpos);
++                    list = BlockModelCustomizer.getRenderQuads(list, p_renderModelFlat_1_, p_renderModelFlat_3_, p_renderModelFlat_4_, enumfacing, enumworldblocklayer, 0L, renderenv);
++                    this.renderQuadsFlat(p_renderModelFlat_1_, p_renderModelFlat_3_, p_renderModelFlat_4_, enumfacing, i, false, p_renderModelFlat_5_, list, renderenv);
+                     flag = true;
+                 }
+             }
+         }
+ 
+-        List<BakedQuad> list1 = p_178258_2_.func_177550_a();
++        List<BakedQuad> list1 = p_renderModelFlat_2_.func_177550_a();
+ 
+         if (list1.size() > 0)
+         {
+-            this.func_178260_a(p_178258_1_, p_178258_3_, p_178258_4_, (EnumFacing)null, -1, true, p_178258_5_, list1, bitset);
++            list1 = BlockModelCustomizer.getRenderQuads(list1, p_renderModelFlat_1_, p_renderModelFlat_3_, p_renderModelFlat_4_, (EnumFacing)null, enumworldblocklayer, 0L, renderenv);
++            this.renderQuadsFlat(p_renderModelFlat_1_, p_renderModelFlat_3_, p_renderModelFlat_4_, (EnumFacing)null, -1, true, p_renderModelFlat_5_, list1, renderenv);
+             flag = true;
+         }
+ 
+         return flag;
+     }
+ 
+-    private void func_178263_a(IBlockAccess p_178263_1_, Block p_178263_2_, BlockPos p_178263_3_, WorldRenderer p_178263_4_, List<BakedQuad> p_178263_5_, float[] p_178263_6_, BitSet p_178263_7_, BlockModelRenderer.AmbientOcclusionFace p_178263_8_)
++    private void renderQuadsSmooth(IBlockAccess p_renderQuadsSmooth_1_, IBlockState p_renderQuadsSmooth_2_, BlockPos p_renderQuadsSmooth_3_, WorldRenderer p_renderQuadsSmooth_4_, List<BakedQuad> p_renderQuadsSmooth_5_, RenderEnv p_renderQuadsSmooth_6_)
+     {
+-        double d0 = (double)p_178263_3_.func_177958_n();
+-        double d1 = (double)p_178263_3_.func_177956_o();
+-        double d2 = (double)p_178263_3_.func_177952_p();
+-        Block.EnumOffsetType block$enumoffsettype = p_178263_2_.func_176218_Q();
++        Block block = p_renderQuadsSmooth_2_.func_177230_c();
++        float[] afloat = p_renderQuadsSmooth_6_.getQuadBounds();
++        BitSet bitset = p_renderQuadsSmooth_6_.getBoundsFlags();
++        BlockModelRenderer.AmbientOcclusionFace blockmodelrenderer$ambientocclusionface = p_renderQuadsSmooth_6_.getAoFace();
++        double d0 = (double)p_renderQuadsSmooth_3_.func_177958_n();
++        double d1 = (double)p_renderQuadsSmooth_3_.func_177956_o();
++        double d2 = (double)p_renderQuadsSmooth_3_.func_177952_p();
++        Block.EnumOffsetType block$enumoffsettype = block.func_176218_Q();
+ 
+         if (block$enumoffsettype != Block.EnumOffsetType.NONE)
+         {
+-            long i = MathHelper.func_180186_a(p_178263_3_);
++            long i = MathHelper.func_180186_a(p_renderQuadsSmooth_3_);
+             d0 += ((double)((float)(i >> 16 & 15L) / 15.0F) - 0.5D) * 0.5D;
+             d2 += ((double)((float)(i >> 24 & 15L) / 15.0F) - 0.5D) * 0.5D;
+ 
+@@ -135,39 +195,85 @@
+             }
+         }
+ 
+-        for (BakedQuad bakedquad : p_178263_5_)
++        for (BakedQuad bakedquad : p_renderQuadsSmooth_5_)
+         {
+-            this.func_178261_a(p_178263_2_, bakedquad.func_178209_a(), bakedquad.func_178210_d(), p_178263_6_, p_178263_7_);
+-            p_178263_8_.func_178204_a(p_178263_1_, p_178263_2_, p_178263_3_, bakedquad.func_178210_d(), p_178263_6_, p_178263_7_);
+-            p_178263_4_.func_178981_a(bakedquad.func_178209_a());
+-            p_178263_4_.func_178962_a(p_178263_8_.field_178207_c[0], p_178263_8_.field_178207_c[1], p_178263_8_.field_178207_c[2], p_178263_8_.field_178207_c[3]);
++            this.func_178261_a(block, bakedquad.func_178209_a(), bakedquad.func_178210_d(), afloat, bitset);
++            blockmodelrenderer$ambientocclusionface.func_178204_a(p_renderQuadsSmooth_1_, block, p_renderQuadsSmooth_3_, bakedquad.func_178210_d(), afloat, bitset);
+ 
+-            if (bakedquad.func_178212_b())
++            if (bakedquad.getSprite().isEmissive)
+             {
+-                int j = p_178263_2_.func_180662_a(p_178263_1_, p_178263_3_, bakedquad.func_178211_c());
++                blockmodelrenderer$ambientocclusionface.setMaxBlockLight();
++            }
+ 
+-                if (EntityRenderer.field_78517_a)
++            if (p_renderQuadsSmooth_4_.isMultiTexture())
++            {
++                p_renderQuadsSmooth_4_.func_178981_a(bakedquad.getVertexDataSingle());
++            }
++            else
++            {
++                p_renderQuadsSmooth_4_.func_178981_a(bakedquad.func_178209_a());
++            }
++
++            p_renderQuadsSmooth_4_.putSprite(bakedquad.getSprite());
++            p_renderQuadsSmooth_4_.func_178962_a(blockmodelrenderer$ambientocclusionface.field_178207_c[0], blockmodelrenderer$ambientocclusionface.field_178207_c[1], blockmodelrenderer$ambientocclusionface.field_178207_c[2], blockmodelrenderer$ambientocclusionface.field_178207_c[3]);
++            int j = CustomColors.getColorMultiplier(bakedquad, p_renderQuadsSmooth_2_, p_renderQuadsSmooth_1_, p_renderQuadsSmooth_3_, p_renderQuadsSmooth_6_);
++
++            if (!bakedquad.func_178212_b() && j == -1)
++            {
++                if (separateAoLightValue)
+                 {
+-                    j = TextureUtil.func_177054_c(j);
++                    p_renderQuadsSmooth_4_.putColorMultiplierRgba(1.0F, 1.0F, 1.0F, blockmodelrenderer$ambientocclusionface.field_178206_b[0], 4);
++                    p_renderQuadsSmooth_4_.putColorMultiplierRgba(1.0F, 1.0F, 1.0F, blockmodelrenderer$ambientocclusionface.field_178206_b[1], 3);
++                    p_renderQuadsSmooth_4_.putColorMultiplierRgba(1.0F, 1.0F, 1.0F, blockmodelrenderer$ambientocclusionface.field_178206_b[2], 2);
++                    p_renderQuadsSmooth_4_.putColorMultiplierRgba(1.0F, 1.0F, 1.0F, blockmodelrenderer$ambientocclusionface.field_178206_b[3], 1);
+                 }
+-
+-                float f = (float)(j >> 16 & 255) / 255.0F;
+-                float f1 = (float)(j >> 8 & 255) / 255.0F;
+-                float f2 = (float)(j & 255) / 255.0F;
+-                p_178263_4_.func_178978_a(p_178263_8_.field_178206_b[0] * f, p_178263_8_.field_178206_b[0] * f1, p_178263_8_.field_178206_b[0] * f2, 4);
+-                p_178263_4_.func_178978_a(p_178263_8_.field_178206_b[1] * f, p_178263_8_.field_178206_b[1] * f1, p_178263_8_.field_178206_b[1] * f2, 3);
+-                p_178263_4_.func_178978_a(p_178263_8_.field_178206_b[2] * f, p_178263_8_.field_178206_b[2] * f1, p_178263_8_.field_178206_b[2] * f2, 2);
+-                p_178263_4_.func_178978_a(p_178263_8_.field_178206_b[3] * f, p_178263_8_.field_178206_b[3] * f1, p_178263_8_.field_178206_b[3] * f2, 1);
++                else
++                {
++                    p_renderQuadsSmooth_4_.func_178978_a(blockmodelrenderer$ambientocclusionface.field_178206_b[0], blockmodelrenderer$ambientocclusionface.field_178206_b[0], blockmodelrenderer$ambientocclusionface.field_178206_b[0], 4);
++                    p_renderQuadsSmooth_4_.func_178978_a(blockmodelrenderer$ambientocclusionface.field_178206_b[1], blockmodelrenderer$ambientocclusionface.field_178206_b[1], blockmodelrenderer$ambientocclusionface.field_178206_b[1], 3);
++                    p_renderQuadsSmooth_4_.func_178978_a(blockmodelrenderer$ambientocclusionface.field_178206_b[2], blockmodelrenderer$ambientocclusionface.field_178206_b[2], blockmodelrenderer$ambientocclusionface.field_178206_b[2], 2);
++                    p_renderQuadsSmooth_4_.func_178978_a(blockmodelrenderer$ambientocclusionface.field_178206_b[3], blockmodelrenderer$ambientocclusionface.field_178206_b[3], blockmodelrenderer$ambientocclusionface.field_178206_b[3], 1);
++                }
+             }
+             else
+             {
+-                p_178263_4_.func_178978_a(p_178263_8_.field_178206_b[0], p_178263_8_.field_178206_b[0], p_178263_8_.field_178206_b[0], 4);
+-                p_178263_4_.func_178978_a(p_178263_8_.field_178206_b[1], p_178263_8_.field_178206_b[1], p_178263_8_.field_178206_b[1], 3);
+-                p_178263_4_.func_178978_a(p_178263_8_.field_178206_b[2], p_178263_8_.field_178206_b[2], p_178263_8_.field_178206_b[2], 2);
+-                p_178263_4_.func_178978_a(p_178263_8_.field_178206_b[3], p_178263_8_.field_178206_b[3], p_178263_8_.field_178206_b[3], 1);
++                int k;
++
++                if (j != -1)
++                {
++                    k = j;
++                }
++                else
++                {
++                    k = block.func_180662_a(p_renderQuadsSmooth_1_, p_renderQuadsSmooth_3_, bakedquad.func_178211_c());
++                }
++
++                if (EntityRenderer.field_78517_a)
++                {
++                    k = TextureUtil.func_177054_c(k);
++                }
++
++                float f = (float)(k >> 16 & 255) / 255.0F;
++                float f1 = (float)(k >> 8 & 255) / 255.0F;
++                float f2 = (float)(k & 255) / 255.0F;
++
++                if (separateAoLightValue)
++                {
++                    p_renderQuadsSmooth_4_.putColorMultiplierRgba(f, f1, f2, blockmodelrenderer$ambientocclusionface.field_178206_b[0], 4);
++                    p_renderQuadsSmooth_4_.putColorMultiplierRgba(f, f1, f2, blockmodelrenderer$ambientocclusionface.field_178206_b[1], 3);
++                    p_renderQuadsSmooth_4_.putColorMultiplierRgba(f, f1, f2, blockmodelrenderer$ambientocclusionface.field_178206_b[2], 2);
++                    p_renderQuadsSmooth_4_.putColorMultiplierRgba(f, f1, f2, blockmodelrenderer$ambientocclusionface.field_178206_b[3], 1);
++                }
++                else
++                {
++                    p_renderQuadsSmooth_4_.func_178978_a(blockmodelrenderer$ambientocclusionface.field_178206_b[0] * f, blockmodelrenderer$ambientocclusionface.field_178206_b[0] * f1, blockmodelrenderer$ambientocclusionface.field_178206_b[0] * f2, 4);
++                    p_renderQuadsSmooth_4_.func_178978_a(blockmodelrenderer$ambientocclusionface.field_178206_b[1] * f, blockmodelrenderer$ambientocclusionface.field_178206_b[1] * f1, blockmodelrenderer$ambientocclusionface.field_178206_b[1] * f2, 3);
++                    p_renderQuadsSmooth_4_.func_178978_a(blockmodelrenderer$ambientocclusionface.field_178206_b[2] * f, blockmodelrenderer$ambientocclusionface.field_178206_b[2] * f1, blockmodelrenderer$ambientocclusionface.field_178206_b[2] * f2, 2);
++                    p_renderQuadsSmooth_4_.func_178978_a(blockmodelrenderer$ambientocclusionface.field_178206_b[3] * f, blockmodelrenderer$ambientocclusionface.field_178206_b[3] * f1, blockmodelrenderer$ambientocclusionface.field_178206_b[3] * f2, 1);
++                }
+             }
+ 
+-            p_178263_4_.func_178987_a(d0, d1, d2);
++            p_renderQuadsSmooth_4_.func_178987_a(d0, d1, d2);
+         }
+     }
+ 
+@@ -179,12 +285,13 @@
+         float f3 = -32.0F;
+         float f4 = -32.0F;
+         float f5 = -32.0F;
++        int i = p_178261_2_.length / 4;
+ 
+-        for (int i = 0; i < 4; ++i)
++        for (int j = 0; j < 4; ++j)
+         {
+-            float f6 = Float.intBitsToFloat(p_178261_2_[i * 7]);
+-            float f7 = Float.intBitsToFloat(p_178261_2_[i * 7 + 1]);
+-            float f8 = Float.intBitsToFloat(p_178261_2_[i * 7 + 2]);
++            float f6 = Float.intBitsToFloat(p_178261_2_[j * i]);
++            float f7 = Float.intBitsToFloat(p_178261_2_[j * i + 1]);
++            float f8 = Float.intBitsToFloat(p_178261_2_[j * i + 2]);
+             f = Math.min(f, f6);
+             f1 = Math.min(f1, f7);
+             f2 = Math.min(f2, f8);
+@@ -201,12 +308,13 @@
+             p_178261_4_[EnumFacing.UP.func_176745_a()] = f4;
+             p_178261_4_[EnumFacing.NORTH.func_176745_a()] = f2;
+             p_178261_4_[EnumFacing.SOUTH.func_176745_a()] = f5;
+-            p_178261_4_[EnumFacing.WEST.func_176745_a() + EnumFacing.values().length] = 1.0F - f;
+-            p_178261_4_[EnumFacing.EAST.func_176745_a() + EnumFacing.values().length] = 1.0F - f3;
+-            p_178261_4_[EnumFacing.DOWN.func_176745_a() + EnumFacing.values().length] = 1.0F - f1;
+-            p_178261_4_[EnumFacing.UP.func_176745_a() + EnumFacing.values().length] = 1.0F - f4;
+-            p_178261_4_[EnumFacing.NORTH.func_176745_a() + EnumFacing.values().length] = 1.0F - f2;
+-            p_178261_4_[EnumFacing.SOUTH.func_176745_a() + EnumFacing.values().length] = 1.0F - f5;
++            int k = EnumFacing.field_82609_l.length;
++            p_178261_4_[EnumFacing.WEST.func_176745_a() + k] = 1.0F - f;
++            p_178261_4_[EnumFacing.EAST.func_176745_a() + k] = 1.0F - f3;
++            p_178261_4_[EnumFacing.DOWN.func_176745_a() + k] = 1.0F - f1;
++            p_178261_4_[EnumFacing.UP.func_176745_a() + k] = 1.0F - f4;
++            p_178261_4_[EnumFacing.NORTH.func_176745_a() + k] = 1.0F - f2;
++            p_178261_4_[EnumFacing.SOUTH.func_176745_a() + k] = 1.0F - f5;
+         }
+ 
+         float f9 = 1.0E-4F;
+@@ -218,39 +326,46 @@
+                 p_178261_5_.set(1, f >= 1.0E-4F || f2 >= 1.0E-4F || f3 <= 0.9999F || f5 <= 0.9999F);
+                 p_178261_5_.set(0, (f1 < 1.0E-4F || p_178261_1_.func_149686_d()) && f1 == f4);
+                 break;
++
+             case UP:
+                 p_178261_5_.set(1, f >= 1.0E-4F || f2 >= 1.0E-4F || f3 <= 0.9999F || f5 <= 0.9999F);
+                 p_178261_5_.set(0, (f4 > 0.9999F || p_178261_1_.func_149686_d()) && f1 == f4);
+                 break;
++
+             case NORTH:
+                 p_178261_5_.set(1, f >= 1.0E-4F || f1 >= 1.0E-4F || f3 <= 0.9999F || f4 <= 0.9999F);
+                 p_178261_5_.set(0, (f2 < 1.0E-4F || p_178261_1_.func_149686_d()) && f2 == f5);
+                 break;
++
+             case SOUTH:
+                 p_178261_5_.set(1, f >= 1.0E-4F || f1 >= 1.0E-4F || f3 <= 0.9999F || f4 <= 0.9999F);
+                 p_178261_5_.set(0, (f5 > 0.9999F || p_178261_1_.func_149686_d()) && f2 == f5);
+                 break;
++
+             case WEST:
+                 p_178261_5_.set(1, f1 >= 1.0E-4F || f2 >= 1.0E-4F || f4 <= 0.9999F || f5 <= 0.9999F);
+                 p_178261_5_.set(0, (f < 1.0E-4F || p_178261_1_.func_149686_d()) && f == f3);
+                 break;
++
+             case EAST:
+                 p_178261_5_.set(1, f1 >= 1.0E-4F || f2 >= 1.0E-4F || f4 <= 0.9999F || f5 <= 0.9999F);
+                 p_178261_5_.set(0, (f3 > 0.9999F || p_178261_1_.func_149686_d()) && f == f3);
+         }
+     }
+ 
+-    private void func_178260_a(IBlockAccess p_178260_1_, Block p_178260_2_, BlockPos p_178260_3_, EnumFacing p_178260_4_, int p_178260_5_, boolean p_178260_6_, WorldRenderer p_178260_7_, List<BakedQuad> p_178260_8_, BitSet p_178260_9_)
++    private void renderQuadsFlat(IBlockAccess p_renderQuadsFlat_1_, IBlockState p_renderQuadsFlat_2_, BlockPos p_renderQuadsFlat_3_, EnumFacing p_renderQuadsFlat_4_, int p_renderQuadsFlat_5_, boolean p_renderQuadsFlat_6_, WorldRenderer p_renderQuadsFlat_7_, List<BakedQuad> p_renderQuadsFlat_8_, RenderEnv p_renderQuadsFlat_9_)
+     {
+-        double d0 = (double)p_178260_3_.func_177958_n();
+-        double d1 = (double)p_178260_3_.func_177956_o();
+-        double d2 = (double)p_178260_3_.func_177952_p();
+-        Block.EnumOffsetType block$enumoffsettype = p_178260_2_.func_176218_Q();
++        Block block = p_renderQuadsFlat_2_.func_177230_c();
++        BitSet bitset = p_renderQuadsFlat_9_.getBoundsFlags();
++        double d0 = (double)p_renderQuadsFlat_3_.func_177958_n();
++        double d1 = (double)p_renderQuadsFlat_3_.func_177956_o();
++        double d2 = (double)p_renderQuadsFlat_3_.func_177952_p();
++        Block.EnumOffsetType block$enumoffsettype = block.func_176218_Q();
+ 
+         if (block$enumoffsettype != Block.EnumOffsetType.NONE)
+         {
+-            int i = p_178260_3_.func_177958_n();
+-            int j = p_178260_3_.func_177952_p();
++            int i = p_renderQuadsFlat_3_.func_177958_n();
++            int j = p_renderQuadsFlat_3_.func_177952_p();
+             long k = (long)(i * 3129871) ^ (long)j * 116129781L;
+             k = k * k * 42317861L + k * 11L;
+             d0 += ((double)((float)(k >> 16 & 15L) / 15.0F) - 0.5D) * 0.5D;
+@@ -262,21 +377,45 @@
+             }
+         }
+ 
+-        for (BakedQuad bakedquad : p_178260_8_)
++        for (BakedQuad bakedquad : p_renderQuadsFlat_8_)
+         {
+-            if (p_178260_6_)
++            if (p_renderQuadsFlat_6_)
+             {
+-                this.func_178261_a(p_178260_2_, bakedquad.func_178209_a(), bakedquad.func_178210_d(), (float[])null, p_178260_9_);
+-                p_178260_5_ = p_178260_9_.get(0) ? p_178260_2_.func_176207_c(p_178260_1_, p_178260_3_.func_177972_a(bakedquad.func_178210_d())) : p_178260_2_.func_176207_c(p_178260_1_, p_178260_3_);
++                this.func_178261_a(block, bakedquad.func_178209_a(), bakedquad.func_178210_d(), (float[])null, bitset);
++                p_renderQuadsFlat_5_ = bitset.get(0) ? block.func_176207_c(p_renderQuadsFlat_1_, p_renderQuadsFlat_3_.func_177972_a(bakedquad.func_178210_d())) : block.func_176207_c(p_renderQuadsFlat_1_, p_renderQuadsFlat_3_);
+             }
+ 
+-            p_178260_7_.func_178981_a(bakedquad.func_178209_a());
+-            p_178260_7_.func_178962_a(p_178260_5_, p_178260_5_, p_178260_5_, p_178260_5_);
++            if (bakedquad.getSprite().isEmissive)
++            {
++                p_renderQuadsFlat_5_ |= 240;
++            }
+ 
+-            if (bakedquad.func_178212_b())
++            if (p_renderQuadsFlat_7_.isMultiTexture())
+             {
+-                int l = p_178260_2_.func_180662_a(p_178260_1_, p_178260_3_, bakedquad.func_178211_c());
++                p_renderQuadsFlat_7_.func_178981_a(bakedquad.getVertexDataSingle());
++            }
++            else
++            {
++                p_renderQuadsFlat_7_.func_178981_a(bakedquad.func_178209_a());
++            }
+ 
++            p_renderQuadsFlat_7_.putSprite(bakedquad.getSprite());
++            p_renderQuadsFlat_7_.func_178962_a(p_renderQuadsFlat_5_, p_renderQuadsFlat_5_, p_renderQuadsFlat_5_, p_renderQuadsFlat_5_);
++            int i1 = CustomColors.getColorMultiplier(bakedquad, p_renderQuadsFlat_2_, p_renderQuadsFlat_1_, p_renderQuadsFlat_3_, p_renderQuadsFlat_9_);
++
++            if (bakedquad.func_178212_b() || i1 != -1)
++            {
++                int l;
++
++                if (i1 != -1)
++                {
++                    l = i1;
++                }
++                else
++                {
++                    l = block.func_180662_a(p_renderQuadsFlat_1_, p_renderQuadsFlat_3_, bakedquad.func_178211_c());
++                }
++
+                 if (EntityRenderer.field_78517_a)
+                 {
+                     l = TextureUtil.func_177054_c(l);
+@@ -285,19 +424,19 @@
+                 float f = (float)(l >> 16 & 255) / 255.0F;
+                 float f1 = (float)(l >> 8 & 255) / 255.0F;
+                 float f2 = (float)(l & 255) / 255.0F;
+-                p_178260_7_.func_178978_a(f, f1, f2, 4);
+-                p_178260_7_.func_178978_a(f, f1, f2, 3);
+-                p_178260_7_.func_178978_a(f, f1, f2, 2);
+-                p_178260_7_.func_178978_a(f, f1, f2, 1);
++                p_renderQuadsFlat_7_.func_178978_a(f, f1, f2, 4);
++                p_renderQuadsFlat_7_.func_178978_a(f, f1, f2, 3);
++                p_renderQuadsFlat_7_.func_178978_a(f, f1, f2, 2);
++                p_renderQuadsFlat_7_.func_178978_a(f, f1, f2, 1);
+             }
+ 
+-            p_178260_7_.func_178987_a(d0, d1, d2);
++            p_renderQuadsFlat_7_.func_178987_a(d0, d1, d2);
+         }
+     }
+ 
+     public void func_178262_a(IBakedModel p_178262_1_, float p_178262_2_, float p_178262_3_, float p_178262_4_, float p_178262_5_)
+     {
+-        for (EnumFacing enumfacing : EnumFacing.values())
++        for (EnumFacing enumfacing : EnumFacing.field_82609_l)
+         {
+             this.func_178264_a(p_178262_2_, p_178262_3_, p_178262_4_, p_178262_5_, p_178262_1_.func_177551_a(enumfacing));
+         }
+@@ -338,6 +477,7 @@
+         {
+             worldrenderer.func_181668_a(7, DefaultVertexFormats.field_176599_b);
+             worldrenderer.func_178981_a(bakedquad.func_178209_a());
++            worldrenderer.putSprite(bakedquad.getSprite());
+ 
+             if (bakedquad.func_178212_b())
+             {
+@@ -354,12 +494,107 @@
+         }
+     }
+ 
+-    @SideOnly(Side.CLIENT)
+-    class AmbientOcclusionFace
++    public static float fixAoLightValue(float p_fixAoLightValue_0_)
+     {
+-        private final float[] field_178206_b = new float[4];
+-        private final int[] field_178207_c = new int[4];
++        return p_fixAoLightValue_0_ == 0.2F ? aoLightValueOpaque : p_fixAoLightValue_0_;
++    }
+ 
++    public static void updateAoLightValue()
++    {
++        aoLightValueOpaque = 1.0F - Config.getAmbientOcclusionLevel() * 0.8F;
++        separateAoLightValue = Config.isShaders() && Shaders.isSeparateAo();
++    }
++
++    private void renderOverlayModels(IBlockAccess p_renderOverlayModels_1_, IBakedModel p_renderOverlayModels_2_, IBlockState p_renderOverlayModels_3_, BlockPos p_renderOverlayModels_4_, WorldRenderer p_renderOverlayModels_5_, boolean p_renderOverlayModels_6_, long p_renderOverlayModels_7_, RenderEnv p_renderOverlayModels_9_, boolean p_renderOverlayModels_10_)
++    {
++        if (p_renderOverlayModels_9_.isOverlaysRendered())
++        {
++            for (int i = 0; i < OVERLAY_LAYERS.length; ++i)
++            {
++                EnumWorldBlockLayer enumworldblocklayer = OVERLAY_LAYERS[i];
++                ListQuadsOverlay listquadsoverlay = p_renderOverlayModels_9_.getListQuadsOverlay(enumworldblocklayer);
++
++                if (listquadsoverlay.size() > 0)
++                {
++                    RegionRenderCacheBuilder regionrendercachebuilder = p_renderOverlayModels_9_.getRegionRenderCacheBuilder();
++
++                    if (regionrendercachebuilder != null)
++                    {
++                        WorldRenderer worldrenderer = regionrendercachebuilder.func_179038_a(enumworldblocklayer);
++
++                        if (!worldrenderer.isDrawing())
++                        {
++                            worldrenderer.func_181668_a(7, DefaultVertexFormats.field_176600_a);
++                            worldrenderer.func_178969_c(p_renderOverlayModels_5_.getXOffset(), p_renderOverlayModels_5_.getYOffset(), p_renderOverlayModels_5_.getZOffset());
++                        }
++
++                        for (int j = 0; j < listquadsoverlay.size(); ++j)
++                        {
++                            BakedQuad bakedquad = listquadsoverlay.getQuad(j);
++                            List<BakedQuad> list = listquadsoverlay.getListQuadsSingle(bakedquad);
++                            IBlockState iblockstate = listquadsoverlay.getBlockState(j);
++
++                            if (bakedquad.getQuadEmissive() != null)
++                            {
++                                listquadsoverlay.addQuad(bakedquad.getQuadEmissive(), iblockstate);
++                            }
++
++                            p_renderOverlayModels_9_.reset(iblockstate, p_renderOverlayModels_4_);
++
++                            if (p_renderOverlayModels_10_)
++                            {
++                                this.renderQuadsSmooth(p_renderOverlayModels_1_, iblockstate, p_renderOverlayModels_4_, worldrenderer, list, p_renderOverlayModels_9_);
++                            }
++                            else
++                            {
++                                int k = iblockstate.func_177230_c().func_176207_c(p_renderOverlayModels_1_, p_renderOverlayModels_4_.func_177972_a(bakedquad.func_178210_d()));
++                                this.renderQuadsFlat(p_renderOverlayModels_1_, iblockstate, p_renderOverlayModels_4_, bakedquad.func_178210_d(), k, false, worldrenderer, list, p_renderOverlayModels_9_);
++                            }
++                        }
++                    }
++
++                    listquadsoverlay.clear();
++                }
++            }
++        }
++
++        if (Config.isBetterSnow() && !p_renderOverlayModels_9_.isBreakingAnimation() && BetterSnow.shouldRender(p_renderOverlayModels_1_, p_renderOverlayModels_3_, p_renderOverlayModels_4_))
++        {
++            IBakedModel ibakedmodel = BetterSnow.getModelSnowLayer();
++            IBlockState iblockstate1 = BetterSnow.getStateSnowLayer();
++            this.func_178267_a(p_renderOverlayModels_1_, ibakedmodel, iblockstate1, p_renderOverlayModels_4_, p_renderOverlayModels_5_, p_renderOverlayModels_6_);
++        }
++    }
++
++    public static class AmbientOcclusionFace
++    {
++        private final float[] field_178206_b;
++        private final int[] field_178207_c;
++
++        public AmbientOcclusionFace()
++        {
++            this((BlockModelRenderer)null);
++        }
++
++        public AmbientOcclusionFace(BlockModelRenderer p_i46235_1_)
++        {
++            this.field_178206_b = new float[4];
++            this.field_178207_c = new int[4];
++        }
++
++        public void setMaxBlockLight()
++        {
++            int i = 240;
++            this.field_178207_c[0] |= i;
++            this.field_178207_c[1] |= i;
++            this.field_178207_c[2] |= i;
++            this.field_178207_c[3] |= i;
++            this.field_178206_b[0] = 1.0F;
++            this.field_178206_b[1] = 1.0F;
++            this.field_178206_b[2] = 1.0F;
++            this.field_178206_b[3] = 1.0F;
++        }
++
+         public void func_178204_a(IBlockAccess p_178204_1_, Block p_178204_2_, BlockPos p_178204_3_, EnumFacing p_178204_4_, float[] p_178204_5_, BitSet p_178204_6_)
+         {
+             BlockPos blockpos = p_178204_6_.get(0) ? p_178204_3_.func_177972_a(p_178204_4_) : p_178204_3_;
+@@ -372,10 +607,10 @@
+             int j = p_178204_2_.func_176207_c(p_178204_1_, blockpos2);
+             int k = p_178204_2_.func_176207_c(p_178204_1_, blockpos3);
+             int l = p_178204_2_.func_176207_c(p_178204_1_, blockpos4);
+-            float f = p_178204_1_.func_180495_p(blockpos1).func_177230_c().func_149685_I();
+-            float f1 = p_178204_1_.func_180495_p(blockpos2).func_177230_c().func_149685_I();
+-            float f2 = p_178204_1_.func_180495_p(blockpos3).func_177230_c().func_149685_I();
+-            float f3 = p_178204_1_.func_180495_p(blockpos4).func_177230_c().func_149685_I();
++            float f = BlockModelRenderer.fixAoLightValue(p_178204_1_.func_180495_p(blockpos1).func_177230_c().func_149685_I());
++            float f1 = BlockModelRenderer.fixAoLightValue(p_178204_1_.func_180495_p(blockpos2).func_177230_c().func_149685_I());
++            float f2 = BlockModelRenderer.fixAoLightValue(p_178204_1_.func_180495_p(blockpos3).func_177230_c().func_149685_I());
++            float f3 = BlockModelRenderer.fixAoLightValue(p_178204_1_.func_180495_p(blockpos4).func_177230_c().func_149685_I());
+             boolean flag = p_178204_1_.func_180495_p(blockpos1.func_177972_a(p_178204_4_)).func_177230_c().func_149751_l();
+             boolean flag1 = p_178204_1_.func_180495_p(blockpos2.func_177972_a(p_178204_4_)).func_177230_c().func_149751_l();
+             boolean flag2 = p_178204_1_.func_180495_p(blockpos3.func_177972_a(p_178204_4_)).func_177230_c().func_149751_l();
+@@ -391,52 +626,52 @@
+             else
+             {
+                 BlockPos blockpos5 = blockpos1.func_177972_a(blockmodelrenderer$enumneighborinfo.field_178276_g[2]);
+-                f4 = p_178204_1_.func_180495_p(blockpos5).func_177230_c().func_149685_I();
++                f4 = BlockModelRenderer.fixAoLightValue(p_178204_1_.func_180495_p(blockpos5).func_177230_c().func_149685_I());
+                 i1 = p_178204_2_.func_176207_c(p_178204_1_, blockpos5);
+             }
+ 
+-            float f5;
+             int j1;
++            float f26;
+ 
+             if (!flag3 && !flag)
+             {
+-                f5 = f;
++                f26 = f;
+                 j1 = i;
+             }
+             else
+             {
+                 BlockPos blockpos6 = blockpos1.func_177972_a(blockmodelrenderer$enumneighborinfo.field_178276_g[3]);
+-                f5 = p_178204_1_.func_180495_p(blockpos6).func_177230_c().func_149685_I();
++                f26 = BlockModelRenderer.fixAoLightValue(p_178204_1_.func_180495_p(blockpos6).func_177230_c().func_149685_I());
+                 j1 = p_178204_2_.func_176207_c(p_178204_1_, blockpos6);
+             }
+ 
+-            float f6;
+             int k1;
++            float f27;
+ 
+             if (!flag2 && !flag1)
+             {
+-                f6 = f1;
++                f27 = f1;
+                 k1 = j;
+             }
+             else
+             {
+                 BlockPos blockpos7 = blockpos2.func_177972_a(blockmodelrenderer$enumneighborinfo.field_178276_g[2]);
+-                f6 = p_178204_1_.func_180495_p(blockpos7).func_177230_c().func_149685_I();
++                f27 = BlockModelRenderer.fixAoLightValue(p_178204_1_.func_180495_p(blockpos7).func_177230_c().func_149685_I());
+                 k1 = p_178204_2_.func_176207_c(p_178204_1_, blockpos7);
+             }
+ 
+-            float f7;
+             int l1;
++            float f28;
+ 
+             if (!flag3 && !flag1)
+             {
+-                f7 = f1;
++                f28 = f1;
+                 l1 = j;
+             }
+             else
+             {
+                 BlockPos blockpos8 = blockpos2.func_177972_a(blockmodelrenderer$enumneighborinfo.field_178276_g[3]);
+-                f7 = p_178204_1_.func_180495_p(blockpos8).func_177230_c().func_149685_I();
++                f28 = BlockModelRenderer.fixAoLightValue(p_178204_1_.func_180495_p(blockpos8).func_177230_c().func_149685_I());
+                 l1 = p_178204_2_.func_176207_c(p_178204_1_, blockpos8);
+             }
+ 
+@@ -447,58 +682,59 @@
+                 i3 = p_178204_2_.func_176207_c(p_178204_1_, p_178204_3_.func_177972_a(p_178204_4_));
+             }
+ 
+-            float f8 = p_178204_6_.get(0) ? p_178204_1_.func_180495_p(blockpos).func_177230_c().func_149685_I() : p_178204_1_.func_180495_p(p_178204_3_).func_177230_c().func_149685_I();
++            float f5 = p_178204_6_.get(0) ? p_178204_1_.func_180495_p(blockpos).func_177230_c().func_149685_I() : p_178204_1_.func_180495_p(p_178204_3_).func_177230_c().func_149685_I();
++            f5 = BlockModelRenderer.fixAoLightValue(f5);
+             BlockModelRenderer.VertexTranslations blockmodelrenderer$vertextranslations = BlockModelRenderer.VertexTranslations.func_178184_a(p_178204_4_);
+ 
+             if (p_178204_6_.get(1) && blockmodelrenderer$enumneighborinfo.field_178289_i)
+             {
+-                float f29 = (f3 + f + f5 + f8) * 0.25F;
+-                float f30 = (f2 + f + f4 + f8) * 0.25F;
+-                float f31 = (f2 + f1 + f6 + f8) * 0.25F;
+-                float f32 = (f3 + f1 + f7 + f8) * 0.25F;
+-                float f13 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178286_j[0].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178286_j[1].field_178229_m];
+-                float f14 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178286_j[2].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178286_j[3].field_178229_m];
+-                float f15 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178286_j[4].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178286_j[5].field_178229_m];
+-                float f16 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178286_j[6].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178286_j[7].field_178229_m];
+-                float f17 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178287_k[0].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178287_k[1].field_178229_m];
+-                float f18 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178287_k[2].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178287_k[3].field_178229_m];
+-                float f19 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178287_k[4].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178287_k[5].field_178229_m];
+-                float f20 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178287_k[6].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178287_k[7].field_178229_m];
+-                float f21 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178284_l[0].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178284_l[1].field_178229_m];
+-                float f22 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178284_l[2].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178284_l[3].field_178229_m];
+-                float f23 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178284_l[4].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178284_l[5].field_178229_m];
+-                float f24 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178284_l[6].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178284_l[7].field_178229_m];
+-                float f25 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178285_m[0].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178285_m[1].field_178229_m];
+-                float f26 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178285_m[2].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178285_m[3].field_178229_m];
+-                float f27 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178285_m[4].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178285_m[5].field_178229_m];
+-                float f28 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178285_m[6].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178285_m[7].field_178229_m];
+-                this.field_178206_b[blockmodelrenderer$vertextranslations.field_178191_g] = f29 * f13 + f30 * f14 + f31 * f15 + f32 * f16;
+-                this.field_178206_b[blockmodelrenderer$vertextranslations.field_178200_h] = f29 * f17 + f30 * f18 + f31 * f19 + f32 * f20;
+-                this.field_178206_b[blockmodelrenderer$vertextranslations.field_178201_i] = f29 * f21 + f30 * f22 + f31 * f23 + f32 * f24;
+-                this.field_178206_b[blockmodelrenderer$vertextranslations.field_178198_j] = f29 * f25 + f30 * f26 + f31 * f27 + f32 * f28;
++                float f29 = (f3 + f + f26 + f5) * 0.25F;
++                float f30 = (f2 + f + f4 + f5) * 0.25F;
++                float f31 = (f2 + f1 + f27 + f5) * 0.25F;
++                float f32 = (f3 + f1 + f28 + f5) * 0.25F;
++                float f10 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178286_j[0].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178286_j[1].field_178229_m];
++                float f11 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178286_j[2].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178286_j[3].field_178229_m];
++                float f12 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178286_j[4].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178286_j[5].field_178229_m];
++                float f13 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178286_j[6].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178286_j[7].field_178229_m];
++                float f14 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178287_k[0].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178287_k[1].field_178229_m];
++                float f15 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178287_k[2].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178287_k[3].field_178229_m];
++                float f16 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178287_k[4].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178287_k[5].field_178229_m];
++                float f17 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178287_k[6].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178287_k[7].field_178229_m];
++                float f18 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178284_l[0].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178284_l[1].field_178229_m];
++                float f19 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178284_l[2].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178284_l[3].field_178229_m];
++                float f20 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178284_l[4].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178284_l[5].field_178229_m];
++                float f21 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178284_l[6].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178284_l[7].field_178229_m];
++                float f22 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178285_m[0].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178285_m[1].field_178229_m];
++                float f23 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178285_m[2].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178285_m[3].field_178229_m];
++                float f24 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178285_m[4].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178285_m[5].field_178229_m];
++                float f25 = p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178285_m[6].field_178229_m] * p_178204_5_[blockmodelrenderer$enumneighborinfo.field_178285_m[7].field_178229_m];
++                this.field_178206_b[blockmodelrenderer$vertextranslations.field_178191_g] = f29 * f10 + f30 * f11 + f31 * f12 + f32 * f13;
++                this.field_178206_b[blockmodelrenderer$vertextranslations.field_178200_h] = f29 * f14 + f30 * f15 + f31 * f16 + f32 * f17;
++                this.field_178206_b[blockmodelrenderer$vertextranslations.field_178201_i] = f29 * f18 + f30 * f19 + f31 * f20 + f32 * f21;
++                this.field_178206_b[blockmodelrenderer$vertextranslations.field_178198_j] = f29 * f22 + f30 * f23 + f31 * f24 + f32 * f25;
+                 int i2 = this.func_147778_a(l, i, j1, i3);
+                 int j2 = this.func_147778_a(k, i, i1, i3);
+                 int k2 = this.func_147778_a(k, j, k1, i3);
+                 int l2 = this.func_147778_a(l, j, l1, i3);
+-                this.field_178207_c[blockmodelrenderer$vertextranslations.field_178191_g] = this.func_178203_a(i2, j2, k2, l2, f13, f14, f15, f16);
+-                this.field_178207_c[blockmodelrenderer$vertextranslations.field_178200_h] = this.func_178203_a(i2, j2, k2, l2, f17, f18, f19, f20);
+-                this.field_178207_c[blockmodelrenderer$vertextranslations.field_178201_i] = this.func_178203_a(i2, j2, k2, l2, f21, f22, f23, f24);
+-                this.field_178207_c[blockmodelrenderer$vertextranslations.field_178198_j] = this.func_178203_a(i2, j2, k2, l2, f25, f26, f27, f28);
++                this.field_178207_c[blockmodelrenderer$vertextranslations.field_178191_g] = this.func_178203_a(i2, j2, k2, l2, f10, f11, f12, f13);
++                this.field_178207_c[blockmodelrenderer$vertextranslations.field_178200_h] = this.func_178203_a(i2, j2, k2, l2, f14, f15, f16, f17);
++                this.field_178207_c[blockmodelrenderer$vertextranslations.field_178201_i] = this.func_178203_a(i2, j2, k2, l2, f18, f19, f20, f21);
++                this.field_178207_c[blockmodelrenderer$vertextranslations.field_178198_j] = this.func_178203_a(i2, j2, k2, l2, f22, f23, f24, f25);
+             }
+             else
+             {
+-                float f9 = (f3 + f + f5 + f8) * 0.25F;
+-                float f10 = (f2 + f + f4 + f8) * 0.25F;
+-                float f11 = (f2 + f1 + f6 + f8) * 0.25F;
+-                float f12 = (f3 + f1 + f7 + f8) * 0.25F;
++                float f6 = (f3 + f + f26 + f5) * 0.25F;
++                float f7 = (f2 + f + f4 + f5) * 0.25F;
++                float f8 = (f2 + f1 + f27 + f5) * 0.25F;
++                float f9 = (f3 + f1 + f28 + f5) * 0.25F;
+                 this.field_178207_c[blockmodelrenderer$vertextranslations.field_178191_g] = this.func_147778_a(l, i, j1, i3);
+                 this.field_178207_c[blockmodelrenderer$vertextranslations.field_178200_h] = this.func_147778_a(k, i, i1, i3);
+                 this.field_178207_c[blockmodelrenderer$vertextranslations.field_178201_i] = this.func_147778_a(k, j, k1, i3);
+                 this.field_178207_c[blockmodelrenderer$vertextranslations.field_178198_j] = this.func_147778_a(l, j, l1, i3);
+-                this.field_178206_b[blockmodelrenderer$vertextranslations.field_178191_g] = f9;
+-                this.field_178206_b[blockmodelrenderer$vertextranslations.field_178200_h] = f10;
+-                this.field_178206_b[blockmodelrenderer$vertextranslations.field_178201_i] = f11;
+-                this.field_178206_b[blockmodelrenderer$vertextranslations.field_178198_j] = f12;
++                this.field_178206_b[blockmodelrenderer$vertextranslations.field_178191_g] = f6;
++                this.field_178206_b[blockmodelrenderer$vertextranslations.field_178200_h] = f7;
++                this.field_178206_b[blockmodelrenderer$vertextranslations.field_178201_i] = f8;
++                this.field_178206_b[blockmodelrenderer$vertextranslations.field_178198_j] = f9;
+             }
+         }
+ 
+@@ -530,7 +766,6 @@
+         }
+     }
+ 
+-    @SideOnly(Side.CLIENT)
+     public static enum EnumNeighborInfo
+     {
+         DOWN(new EnumFacing[]{EnumFacing.WEST, EnumFacing.EAST, EnumFacing.NORTH, EnumFacing.SOUTH}, 0.5F, false, new BlockModelRenderer.Orientation[0], new BlockModelRenderer.Orientation[0], new BlockModelRenderer.Orientation[0], new BlockModelRenderer.Orientation[0]),
+@@ -565,8 +800,7 @@
+             return field_178282_n[p_178273_0_.func_176745_a()];
+         }
+ 
+-        static
+-        {
++        static {
+             field_178282_n[EnumFacing.DOWN.func_176745_a()] = DOWN;
+             field_178282_n[EnumFacing.UP.func_176745_a()] = UP;
+             field_178282_n[EnumFacing.NORTH.func_176745_a()] = NORTH;
+@@ -576,7 +810,6 @@
+         }
+     }
+ 
+-    @SideOnly(Side.CLIENT)
+     public static enum Orientation
+     {
+         DOWN(EnumFacing.DOWN, false),
+@@ -600,7 +833,6 @@
+         }
+     }
+ 
+-    @SideOnly(Side.CLIENT)
+     static enum VertexTranslations
+     {
+         DOWN(0, 1, 2, 3),
+@@ -629,8 +861,7 @@
+             return field_178199_k[p_178184_0_.func_176745_a()];
+         }
+ 
+-        static
+-        {
++        static {
+             field_178199_k[EnumFacing.DOWN.func_176745_a()] = DOWN;
+             field_178199_k[EnumFacing.UP.func_176745_a()] = UP;
+             field_178199_k[EnumFacing.NORTH.func_176745_a()] = NORTH;

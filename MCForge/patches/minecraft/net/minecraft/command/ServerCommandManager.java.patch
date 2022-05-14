@@ -1,0 +1,19 @@
+--- ../src-base/minecraft/net/minecraft/command/ServerCommandManager.java
++++ ../src-work/minecraft/net/minecraft/command/ServerCommandManager.java
+@@ -1,5 +1,7 @@
+ package net.minecraft.command;
+ 
++import net.mattbenson.Wrapper;
++import net.mattbenson.events.types.commands.CommandRegisterEvent;
+ import net.minecraft.command.server.CommandAchievement;
+ import net.minecraft.command.server.CommandBanIp;
+ import net.minecraft.command.server.CommandBanPlayer;
+@@ -38,6 +40,8 @@
+ {
+     public ServerCommandManager()
+     {
++    	CommandRegisterEvent event = new CommandRegisterEvent();
++    	Wrapper.getInstance().post(event);
+         this.func_71560_a(new CommandTime());
+         this.func_71560_a(new CommandGameMode());
+         this.func_71560_a(new CommandDifficulty());

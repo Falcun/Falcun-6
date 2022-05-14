@@ -1,0 +1,71 @@
+#PARSE_ESCAPES
+
+# GUI and other stuff
+emoticons.keys.category=Emoticons Emotes
+emoticons.keys.random=Random emote
+emoticons.keys.emote1=Emote 1
+emoticons.keys.emote2=Emote 2
+emoticons.keys.emote3=Emote 3
+emoticons.keys.emote4=Emote 4
+emoticons.keys.emote5=Emote 5
+emoticons.keys.emote6=Emote 6
+emoticons.keys.emotes=Configure emotes
+emoticons.keys.stop_emote=Stop emote
+
+morph.section.emoticons=Emoticons
+morph.category.emoticons=Models
+
+# Commands
+emoticons.commands.emote.help=Emote command. Client-side command to change your own emote. This command supports tab completion.\n/emote [emote_name]
+
+# Blockbuster integration
+blockbuster.gui.record_editor.actions.fc_emote.title=Emoticons emote
+blockbuster.gui.record_editor.actions.fc_emote.desc=This action is responsible for activating a Emoticons emote. Works only with Fake Player actors who use player morphs or no morphs at all!
+
+# Config
+emoticons.config.title=Emoticons
+
+emoticons.config.reload=Reload animations
+emoticons.config.open=Open user folder
+
+emoticons.config.general.title=General
+emoticons.config.general.tooltip=General options of Emoticons' mod
+
+emoticons.config.general.disable_sound_events=Disable sound events
+emoticons.config.comments.general.disable_sound_events=Whether sound events should not be registered (useful for servers who want to enable optional mod compatibility, requires RESTART)
+
+emoticons.config.animations.title=Animations
+emoticons.config.animations.tooltip=Emoticons' animation options
+
+emoticons.config.animations.disable=Disable non-emote animations
+emoticons.config.comments.animations.disable=Whether running, sneaking, swimming, flying, etc. animations should be shown?
+emoticons.config.animations.simple=Simple models
+emoticons.config.comments.animations.simple=Whether simple model (that has less geometry, and should be in theory faster) should be used instead of with smooth bends
+
+emoticons.config.player_preview.title=Player preview
+emoticons.config.player_preview.tooltip=The player preview in the corner options in the first person
+
+emoticons.config.player_preview.mode=Preview mode
+emoticons.config.comments.player_preview.mode=Determines when preview gets shown, either only when player emotes, always, or never
+emoticons.config.player_preview.scale=Scale
+emoticons.config.comments.player_preview.scale=Scale of the character in the preview
+emoticons.config.player_preview.x=X shift
+emoticons.config.comments.player_preview.x=X shift of the player preview
+emoticons.config.player_preview.y=Y shift
+emoticons.config.comments.player_preview.y=Y shift of the player preview
+
+# GUI
+emoticons.gui.title=Emotes
+emoticons.gui.search=Search...
+emoticons.gui.emote=(Emote %s)
+emoticons.gui.total_emotes=(total %s)
+emoticons.gui.disable_animations=Disable non-emote animations
+emoticons.gui.enable_simple_models=Enable simpler models
+
+emoticons.player_preview.emote=Only emotes
+emoticons.player_preview.always=Always
+emoticons.player_preview.never=Never
+
+# Emote dances
+emoticons.emotes.best_mates.title=Marlon's Exercise
+emoticons.emotes.best_mates.desc=Credit goes to Marlon Webb for his amazing vines!

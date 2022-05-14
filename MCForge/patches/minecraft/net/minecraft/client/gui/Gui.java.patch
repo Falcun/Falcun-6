@@ -1,0 +1,167 @@
+--- ../src-base/minecraft/net/minecraft/client/gui/Gui.java
++++ ../src-work/minecraft/net/minecraft/client/gui/Gui.java
+@@ -6,10 +6,7 @@
+ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+ import net.minecraft.util.ResourceLocation;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
+ 
+-@SideOnly(Side.CLIENT)
+ public class Gui
+ {
+     public static final ResourceLocation field_110325_k = new ResourceLocation("textures/gui/options_background.png");
+@@ -17,6 +14,9 @@
+     public static final ResourceLocation field_110324_m = new ResourceLocation("textures/gui/icons.png");
+     protected float field_73735_i;
+ 
++    /**
++     * Draw a 1 pixel wide horizontal line. Args: x1, x2, y, color
++     */
+     protected void func_73730_a(int p_73730_1_, int p_73730_2_, int p_73730_3_, int p_73730_4_)
+     {
+         if (p_73730_2_ < p_73730_1_)
+@@ -26,9 +26,12 @@
+             p_73730_2_ = i;
+         }
+ 
+-        func_73734_a(p_73730_1_, p_73730_3_, p_73730_2_ + 1, p_73730_3_ + 1, p_73730_4_);
++        drawRectangle(p_73730_1_, p_73730_3_, p_73730_2_ + 1, p_73730_3_ + 1, p_73730_4_);
+     }
+ 
++    /**
++     * Draw a 1 pixel wide vertical line. Args : x, y1, y2, color
++     */
+     protected void func_73728_b(int p_73728_1_, int p_73728_2_, int p_73728_3_, int p_73728_4_)
+     {
+         if (p_73728_3_ < p_73728_2_)
+@@ -38,9 +41,48 @@
+             p_73728_3_ = i;
+         }
+ 
+-        func_73734_a(p_73728_1_, p_73728_2_ + 1, p_73728_1_ + 1, p_73728_3_, p_73728_4_);
++        drawRectangle(p_73728_1_, p_73728_2_ + 1, p_73728_1_ + 1, p_73728_3_, p_73728_4_);
+     }
+ 
++    /**
++     * Draws a solid color rectangle with the specified coordinates and color (ARGB format). Args: x1, y1, x2, y2, color
++     */
++    public static void drawRectangle(int left, int top, int right, int bottom, int color)
++    {
++        if (left < right)
++        {
++            int i = left;
++            left = right;
++            right = i;
++        }
++
++        if (top < bottom)
++        {
++            int j = top;
++            top = bottom;
++            bottom = j;
++        }
++
++        float f3 = (float)(color >> 24 & 255) / 255.0F;
++        float f = (float)(color >> 16 & 255) / 255.0F;
++        float f1 = (float)(color >> 8 & 255) / 255.0F;
++        float f2 = (float)(color & 255) / 255.0F;
++        Tessellator tessellator = Tessellator.func_178181_a();
++        WorldRenderer worldrenderer = tessellator.func_178180_c();
++        GlStateManager.func_179147_l();
++        GlStateManager.func_179090_x();
++        GlStateManager.func_179120_a(770, 771, 1, 0);
++        GlStateManager.func_179131_c(f, f1, f2, f3);
++        worldrenderer.func_181668_a(7, DefaultVertexFormats.field_181705_e);
++        worldrenderer.func_181662_b((double)left, (double)bottom, 0.0D).func_181675_d();
++        worldrenderer.func_181662_b((double)right, (double)bottom, 0.0D).func_181675_d();
++        worldrenderer.func_181662_b((double)right, (double)top, 0.0D).func_181675_d();
++        worldrenderer.func_181662_b((double)left, (double)top, 0.0D).func_181675_d();
++        tessellator.func_78381_a();
++        GlStateManager.func_179098_w();
++        GlStateManager.func_179084_k();
++    }
++    
+     public static void func_73734_a(int p_73734_0_, int p_73734_1_, int p_73734_2_, int p_73734_3_, int p_73734_4_)
+     {
+         if (p_73734_0_ < p_73734_2_)
+@@ -77,7 +119,12 @@
+         GlStateManager.func_179084_k();
+     }
+ 
+-    protected void func_73733_a(int p_73733_1_, int p_73733_2_, int p_73733_3_, int p_73733_4_, int p_73733_5_, int p_73733_6_)
++
++    /**
++     * Draws a rectangle with a vertical gradient between the specified colors (ARGB format). Args : x1, y1, x2, y2,
++     * topColor, bottomColor
++     */
++    public void func_73733_a(int p_73733_1_, int p_73733_2_, int p_73733_3_, int p_73733_4_, int p_73733_5_, int p_73733_6_)
+     {
+         float f = (float)(p_73733_5_ >> 24 & 255) / 255.0F;
+         float f1 = (float)(p_73733_5_ >> 16 & 255) / 255.0F;
+@@ -106,16 +153,25 @@
+         GlStateManager.func_179098_w();
+     }
+ 
++    /**
++     * Renders the specified text to the screen, center-aligned. Args : renderer, string, x, y, color
++     */
+     public void func_73732_a(FontRenderer p_73732_1_, String p_73732_2_, int p_73732_3_, int p_73732_4_, int p_73732_5_)
+     {
+         p_73732_1_.func_175063_a(p_73732_2_, (float)(p_73732_3_ - p_73732_1_.func_78256_a(p_73732_2_) / 2), (float)p_73732_4_, p_73732_5_);
+     }
+ 
++    /**
++     * Renders the specified text to the screen. Args : renderer, string, x, y, color
++     */
+     public void func_73731_b(FontRenderer p_73731_1_, String p_73731_2_, int p_73731_3_, int p_73731_4_, int p_73731_5_)
+     {
+         p_73731_1_.func_175063_a(p_73731_2_, (float)p_73731_3_, (float)p_73731_4_, p_73731_5_);
+     }
+ 
++    /**
++     * Draws a textured rectangle at the stored z-value. Args: x, y, u, v, width, height
++     */
+     public void func_73729_b(int p_73729_1_, int p_73729_2_, int p_73729_3_, int p_73729_4_, int p_73729_5_, int p_73729_6_)
+     {
+         float f = 0.00390625F;
+@@ -130,6 +186,9 @@
+         tessellator.func_78381_a();
+     }
+ 
++    /**
++     * Draws a textured rectangle using the texture currently bound to the TextureManager
++     */
+     public void func_175174_a(float p_175174_1_, float p_175174_2_, int p_175174_3_, int p_175174_4_, int p_175174_5_, int p_175174_6_)
+     {
+         float f = 0.00390625F;
+@@ -144,6 +203,9 @@
+         tessellator.func_78381_a();
+     }
+ 
++    /**
++     * Draws a texture rectangle using the texture currently bound to the TextureManager
++     */
+     public void func_175175_a(int p_175175_1_, int p_175175_2_, TextureAtlasSprite p_175175_3_, int p_175175_4_, int p_175175_5_)
+     {
+         Tessellator tessellator = Tessellator.func_178181_a();
+@@ -156,6 +218,9 @@
+         tessellator.func_78381_a();
+     }
+ 
++    /**
++     * Draws a textured rectangle at z = 0. Args: x, y, u, v, width, height, textureWidth, textureHeight
++     */
+     public static void func_146110_a(int p_146110_0_, int p_146110_1_, float p_146110_2_, float p_146110_3_, int p_146110_4_, int p_146110_5_, float p_146110_6_, float p_146110_7_)
+     {
+         float f = 1.0F / p_146110_6_;
+@@ -170,6 +235,9 @@
+         tessellator.func_78381_a();
+     }
+ 
++    /**
++     * Draws a scaled, textured, tiled modal rect at z = 0. This method isn't used anywhere in vanilla code.
++     */
+     public static void func_152125_a(int p_152125_0_, int p_152125_1_, float p_152125_2_, float p_152125_3_, int p_152125_4_, int p_152125_5_, int p_152125_6_, int p_152125_7_, float p_152125_8_, float p_152125_9_)
+     {
+         float f = 1.0F / p_152125_8_;

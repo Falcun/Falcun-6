@@ -1,0 +1,10 @@
+--- ../src-base/minecraft/net/minecraft/realms/RealmsBufferBuilder.java
++++ ../src-work/minecraft/net/minecraft/realms/RealmsBufferBuilder.java
+@@ -149,6 +149,6 @@
+ 
+     public void noColor()
+     {
+-        this.b.func_78914_f();
++        this.b.markDirty();
+     }
+ }

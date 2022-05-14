@@ -1,0 +1,23 @@
+--- ../src-base/minecraft/net/minecraft/entity/item/EntityMinecartHopper.java
++++ ../src-work/minecraft/net/minecraft/entity/item/EntityMinecartHopper.java
+@@ -1,6 +1,9 @@
+ package net.minecraft.entity.item;
+ 
+ import java.util.List;
++
++import net.mattbenson.Wrapper;
++import net.mattbenson.events.types.entity.MinecartInteractEvent;
+ import net.minecraft.block.state.IBlockState;
+ import net.minecraft.entity.player.EntityPlayer;
+ import net.minecraft.entity.player.InventoryPlayer;
+@@ -54,6 +57,10 @@
+ 
+     public boolean func_130002_c(EntityPlayer p_130002_1_)
+     {
++    	if(Wrapper.getInstance().post(new MinecartInteractEvent(p_130002_1_, this))) {
++    		return true;
++    	}
++        if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.minecart.MinecartInteractEvent(this, p_130002_1_))) return true;
+         if (!this.field_70170_p.field_72995_K)
+         {
+             p_130002_1_.func_71007_a(this);

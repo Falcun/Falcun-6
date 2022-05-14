@@ -1,0 +1,68 @@
+{
+    "name": "Steve",
+    "primaryMesh": "body",
+    "scale": 0.9375,
+    "scaleItems": 1,
+    "scaleGui": 0.9375,
+    "renderHeldItems": true,
+    "leftHands": {
+        "low_left_arm.end": {
+            "rx": -90,
+            "ry": 180,
+            "z": -0.1,
+            "y": 0.1
+        }
+    },
+    "rightHands": {
+        "low_right_arm.end": {
+            "rx": -90,
+            "ry": 180,
+            "z": -0.1,
+            "y": 0.1
+        }
+    },
+    "head": "head",
+    "meshes": {
+        "body": {
+            "normals": true,
+            "texture": "minecraft:textures/entity/steve.png"
+        },
+        "body_2": {
+            "normals": true,
+            "smooth": true,
+            "texture": "minecraft:textures/entity/alex.png",
+	    "visible": false
+        },
+        "armor_helmet": {
+        	"visible": false,
+        	"normals": true
+        },
+        "armor_chest": {
+        	"visible": false,
+        	"normals": true
+        },
+        "armor_leggings": {
+        	"visible": false,
+        	"normals": true
+        },
+        "armor_feet": {
+        	"visible": false,
+        	"normals": true
+        },
+        "popcorn": {
+            "normals": true,
+            "visible": false,
+            "texture": "emoticons:textures/popcorn.png"
+        },
+        "joint": {
+            "normals": true,
+            "visible": false,
+            "texture": "emoticons:textures/joint.png"
+        },
+        "ball": {
+            "normals": true,
+            "visible": false,
+            "texture": "emoticons:textures/soccer_ball.png"
+        }
+    }
+}

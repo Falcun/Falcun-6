@@ -1,0 +1,132 @@
+buildscript {
+    repositories {
+        jcenter()
+        mavenLocal()
+        mavenCentral()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+        maven {
+            name = 'sonatype'
+            url = 'https://oss.sonatype.org/content/repositories/snapshots/'
+        }
+        maven {
+            url = 'https://www.jitpack.io/'
+        }
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+        maven {
+            url "https://artifactory.prezi.com/repo"
+        }
+        flatDir {
+            dirs 'lib'
+        }
+    }
+
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
+        classpath 'org.reflections:reflections:0.10.2'
+        classpath 'org.json:json:20220320'
+        classpath 'io.socket:socket.io-client:2.0.1'
+        classpath 'com.jagrosh:DiscordIPC:0.4'
+        classpath 'it.unimi.dsi:fastutil:8.5.8'
+        classpath 'com.google.code.gson:gson:2.9.0'
+        classpath 'com.cosium.junixsocket:junixsocket-common:2.0.4.3'
+    }
+}
+
+plugins {
+    id "com.github.johnrengelman.shadow" version "1.2.4"
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'java'
+
+compileJava {
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+}
+
+version = "6.0"
+group = "falcun.net"
+archivesBaseName = "FalcunClient"
+
+minecraft {
+    version = "1.8.9-11.15.1.2318-1.8.9"
+    runDir = "run"
+
+
+    mappings = "stable_20"
+}
+
+dependencies {
+    compile 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
+    compile 'org.reflections:reflections:0.10.2'
+    compile 'org.json:json:20220320'
+    compile 'io.socket:socket.io-client:2.0.1'
+    compile 'com.cosium.junixsocket:junixsocket-common:2.0.4.3'
+    compile 'it.unimi.dsi:fastutil:8.5.8'
+    compile 'com.google.code.gson:gson:2.9.0'
+}
+
+shadowJar {
+    dependencies {
+        include(dependency('com.google.code.gson:gson:2.9.0:withDependencies'))
+        include(dependency('io.socket:socket.io-client:2.0.1:withDependencies'))
+        include(dependency('org.json:json:20220320:withDependencies'))
+        include(dependency('io.socket:engine.io-client:1.0.0:withDependencies'))
+        include(dependency('com.jagrosh:DiscordIPC:0.4:withDependencies'))
+        include(dependency('org.reflections:reflections:0.10.2:withDependencies'))
+        include(dependency('it.unimi.dsi:fastutil:8.5.8:withDependencies'))
+        include(dependency('com.cosium.junixsocket:junixsocket-common:2.0.4.3'))
+    }
+
+    relocate 'com.google.gson', 'falcun.xyz.com.google.gson'
+    relocate 'io.socket', 'falcun.xyz.io.socket'
+    relocate 'org.json', 'falcun.xyz.org.json'
+    relocate 'com.jagrosh', 'falcun.xyz.com.jagrosh'
+    relocate 'it.unimi.dsi', 'falcun.xyz.it.unimi.dsi'
+    relocate 'org.reflections', 'falcun.xyz.org.reflections'
+    relocate 'org.newsclub.net.unix', 'falcun.xyz.org.newsclub.net.unix'
+
+    classifier ''
+}
+
+reobf {
+    shadowJar {}
+}
+
+tasks.reobfShadowJar.mustRunAfter shadowJar
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+
+        expand 'version': project.version, 'mcversion': project.minecraft.version
+    }
+
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+
+jar {
+    manifest {
+        attributes(
+                'Manifest-Version': 1.0,
+                'Version': project.version,
+                'FMLCorePlugin': 'falcun.xyz.dancore',
+                'FMLCorePluginContainMod': 'true'
+        )
+    }
+}
+
+artifacts {
+    archives shadowJar
+}

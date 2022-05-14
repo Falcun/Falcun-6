@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/net/minecraft/client/gui/GuiCustomizeWorldScreen.java
++++ ../src-work/minecraft/net/minecraft/client/gui/GuiCustomizeWorldScreen.java
+@@ -851,7 +851,7 @@
+ 
+         if (this.field_175339_B != 0)
+         {
+-            func_73734_a(0, 0, this.field_146294_l, this.field_146295_m, Integer.MIN_VALUE);
++        	drawRectangle(0, 0, this.field_146294_l, this.field_146295_m, Integer.MIN_VALUE);
+             this.func_73730_a(this.field_146294_l / 2 - 91, this.field_146294_l / 2 + 90, 99, -2039584);
+             this.func_73730_a(this.field_146294_l / 2 - 91, this.field_146294_l / 2 + 90, 185, -6250336);
+             this.func_73728_b(this.field_146294_l / 2 - 91, 99, 185, -2039584);

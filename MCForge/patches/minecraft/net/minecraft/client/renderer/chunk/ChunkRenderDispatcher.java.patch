@@ -1,0 +1,46 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/chunk/ChunkRenderDispatcher.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/chunk/ChunkRenderDispatcher.java
+@@ -10,6 +10,8 @@
+ import java.util.Queue;
+ import java.util.concurrent.BlockingQueue;
+ import java.util.concurrent.ThreadFactory;
++
++import net.mattbenson.Wrapper;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.renderer.GlStateManager;
+ import net.minecraft.client.renderer.OpenGlHelper;
+@@ -193,6 +195,14 @@
+ 
+     public ChunkCompileTaskGenerator func_178511_d() throws InterruptedException
+     {
++    	if(Minecraft.func_71410_x().field_71439_g == null) return (ChunkCompileTaskGenerator)this.field_178519_d.take();
++     	if (Wrapper.getInstance().isChunkLimiter()) {
++        	if(Wrapper.getInstance().getChunkLimiter() > 0) {
++        		while(RenderChunk.field_178592_a > Wrapper.getInstance().getChunkLimiter()) {
++        			Thread.sleep(50L);
++        		}
++        	}
++        	}
+         return (ChunkCompileTaskGenerator)this.field_178519_d.take();
+     }
+ 
+@@ -262,7 +272,7 @@
+         }
+     }
+ 
+-    private void func_178510_a(WorldRenderer p_178510_1_, int p_178510_2_, RenderChunk p_178510_3_)
++    protected void func_178510_a(WorldRenderer p_178510_1_, int p_178510_2_, RenderChunk p_178510_3_)
+     {
+         GL11.glNewList(p_178510_2_, GL11.GL_COMPILE);
+         GlStateManager.func_179094_E();
+@@ -290,4 +300,10 @@
+             }
+         }
+     }
++
++
++    public boolean hasChunkUpdates()
++    {
++        return this.field_178519_d.isEmpty() && this.field_178524_h.isEmpty();
++    }
+ }

@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/net/minecraft/client/gui/spectator/categories/TeleportToTeam.java
++++ ../src-work/minecraft/net/minecraft/client/gui/spectator/categories/TeleportToTeam.java
+@@ -135,7 +135,7 @@
+                 float f = (float)(i >> 16 & 255) / 255.0F;
+                 float f1 = (float)(i >> 8 & 255) / 255.0F;
+                 float f2 = (float)(i & 255) / 255.0F;
+-                Gui.func_73734_a(1, 1, 15, 15, MathHelper.func_180183_b(f * p_178663_1_, f1 * p_178663_1_, f2 * p_178663_1_) | p_178663_2_ << 24);
++                Gui.drawRectangle(1, 1, 15, 15, MathHelper.func_180183_b(f * p_178663_1_, f1 * p_178663_1_, f2 * p_178663_1_) | p_178663_2_ << 24);
+             }
+ 
+             Minecraft.func_71410_x().func_110434_K().func_110577_a(this.field_178677_c);

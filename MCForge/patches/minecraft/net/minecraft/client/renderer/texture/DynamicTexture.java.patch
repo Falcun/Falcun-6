@@ -1,0 +1,13 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/texture/DynamicTexture.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/texture/DynamicTexture.java
+@@ -10,8 +10,8 @@
+ public class DynamicTexture extends AbstractTexture
+ {
+     private final int[] field_110566_b;
+-    private final int field_94233_j;
+-    private final int field_94234_k;
++    protected final int field_94233_j;
++    protected final int field_94234_k;
+ 
+     public DynamicTexture(BufferedImage p_i1270_1_)
+     {

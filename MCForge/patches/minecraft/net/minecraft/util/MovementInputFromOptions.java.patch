@@ -1,0 +1,26 @@
+--- ../src-base/minecraft/net/minecraft/util/MovementInputFromOptions.java
++++ ../src-work/minecraft/net/minecraft/util/MovementInputFromOptions.java
+@@ -1,10 +1,9 @@
+ package net.minecraft.util;
+ 
++import net.mattbenson.Wrapper;
++import net.mattbenson.events.types.movement.MovementInputEvent;
+ import net.minecraft.client.settings.GameSettings;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
+ 
+-@SideOnly(Side.CLIENT)
+ public class MovementInputFromOptions extends MovementInput
+ {
+     private final GameSettings field_78903_e;
+@@ -16,6 +15,10 @@
+ 
+     public void func_78898_a()
+     {
++    	if(!Wrapper.getInstance().post(new MovementInputEvent(this))) {
++    		return;
++    	}
++    	
+         this.field_78902_a = 0.0F;
+         this.field_78900_b = 0.0F;
+ 

@@ -1,0 +1,257 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/entity/RenderManager.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/entity/RenderManager.java
+@@ -1,7 +1,15 @@
+ package net.minecraft.client.renderer.entity;
+ 
+ import com.google.common.collect.Maps;
++
++import java.awt.Color;
++import java.util.Collections;
+ import java.util.Map;
++
++import org.lwjgl.opengl.GL11;
++
++import net.mattbenson.Wrapper;
++import net.mattbenson.modules.types.mods.Hitbox;
+ import net.minecraft.block.Block;
+ import net.minecraft.block.BlockBed;
+ import net.minecraft.block.state.IBlockState;
+@@ -100,32 +108,43 @@
+ import net.minecraft.util.ReportedException;
+ import net.minecraft.util.Vec3;
+ import net.minecraft.world.World;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import net.optifine.entity.model.CustomEntityModels;
++import net.optifine.player.PlayerItemsLayer;
++import net.optifine.reflect.Reflector;
+ 
+-@SideOnly(Side.CLIENT)
+ public class RenderManager
+ {
+-    public Map < Class <? extends Entity > , Render <? extends Entity >> field_78729_o = Maps. < Class <? extends Entity > , Render <? extends Entity >> newHashMap();
+-    private Map<String, RenderPlayer> field_178636_l = Maps.<String, RenderPlayer>newHashMap();
+-    private RenderPlayer field_178637_m;
++    public Map<Class<? extends Entity>, Render<? extends Entity>> field_78729_o = Maps.newHashMap();
++    public Map<String, RenderPlayer> field_178636_l = Maps.newHashMap();
++    public RenderPlayer field_178637_m;
++
++    /** Renders fonts */
+     private FontRenderer field_78736_p;
+-    private double field_78725_b;
+-    private double field_78726_c;
+-    private double field_78723_d;
++    public static double field_78725_b;
++    public static double field_78726_c;
++    public static double field_78723_d;
+     public TextureManager field_78724_e;
++
++    /** Reference to the World object. */
+     public World field_78722_g;
++
++    /** Rendermanager's variable for the player */
+     public Entity field_78734_h;
+     public Entity field_147941_i;
+     public float field_78735_i;
+     public float field_78732_j;
++
++    /** Reference to the GameSettings object. */
+     public GameSettings field_78733_k;
+     public double field_78730_l;
+     public double field_78731_m;
+     public double field_78728_n;
+     private boolean field_178639_r = false;
+     private boolean field_178638_s = true;
++
++    /** whether bounding box should be rendered or not */
+     private boolean field_85095_o = false;
++    public Render renderRender = null;
+ 
+     public RenderManager(TextureManager p_i46180_1_, RenderItem p_i46180_2_)
+     {
+@@ -192,6 +211,12 @@
+         this.field_178637_m = new RenderPlayer(this);
+         this.field_178636_l.put("default", this.field_178637_m);
+         this.field_178636_l.put("slim", new RenderPlayer(this, true));
++        PlayerItemsLayer.register(this.field_178636_l);
++
++        if (Reflector.RenderingRegistry_loadEntityRenderers.exists())
++        {
++            Reflector.call(Reflector.RenderingRegistry_loadEntityRenderers, new Object[] {this, this.field_78729_o});
++        }
+     }
+ 
+     public void func_178628_a(double p_178628_1_, double p_178628_3_, double p_178628_5_)
+@@ -241,12 +266,19 @@
+             IBlockState iblockstate = p_180597_1_.func_180495_p(new BlockPos(p_180597_3_));
+             Block block = iblockstate.func_177230_c();
+ 
+-            if (block == Blocks.field_150324_C)
++            if (Reflector.callBoolean(block, Reflector.ForgeBlock_isBed, new Object[] {iblockstate, p_180597_1_, new BlockPos(p_180597_3_), (EntityLivingBase)p_180597_3_}))
+             {
+-                int i = ((EnumFacing)iblockstate.func_177229_b(BlockBed.field_176387_N)).func_176736_b();
++                EnumFacing enumfacing = (EnumFacing)Reflector.call(block, Reflector.ForgeBlock_getBedDirection, new Object[] {iblockstate, p_180597_1_, new BlockPos(p_180597_3_)});
++                int i = enumfacing.func_176736_b();
+                 this.field_78735_i = (float)(i * 90 + 180);
+                 this.field_78732_j = 0.0F;
+             }
++            else if (block == Blocks.field_150324_C)
++            {
++                int j = ((EnumFacing)iblockstate.func_177229_b(BlockBed.field_176387_N)).func_176736_b();
++                this.field_78735_i = (float)(j * 90 + 180);
++                this.field_78732_j = 0.0F;
++            }
+         }
+         else
+         {
+@@ -258,6 +290,11 @@
+         {
+             this.field_78735_i += 180.0F;
+         }
++        
++        if(Wrapper.getInstance().isInPerspectiveMode()) {
++            this.field_78735_i = Wrapper.getInstance().getCameraYaw();
++            this.field_78732_j = Wrapper.getInstance().getCameraPitch();
++        }
+ 
+         this.field_78730_l = p_180597_3_.field_70142_S + (p_180597_3_.field_70165_t - p_180597_3_.field_70142_S) * (double)p_180597_6_;
+         this.field_78731_m = p_180597_3_.field_70137_T + (p_180597_3_.field_70163_u - p_180597_3_.field_70137_T) * (double)p_180597_6_;
+@@ -367,11 +404,16 @@
+                         ((RendererLivingEntity)render).func_177086_a(this.field_178639_r);
+                     }
+ 
++                    if (CustomEntityModels.isActive())
++                    {
++                        this.renderRender = render;
++                    }
++
+                     render.func_76986_a(p_147939_1_, p_147939_2_, p_147939_4_, p_147939_6_, p_147939_8_, p_147939_9_);
+                 }
+                 catch (Throwable throwable2)
+                 {
+-                    throw new ReportedException(CrashReport.func_85055_a(throwable2, "Rendering entity in world"));
++                    //throw new ReportedException(CrashReport.makeCrashReport(throwable2, "Rendering entity in world"));
+                 }
+ 
+                 try
+@@ -383,7 +425,7 @@
+                 }
+                 catch (Throwable throwable1)
+                 {
+-                    throw new ReportedException(CrashReport.func_85055_a(throwable1, "Post-rendering entity in world"));
++                    //throw new ReportedException(CrashReport.makeCrashReport(throwable1, "Post-rendering entity in world"));
+                 }
+ 
+                 if (this.field_85095_o && !p_147939_1_.func_82150_aj() && !p_147939_10_)
+@@ -394,9 +436,19 @@
+                     }
+                     catch (Throwable throwable)
+                     {
+-                        throw new ReportedException(CrashReport.func_85055_a(throwable, "Rendering entity hitbox in world"));
++                        //throw new ReportedException(CrashReport.makeCrashReport(throwable, "Rendering entity hitbox in world"));
+                     }
+                 }
++                if (Wrapper.getInstance().isHitboxEnabled() && !p_147939_1_.func_82150_aj() && !p_147939_10_) {
++                    try
++                    {
++                        this.renderDebugBoundingBoxFalcun(p_147939_1_, p_147939_2_, p_147939_4_, p_147939_6_, p_147939_8_, p_147939_9_);
++                    }
++                    catch (Throwable throwable)
++                    {
++                        //throw new ReportedException(CrashReport.makeCrashReport(throwable, "Rendering entity hitbox in world"));
++                    }
++                }
+             }
+             else if (this.field_78724_e != null)
+             {
+@@ -415,10 +467,13 @@
+             crashreportcategory1.func_71507_a("Location", CrashReportCategory.func_85074_a(p_147939_2_, p_147939_4_, p_147939_6_));
+             crashreportcategory1.func_71507_a("Rotation", Float.valueOf(p_147939_8_));
+             crashreportcategory1.func_71507_a("Delta", Float.valueOf(p_147939_9_));
+-            throw new ReportedException(crashreport);
++            return true;
+         }
+     }
+ 
++    /**
++     * Renders the bounding box around an entity when F3+B is pressed
++     */
+     private void func_85094_b(Entity p_85094_1_, double p_85094_2_, double p_85094_4_, double p_85094_6_, float p_85094_8_, float p_85094_9_)
+     {
+         GlStateManager.func_179132_a(false);
+@@ -450,7 +505,45 @@
+         GlStateManager.func_179084_k();
+         GlStateManager.func_179132_a(true);
+     }
++    
++    private void renderDebugBoundingBoxFalcun(Entity entityIn, double p_85094_2_, double p_85094_4_, double p_85094_6_, float p_85094_8_, float p_85094_9_)
++    {
++        GlStateManager.func_179132_a(false);
++        GlStateManager.func_179090_x();
++        GlStateManager.func_179140_f();
++        GlStateManager.func_179129_p();
++        GlStateManager.func_179084_k();
++        GL11.glLineWidth((float)Wrapper.getInstance().getHitBoxWidth());
++        AxisAlignedBB axisalignedbb = entityIn.func_174813_aQ();
++        AxisAlignedBB axisalignedbb1 = new AxisAlignedBB(axisalignedbb.field_72340_a - entityIn.field_70165_t + p_85094_2_, axisalignedbb.field_72338_b - entityIn.field_70163_u + p_85094_4_, axisalignedbb.field_72339_c - entityIn.field_70161_v + p_85094_6_, axisalignedbb.field_72336_d - entityIn.field_70165_t + p_85094_2_, axisalignedbb.field_72337_e - entityIn.field_70163_u + p_85094_4_, axisalignedbb.field_72334_f - entityIn.field_70161_v + p_85094_6_);
++        Color color = Wrapper.getInstance().getHitBoxColor();
++        
++        if (Wrapper.getInstance().getHitBoxMode().equals("All")) {
++            RenderGlobal.func_181563_a(axisalignedbb1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
++        } else if (Wrapper.getInstance().getHitBoxMode().equals("Items Only")) {
++        	if (entityIn instanceof EntityItem) {
++            RenderGlobal.func_181563_a(axisalignedbb1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
++        	}
++        } else if (Wrapper.getInstance().getHitBoxMode().equals("Enderpearls Only")) {
++        	 if (entityIn.func_145748_c_().func_150260_c().contains("ThrownEnderpearl")) {
++                 RenderGlobal.func_181563_a(axisalignedbb1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
++        	 }	
++    	} else if (Wrapper.getInstance().getHitBoxMode().equals("Enderpearls & Items Only")) {
++       	 if (entityIn instanceof EntityItem || entityIn.func_145748_c_().func_150260_c().contains("ThrownEnderpearl")) {
++             RenderGlobal.func_181563_a(axisalignedbb1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
++    	 }	
++	}
+ 
++        GlStateManager.func_179098_w();
++        GlStateManager.func_179145_e();
++        GlStateManager.func_179089_o();
++        GlStateManager.func_179084_k();
++        GlStateManager.func_179132_a(true);
++    }
++
++    /**
++     * World sets this RenderManager's worldObj to the world provided
++     */
+     public void func_78717_a(World p_78717_1_)
+     {
+         this.field_78722_g = p_78717_1_;
+@@ -464,6 +557,9 @@
+         return d0 * d0 + d1 * d1 + d2 * d2;
+     }
+ 
++    /**
++     * Returns the font renderer
++     */
+     public FontRenderer func_78716_a()
+     {
+         return this.field_78736_p;
+@@ -473,4 +569,19 @@
+     {
+         this.field_178639_r = p_178632_1_;
+     }
++
++    public Map getEntityRenderMap()
++    {
++        return this.field_78729_o;
++    }
++
++    public void setEntityRenderMap(Map p_setEntityRenderMap_1_)
++    {
++        this.field_78729_o = p_setEntityRenderMap_1_;
++    }
++
++    public Map<String, RenderPlayer> getSkinMap()
++    {
++        return Collections.<String, RenderPlayer>unmodifiableMap(this.field_178636_l);
++    }
+ }

@@ -1,0 +1,39 @@
+--- ../src-base/minecraft/net/minecraft/client/resources/I18n.java
++++ ../src-work/minecraft/net/minecraft/client/resources/I18n.java
+@@ -1,9 +1,9 @@
+ package net.minecraft.client.resources;
+ 
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import java.util.Map;
+ 
+-@SideOnly(Side.CLIENT)
++import net.mattbenson.Wrapper;
++
+ public class I18n
+ {
+     private static Locale field_135054_a;
+@@ -13,8 +13,22 @@
+         field_135054_a = p_135051_0_;
+     }
+ 
++    /**
++     * format(a, b) is equivalent to String.format(translate(a), b). Args: translationKey, params...
++     */
+     public static String func_135052_a(String p_135052_0_, Object... p_135052_1_)
+     {
+-        return field_135054_a.func_135023_a(p_135052_0_, p_135052_1_);
++    	String msg = field_135054_a.func_135023_a(p_135052_0_, p_135052_1_);
++    	
++    	if(msg.equals(p_135052_0_)) {
++    		return String.format(Wrapper.getInstance().langFiles(Wrapper.getInstance().langFiles(p_135052_0_)), p_135052_1_);
++    	}
++    	
++        return msg;
+     }
++
++    public static Map getLocaleProperties()
++    {
++        return field_135054_a.field_135032_a;
++    }
+ }

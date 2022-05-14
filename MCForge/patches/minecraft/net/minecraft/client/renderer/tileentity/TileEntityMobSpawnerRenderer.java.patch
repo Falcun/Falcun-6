@@ -1,0 +1,34 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/tileentity/TileEntityMobSpawnerRenderer.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/tileentity/TileEntityMobSpawnerRenderer.java
+@@ -1,14 +1,12 @@
+ package net.minecraft.client.renderer.tileentity;
+ 
++import net.mattbenson.Wrapper;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.renderer.GlStateManager;
+ import net.minecraft.entity.Entity;
+ import net.minecraft.tileentity.MobSpawnerBaseLogic;
+ import net.minecraft.tileentity.TileEntityMobSpawner;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
+ 
+-@SideOnly(Side.CLIENT)
+ public class TileEntityMobSpawnerRenderer extends TileEntitySpecialRenderer<TileEntityMobSpawner>
+ {
+     public void func_180535_a(TileEntityMobSpawner p_180535_1_, double p_180535_2_, double p_180535_4_, double p_180535_6_, float p_180535_8_, int p_180535_9_)
+@@ -19,8 +17,15 @@
+         GlStateManager.func_179121_F();
+     }
+ 
++    /**
++     * Render the mob inside the mob spawner.
++     */
+     public static void func_147517_a(MobSpawnerBaseLogic p_147517_0_, double p_147517_1_, double p_147517_3_, double p_147517_5_, float p_147517_7_)
+     {
++    	if(Wrapper.getInstance().isRemoveSpawner()) {
++    		return;
++    	}
++    	
+         Entity entity = p_147517_0_.func_180612_a(p_147517_0_.func_98271_a());
+ 
+         if (entity != null)

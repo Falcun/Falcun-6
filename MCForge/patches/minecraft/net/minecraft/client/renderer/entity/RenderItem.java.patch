@@ -1,0 +1,477 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/entity/RenderItem.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/entity/RenderItem.java
+@@ -1,7 +1,10 @@
+ package net.minecraft.client.renderer.entity;
+ 
+ import java.util.List;
++
+ import java.util.concurrent.Callable;
++
++import net.mattbenson.Wrapper;
+ import net.minecraft.block.Block;
+ import net.minecraft.block.BlockDirt;
+ import net.minecraft.block.BlockDoublePlant;
+@@ -26,6 +29,7 @@
+ import net.minecraft.client.renderer.GlStateManager;
+ import net.minecraft.client.renderer.ItemMeshDefinition;
+ import net.minecraft.client.renderer.ItemModelMesher;
++import net.minecraft.client.renderer.OpenGlHelper;
+ import net.minecraft.client.renderer.Tessellator;
+ import net.minecraft.client.renderer.WorldRenderer;
+ import net.minecraft.client.renderer.block.model.BakedQuad;
+@@ -52,27 +56,48 @@
+ import net.minecraft.item.ItemFishFood;
+ import net.minecraft.item.ItemPotion;
+ import net.minecraft.item.ItemStack;
++import net.minecraft.src.Config;
+ import net.minecraft.util.EnumChatFormatting;
+ import net.minecraft.util.EnumFacing;
++import net.minecraft.util.EnumWorldBlockLayer;
+ import net.minecraft.util.ReportedException;
+ import net.minecraft.util.ResourceLocation;
+ import net.minecraft.util.Vec3i;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import net.optifine.CustomColors;
++import net.optifine.CustomItems;
++import net.optifine.reflect.Reflector;
++import net.optifine.reflect.ReflectorForge;
++import net.optifine.shaders.Shaders;
++import net.optifine.shaders.ShadersRender;
+ 
+-@SideOnly(Side.CLIENT)
+ public class RenderItem implements IResourceManagerReloadListener
+ {
+     private static final ResourceLocation field_110798_h = new ResourceLocation("textures/misc/enchanted_item_glint.png");
+     private boolean field_175058_l = true;
++
++    /** Defines the zLevel of rendering of item on GUI. */
+     public float field_77023_b;
+     private final ItemModelMesher field_175059_m;
+     private final TextureManager field_175057_n;
++    private boolean renderItemGui = false;
++    public ModelManager modelManager = null;
++    private boolean renderModelHasEmissive = false;
++    private boolean renderModelEmissive = false;
+ 
+     public RenderItem(TextureManager p_i46165_1_, ModelManager p_i46165_2_)
+     {
+         this.field_175057_n = p_i46165_1_;
+-        this.field_175059_m = new ItemModelMesher(p_i46165_2_);
++        this.modelManager = p_i46165_2_;
++
++        if (Reflector.ItemModelMesherForge_Constructor.exists())
++        {
++            this.field_175059_m = (ItemModelMesher)Reflector.newInstance(Reflector.ItemModelMesherForge_Constructor, new Object[] {p_i46165_2_});
++        }
++        else
++        {
++            this.field_175059_m = new ItemModelMesher(p_i46165_2_);
++        }
++
+         this.func_175041_b();
+     }
+ 
+@@ -111,24 +136,43 @@
+         this.func_175045_a(p_175036_1_, -1, p_175036_2_);
+     }
+ 
+-    private void func_175035_a(IBakedModel p_175035_1_, int p_175035_2_)
++    public void func_175035_a(IBakedModel p_175035_1_, int p_175035_2_)
+     {
+         this.func_175045_a(p_175035_1_, p_175035_2_, (ItemStack)null);
+     }
+ 
+     private void func_175045_a(IBakedModel p_175045_1_, int p_175045_2_, ItemStack p_175045_3_)
+     {
++    	if(Wrapper.getInstance().getRenderItemHook().renderModelStart(p_175045_1_, p_175045_2_, p_175045_3_)) {
++    		return;
++    	}
++    	
+         Tessellator tessellator = Tessellator.func_178181_a();
+         WorldRenderer worldrenderer = tessellator.func_178180_c();
++        boolean flag = Minecraft.func_71410_x().func_147117_R().isTextureBound();
++        boolean flag1 = Config.isMultiTexture() && flag;
++
++        if (flag1)
++        {
++            worldrenderer.setBlockLayer(EnumWorldBlockLayer.SOLID);
++        }
++
+         worldrenderer.func_181668_a(7, DefaultVertexFormats.field_176599_b);
+ 
+-        for (EnumFacing enumfacing : EnumFacing.values())
++        for (EnumFacing enumfacing : EnumFacing.field_82609_l)
+         {
+             this.func_175032_a(worldrenderer, p_175045_1_.func_177551_a(enumfacing), p_175045_2_, p_175045_3_);
+         }
+ 
+         this.func_175032_a(worldrenderer, p_175045_1_.func_177550_a(), p_175045_2_, p_175045_3_);
+         tessellator.func_78381_a();
++
++        if (flag1)
++        {
++            worldrenderer.setBlockLayer((EnumWorldBlockLayer)null);
++            GlStateManager.bindCurrentTexture();
++        }
++        Wrapper.getInstance().renderModelEnd();
+     }
+ 
+     public void func_180454_a(ItemStack p_180454_1_, IBakedModel p_180454_2_)
+@@ -149,10 +193,28 @@
+             else
+             {
+                 GlStateManager.func_179109_b(-0.5F, -0.5F, -0.5F);
++
++                if (Config.isCustomItems())
++                {
++                    p_180454_2_ = CustomItems.getCustomItemModel(p_180454_1_, p_180454_2_, (ResourceLocation)null, false);
++                }
++
++                this.renderModelHasEmissive = false;
+                 this.func_175036_a(p_180454_2_, p_180454_1_);
+ 
+-                if (p_180454_1_.func_77962_s())
++                if (this.renderModelHasEmissive)
+                 {
++                    float f = OpenGlHelper.lastBrightnessX;
++                    float f1 = OpenGlHelper.lastBrightnessY;
++                    OpenGlHelper.func_77475_a(OpenGlHelper.field_77476_b, 240.0F, f1);
++                    this.renderModelEmissive = true;
++                    this.func_175036_a(p_180454_2_, p_180454_1_);
++                    this.renderModelEmissive = false;
++                    OpenGlHelper.func_77475_a(OpenGlHelper.field_77476_b, f, f1);
++                }
++
++                if (p_180454_1_.func_77962_s() && (!Config.isCustomItems() || !CustomItems.renderCustomEffect(this, p_180454_1_, p_180454_2_)))
++                {
+                     this.func_180451_a(p_180454_2_);
+                 }
+             }
+@@ -163,32 +225,52 @@
+ 
+     private void func_180451_a(IBakedModel p_180451_1_)
+     {
+-        GlStateManager.func_179132_a(false);
+-        GlStateManager.func_179143_c(514);
+-        GlStateManager.func_179140_f();
+-        GlStateManager.func_179112_b(768, 1);
+-        this.field_175057_n.func_110577_a(field_110798_h);
+-        GlStateManager.func_179128_n(5890);
+-        GlStateManager.func_179094_E();
+-        GlStateManager.func_179152_a(8.0F, 8.0F, 8.0F);
+-        float f = (float)(Minecraft.func_71386_F() % 3000L) / 3000.0F / 8.0F;
+-        GlStateManager.func_179109_b(f, 0.0F, 0.0F);
+-        GlStateManager.func_179114_b(-50.0F, 0.0F, 0.0F, 1.0F);
+-        this.func_175035_a(p_180451_1_, -8372020);
+-        GlStateManager.func_179121_F();
+-        GlStateManager.func_179094_E();
+-        GlStateManager.func_179152_a(8.0F, 8.0F, 8.0F);
+-        float f1 = (float)(Minecraft.func_71386_F() % 4873L) / 4873.0F / 8.0F;
+-        GlStateManager.func_179109_b(-f1, 0.0F, 0.0F);
+-        GlStateManager.func_179114_b(10.0F, 0.0F, 0.0F, 1.0F);
+-        this.func_175035_a(p_180451_1_, -8372020);
+-        GlStateManager.func_179121_F();
+-        GlStateManager.func_179128_n(5888);
+-        GlStateManager.func_179112_b(770, 771);
+-        GlStateManager.func_179145_e();
+-        GlStateManager.func_179143_c(515);
+-        GlStateManager.func_179132_a(true);
+-        this.field_175057_n.func_110577_a(TextureMap.field_110575_b);
++        if(Wrapper.getInstance().isRemoveTint()) {
++        	return;
++        }
++        if (!Config.isCustomItems() || CustomItems.isUseGlint())
++        {
++            if (!Config.isShaders() || !Shaders.isShadowPass)
++            {
++                GlStateManager.func_179132_a(false);
++                GlStateManager.func_179143_c(514);
++                GlStateManager.func_179140_f();
++                GlStateManager.func_179112_b(768, 1);
++                this.field_175057_n.func_110577_a(field_110798_h);
++
++                if (Config.isShaders() && !this.renderItemGui)
++                {
++                    ShadersRender.renderEnchantedGlintBegin();
++                }
++
++                GlStateManager.func_179128_n(5890);
++                GlStateManager.func_179094_E();
++                GlStateManager.func_179152_a(8.0F, 8.0F, 8.0F);
++                float f = (float)(Minecraft.func_71386_F() % 3000L) / 3000.0F / 8.0F;
++                GlStateManager.func_179109_b(f, 0.0F, 0.0F);
++                GlStateManager.func_179114_b(-50.0F, 0.0F, 0.0F, 1.0F);
++                this.func_175035_a(p_180451_1_, -8372020);
++                GlStateManager.func_179121_F();
++                GlStateManager.func_179094_E();
++                GlStateManager.func_179152_a(8.0F, 8.0F, 8.0F);
++                float f1 = (float)(Minecraft.func_71386_F() % 4873L) / 4873.0F / 8.0F;
++                GlStateManager.func_179109_b(-f1, 0.0F, 0.0F);
++                GlStateManager.func_179114_b(10.0F, 0.0F, 0.0F, 1.0F);
++                this.func_175035_a(p_180451_1_, -8372020);
++                GlStateManager.func_179121_F();
++                GlStateManager.func_179128_n(5888);
++                GlStateManager.func_179112_b(770, 771);
++                GlStateManager.func_179145_e();
++                GlStateManager.func_179143_c(515);
++                GlStateManager.func_179132_a(true);
++                this.field_175057_n.func_110577_a(TextureMap.field_110575_b);
++
++                if (Config.isShaders() && !this.renderItemGui)
++                {
++                    ShadersRender.renderEnchantedGlintEnd();
++                }
++            }
++        }
+     }
+ 
+     private void func_175038_a(WorldRenderer p_175038_1_, BakedQuad p_175038_2_)
+@@ -199,8 +281,40 @@
+ 
+     private void func_175033_a(WorldRenderer p_175033_1_, BakedQuad p_175033_2_, int p_175033_3_)
+     {
+-        p_175033_1_.func_178981_a(p_175033_2_.func_178209_a());
+-        p_175033_1_.func_178968_d(p_175033_3_);
++        if (this.renderModelEmissive)
++        {
++            if (p_175033_2_.getQuadEmissive() == null)
++            {
++                return;
++            }
++
++            p_175033_2_ = p_175033_2_.getQuadEmissive();
++        }
++        else if (p_175033_2_.getQuadEmissive() != null)
++        {
++            this.renderModelHasEmissive = true;
++        }
++
++        if (p_175033_1_.isMultiTexture())
++        {
++            p_175033_1_.func_178981_a(p_175033_2_.getVertexDataSingle());
++        }
++        else
++        {
++            p_175033_1_.func_178981_a(p_175033_2_.func_178209_a());
++        }
++
++        p_175033_1_.putSprite(p_175033_2_.getSprite());
++
++        if (Reflector.IColoredBakedQuad.exists() && Reflector.IColoredBakedQuad.isInstance(p_175033_2_))
++        {
++            forgeHooksClient_putQuadColor(p_175033_1_, p_175033_2_, p_175033_3_);
++        }
++        else
++        {
++            p_175033_1_.func_178968_d(p_175033_3_);
++        }
++
+         this.func_175038_a(p_175033_1_, p_175033_2_);
+     }
+ 
+@@ -218,6 +332,11 @@
+             {
+                 k = p_175032_4_.func_77973_b().func_82790_a(p_175032_4_, bakedquad.func_178211_c());
+ 
++                if (Config.isCustomColors())
++                {
++                    k = CustomColors.getColorFromItemStack(p_175032_4_, bakedquad.func_178211_c(), k);
++                }
++
+                 if (EntityRenderer.field_78517_a)
+                 {
+                     k = TextureUtil.func_177054_c(k);
+@@ -296,10 +415,19 @@
+                         modelresourcelocation = new ModelResourceLocation("bow_pulling_0", "inventory");
+                     }
+                 }
++                else if (Reflector.ForgeItem_getModel.exists())
++                {
++                    modelresourcelocation = (ModelResourceLocation)Reflector.call(item, Reflector.ForgeItem_getModel, new Object[] {p_175049_1_, entityplayer, Integer.valueOf(entityplayer.func_71052_bv())});
++                }
+ 
+                 if (modelresourcelocation != null)
+                 {
+                     ibakedmodel = this.field_175059_m.func_178083_a().func_174953_a(modelresourcelocation);
++
++                    if (Config.isCustomItems())
++                    {
++                        ibakedmodel = CustomItems.getCustomItemModel(p_175049_1_, ibakedmodel, modelresourcelocation, true);
++                    }
+                 }
+             }
+ 
+@@ -317,14 +445,22 @@
+         GlStateManager.func_179147_l();
+         GlStateManager.func_179120_a(770, 771, 1, 0);
+         GlStateManager.func_179094_E();
+-        ItemCameraTransforms itemcameratransforms = p_175040_2_.func_177552_f();
+-        itemcameratransforms.func_181689_a(p_175040_3_);
+ 
+-        if (this.func_183005_a(itemcameratransforms.func_181688_b(p_175040_3_)))
++        if (Reflector.ForgeHooksClient_handleCameraTransforms.exists())
+         {
+-            GlStateManager.func_179107_e(1028);
++            p_175040_2_ = (IBakedModel)Reflector.call(Reflector.ForgeHooksClient_handleCameraTransforms, new Object[] {p_175040_2_, p_175040_3_});
+         }
++        else
++        {
++            ItemCameraTransforms itemcameratransforms = p_175040_2_.func_177552_f();
++            itemcameratransforms.func_181689_a(p_175040_3_);
+ 
++            if (this.func_183005_a(itemcameratransforms.func_181688_b(p_175040_3_)))
++            {
++                GlStateManager.func_179107_e(1028);
++            }
++        }
++
+         this.func_180454_a(p_175040_1_, p_175040_2_);
+         GlStateManager.func_179107_e(1029);
+         GlStateManager.func_179121_F();
+@@ -341,6 +477,7 @@
+ 
+     public void func_175042_a(ItemStack p_175042_1_, int p_175042_2_, int p_175042_3_)
+     {
++        this.renderItemGui = true;
+         IBakedModel ibakedmodel = this.field_175059_m.func_178089_a(p_175042_1_);
+         GlStateManager.func_179094_E();
+         this.field_175057_n.func_110577_a(TextureMap.field_110575_b);
+@@ -352,7 +489,16 @@
+         GlStateManager.func_179112_b(770, 771);
+         GlStateManager.func_179131_c(1.0F, 1.0F, 1.0F, 1.0F);
+         this.func_180452_a(p_175042_2_, p_175042_3_, ibakedmodel.func_177556_c());
+-        ibakedmodel.func_177552_f().func_181689_a(ItemCameraTransforms.TransformType.GUI);
++
++        if (Reflector.ForgeHooksClient_handleCameraTransforms.exists())
++        {
++            ibakedmodel = (IBakedModel)Reflector.call(Reflector.ForgeHooksClient_handleCameraTransforms, new Object[] {ibakedmodel, ItemCameraTransforms.TransformType.GUI});
++        }
++        else
++        {
++            ibakedmodel.func_177552_f().func_181689_a(ItemCameraTransforms.TransformType.GUI);
++        }
++
+         this.func_180454_a(p_175042_1_, ibakedmodel);
+         GlStateManager.func_179118_c();
+         GlStateManager.func_179101_C();
+@@ -360,6 +506,7 @@
+         GlStateManager.func_179121_F();
+         this.field_175057_n.func_110577_a(TextureMap.field_110575_b);
+         this.field_175057_n.func_110581_b(TextureMap.field_110575_b).func_174935_a();
++        this.renderItemGui = false;
+     }
+ 
+     private void func_180452_a(int p_180452_1_, int p_180452_2_, boolean p_180452_3_)
+@@ -438,6 +585,9 @@
+         this.func_180453_a(p_175030_1_, p_175030_2_, p_175030_3_, p_175030_4_, (String)null);
+     }
+ 
++    /**
++     * Renders the stack size and/or damage bar for the given ItemStack.
++     */
+     public void func_180453_a(FontRenderer p_180453_1_, ItemStack p_180453_2_, int p_180453_3_, int p_180453_4_, String p_180453_5_)
+     {
+         if (p_180453_2_ != null)
+@@ -457,12 +607,21 @@
+                 p_180453_1_.func_175063_a(s, (float)(p_180453_3_ + 19 - 2 - p_180453_1_.func_78256_a(s)), (float)(p_180453_4_ + 6 + 3), 16777215);
+                 GlStateManager.func_179145_e();
+                 GlStateManager.func_179126_j();
++                GlStateManager.func_179147_l();
+             }
+ 
+-            if (p_180453_2_.func_77951_h())
++            if (ReflectorForge.isItemDamaged(p_180453_2_))
+             {
+-                int j = (int)Math.round(13.0D - (double)p_180453_2_.func_77952_i() * 13.0D / (double)p_180453_2_.func_77958_k());
++                int j1 = (int)Math.round(13.0D - (double)p_180453_2_.func_77952_i() * 13.0D / (double)p_180453_2_.func_77958_k());
+                 int i = (int)Math.round(255.0D - (double)p_180453_2_.func_77952_i() * 255.0D / (double)p_180453_2_.func_77958_k());
++
++                if (Reflector.ForgeItem_getDurabilityForDisplay.exists())
++                {
++                    double d0 = Reflector.callDouble(p_180453_2_.func_77973_b(), Reflector.ForgeItem_getDurabilityForDisplay, new Object[] {p_180453_2_});
++                    j1 = (int)Math.round(13.0D - d0 * 13.0D);
++                    i = (int)Math.round(255.0D - d0 * 255.0D);
++                }
++
+                 GlStateManager.func_179140_f();
+                 GlStateManager.func_179097_i();
+                 GlStateManager.func_179090_x();
+@@ -470,9 +629,25 @@
+                 GlStateManager.func_179084_k();
+                 Tessellator tessellator = Tessellator.func_178181_a();
+                 WorldRenderer worldrenderer = tessellator.func_178180_c();
+-                this.func_181565_a(worldrenderer, p_180453_3_ + 2, p_180453_4_ + 13, 13, 2, 0, 0, 0, 255);
+-                this.func_181565_a(worldrenderer, p_180453_3_ + 2, p_180453_4_ + 13, 12, 1, (255 - i) / 4, 64, 0, 255);
+-                this.func_181565_a(worldrenderer, p_180453_3_ + 2, p_180453_4_ + 13, j, 1, 255 - i, i, 0, 255);
++                this.draw(worldrenderer, p_180453_3_ + 2, p_180453_4_ + 13, 13, 2, 0, 0, 0, 255);
++                this.draw(worldrenderer, p_180453_3_ + 2, p_180453_4_ + 13, 12, 1, (255 - i) / 4, 64, 0, 255);
++                int j = 255 - i;
++                int k = i;
++                int l = 0;
++
++                if (Config.isCustomColors())
++                {
++                    int i1 = CustomColors.getDurabilityColor(i);
++
++                    if (i1 >= 0)
++                    {
++                        j = i1 >> 16 & 255;
++                        k = i1 >> 8 & 255;
++                        l = i1 >> 0 & 255;
++                    }
++                }
++
++                this.draw(worldrenderer, p_180453_3_ + 2, p_180453_4_ + 13, j1, 1, j, k, l, 255);
+                 GlStateManager.func_179147_l();
+                 GlStateManager.func_179141_d();
+                 GlStateManager.func_179098_w();
+@@ -482,7 +657,7 @@
+         }
+     }
+ 
+-    private void func_181565_a(WorldRenderer p_181565_1_, int p_181565_2_, int p_181565_3_, int p_181565_4_, int p_181565_5_, int p_181565_6_, int p_181565_7_, int p_181565_8_, int p_181565_9_)
++    private void draw(WorldRenderer p_181565_1_, int p_181565_2_, int p_181565_3_, int p_181565_4_, int p_181565_5_, int p_181565_6_, int p_181565_7_, int p_181565_8_, int p_181565_9_)
+     {
+         p_181565_1_.func_181668_a(7, DefaultVertexFormats.field_181706_f);
+         p_181565_1_.func_181662_b((double)(p_181565_2_ + 0), (double)(p_181565_3_ + 0), 0.0D).func_181669_b(p_181565_6_, p_181565_7_, p_181565_8_, p_181565_9_).func_181675_d();
+@@ -1038,10 +1213,39 @@
+         this.func_175029_a(Blocks.field_150420_aW, BlockHugeMushroom.EnumType.ALL_INSIDE.func_176896_a(), "brown_mushroom_block");
+         this.func_175029_a(Blocks.field_150419_aX, BlockHugeMushroom.EnumType.ALL_INSIDE.func_176896_a(), "red_mushroom_block");
+         this.func_175031_a(Blocks.field_150380_bt, "dragon_egg");
++
++        if (Reflector.ModelLoader_onRegisterItems.exists())
++        {
++            Reflector.call(Reflector.ModelLoader_onRegisterItems, new Object[] {this.field_175059_m});
++        }
+     }
+ 
+     public void func_110549_a(IResourceManager p_110549_1_)
+     {
+         this.field_175059_m.func_178085_b();
+     }
++
++    public static void forgeHooksClient_putQuadColor(WorldRenderer p_forgeHooksClient_putQuadColor_0_, BakedQuad p_forgeHooksClient_putQuadColor_1_, int p_forgeHooksClient_putQuadColor_2_)
++    {
++        float f = (float)(p_forgeHooksClient_putQuadColor_2_ & 255);
++        float f1 = (float)(p_forgeHooksClient_putQuadColor_2_ >>> 8 & 255);
++        float f2 = (float)(p_forgeHooksClient_putQuadColor_2_ >>> 16 & 255);
++        float f3 = (float)(p_forgeHooksClient_putQuadColor_2_ >>> 24 & 255);
++        int[] aint = p_forgeHooksClient_putQuadColor_1_.func_178209_a();
++        int i = aint.length / 4;
++
++        for (int j = 0; j < 4; ++j)
++        {
++            int k = aint[3 + i * j];
++            float f4 = (float)(k & 255);
++            float f5 = (float)(k >>> 8 & 255);
++            float f6 = (float)(k >>> 16 & 255);
++            float f7 = (float)(k >>> 24 & 255);
++            int l = Math.min(255, (int)(f * f4 / 255.0F));
++            int i1 = Math.min(255, (int)(f1 * f5 / 255.0F));
++            int j1 = Math.min(255, (int)(f2 * f6 / 255.0F));
++            int k1 = Math.min(255, (int)(f3 * f7 / 255.0F));
++            p_forgeHooksClient_putQuadColor_0_.func_178972_a(p_forgeHooksClient_putQuadColor_0_.func_78909_a(4 - j), l, i1, j1, k1);
++        }
++    }
+ }

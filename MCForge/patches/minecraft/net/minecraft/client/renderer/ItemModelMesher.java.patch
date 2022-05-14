@@ -1,0 +1,40 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/ItemModelMesher.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/ItemModelMesher.java
+@@ -9,10 +9,12 @@
+ import net.minecraft.client.resources.model.ModelResourceLocation;
+ import net.minecraft.item.Item;
+ import net.minecraft.item.ItemStack;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import net.minecraft.src.Config;
++import net.minecraft.util.ResourceLocation;
++import net.minecraftforge.client.model.ISmartItemModel;
++import net.optifine.CustomItems;
++import net.optifine.reflect.Reflector;
+ 
+-@SideOnly(Side.CLIENT)
+ public class ItemModelMesher
+ {
+     private final Map<Integer, ModelResourceLocation> field_178093_a = Maps.<Integer, ModelResourceLocation>newHashMap();
+@@ -50,11 +52,21 @@
+             }
+         }
+ 
++        if (Reflector.ForgeHooksClient.exists() && ibakedmodel instanceof ISmartItemModel)
++        {
++            ibakedmodel = ((ISmartItemModel)ibakedmodel).handleItemState(p_178089_1_);
++        }
++
+         if (ibakedmodel == null)
+         {
+             ibakedmodel = this.field_178090_d.func_174951_a();
+         }
+ 
++        if (Config.isCustomItems())
++        {
++            ibakedmodel = CustomItems.getCustomItemModel(p_178089_1_, ibakedmodel, (ResourceLocation)null, true);
++        }
++
+         return ibakedmodel;
+     }
+ 

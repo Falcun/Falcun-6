@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/net/minecraft/world/pathfinder/NodeProcessor.java
++++ ../src-work/minecraft/net/minecraft/world/pathfinder/NodeProcessor.java
+@@ -25,6 +25,8 @@
+ 
+     public void func_176163_a()
+     {
++    	//MATT NEW FPS
++    	this.field_176169_a = null;
+     }
+ 
+     protected PathPoint func_176159_a(int p_176159_1_, int p_176159_2_, int p_176159_3_)

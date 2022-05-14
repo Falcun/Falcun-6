@@ -1,0 +1,68 @@
+--- ../src-base/minecraft/net/minecraft/client/shader/ShaderManager.java
++++ ../src-work/minecraft/net/minecraft/client/shader/ShaderManager.java
+@@ -19,13 +19,10 @@
+ import net.minecraft.client.util.JsonException;
+ import net.minecraft.util.JsonUtils;
+ import net.minecraft.util.ResourceLocation;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
+ import org.apache.commons.io.IOUtils;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+-@SideOnly(Side.CLIENT)
+ public class ShaderManager
+ {
+     private static final Logger field_148003_a = LogManager.getLogger();
+@@ -253,16 +250,25 @@
+         this.field_148005_o = true;
+     }
+ 
++    /**
++     * gets a shader uniform for the name given. null if not found.
++     */
+     public ShaderUniform func_147991_a(String p_147991_1_)
+     {
+         return this.field_148009_k.containsKey(p_147991_1_) ? (ShaderUniform)this.field_148009_k.get(p_147991_1_) : null;
+     }
+ 
++    /**
++     * gets a shader uniform for the name given. if not found, returns a default not-null value
++     */
+     public ShaderUniform func_147984_b(String p_147984_1_)
+     {
+         return (ShaderUniform)(this.field_148009_k.containsKey(p_147984_1_) ? (ShaderUniform)this.field_148009_k.get(p_147984_1_) : field_148001_b);
+     }
+ 
++    /**
++     * goes through the parsed uniforms and samplers and connects them to their GL counterparts.
++     */
+     private void func_147990_i()
+     {
+         int i = 0;
+@@ -274,7 +280,6 @@
+ 
+             if (k == -1)
+             {
+-                field_148003_a.warn("Shader " + this.field_148007_m + "could not find sampler named " + s + " in the specified shader program.");
+                 this.field_147997_f.remove(s);
+                 this.field_147998_g.remove(j);
+                 --j;
+@@ -294,7 +299,6 @@
+ 
+             if (l == -1)
+             {
+-                field_148003_a.warn("Could not find uniform named " + s1 + " in the specified" + " shader program.");
+             }
+             else
+             {
+@@ -321,6 +325,9 @@
+         }
+     }
+ 
++    /**
++     * adds a shader sampler texture. if it already exists, replaces it.
++     */
+     public void func_147992_a(String p_147992_1_, Object p_147992_2_)
+     {
+         if (this.field_147997_f.containsKey(p_147992_1_))

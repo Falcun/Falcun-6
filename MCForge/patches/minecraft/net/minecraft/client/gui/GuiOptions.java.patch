@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/net/minecraft/client/gui/GuiOptions.java
++++ ../src-work/minecraft/net/minecraft/client/gui/GuiOptions.java
+@@ -229,4 +229,8 @@
+         this.func_73732_a(this.field_146289_q, this.field_146442_a, this.field_146294_l / 2, 15, 16777215);
+         super.func_73863_a(p_73863_1_, p_73863_2_, p_73863_3_);
+     }
++    
++    public void func_146281_b() {
++        this.field_146297_k.field_71474_y.func_74303_b();
++    }
+ }

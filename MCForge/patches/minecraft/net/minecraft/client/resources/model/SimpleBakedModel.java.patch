@@ -1,0 +1,13 @@
+--- ../src-base/minecraft/net/minecraft/client/resources/model/SimpleBakedModel.java
++++ ../src-work/minecraft/net/minecraft/client/resources/model/SimpleBakedModel.java
+@@ -155,4 +155,10 @@
+                 }
+             }
+         }
++
++	@Override
++	public TextureAtlasSprite getTexture() {
++		// TODO Auto-generated method stub
++		return null;
++	}
+ }

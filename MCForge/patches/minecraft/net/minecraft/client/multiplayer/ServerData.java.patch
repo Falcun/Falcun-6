@@ -1,0 +1,82 @@
+--- ../src-base/minecraft/net/minecraft/client/multiplayer/ServerData.java
++++ ../src-work/minecraft/net/minecraft/client/multiplayer/ServerData.java
+@@ -21,20 +21,35 @@
+     private ServerData.ServerResourceMode field_152587_j = ServerData.ServerResourceMode.PROMPT;
+     private String field_147411_m;
+     private boolean field_181042_l;
++    public boolean isPartner;
+ 
+-    public ServerData(String p_i46420_1_, String p_i46420_2_, boolean p_i46420_3_)
++    public ServerData(String p_i46420_1_, String p_i46420_2_, boolean p_i46420_3_, boolean isPartner)
+     {
+         this.field_78847_a = p_i46420_1_;
+         this.field_78845_b = p_i46420_2_;
+         this.field_181042_l = p_i46420_3_;
++        this.isPartner = isPartner;
+     }
+ 
++    public ServerData(String p_i46420_1_, String p_i46420_2_, boolean p_i46420_3_)
++    {
++        this.field_78847_a = p_i46420_1_;
++        this.field_78845_b = p_i46420_2_;
++        this.field_181042_l = p_i46420_3_;
++        this.isPartner = false;
++    }
++    
+     public NBTTagCompound func_78836_a()
+     {
+         NBTTagCompound nbttagcompound = new NBTTagCompound();
+         nbttagcompound.func_74778_a("name", this.field_78847_a);
+         nbttagcompound.func_74778_a("ip", this.field_78845_b);
+-
++        if(this.isPartner)
++        {
++            nbttagcompound.func_74757_a("partner", true);
++        } else {
++        	nbttagcompound.func_74757_a("partner", false);
++        }
+         if (this.field_147411_m != null)
+         {
+             nbttagcompound.func_74778_a("icon", this.field_147411_m);
+@@ -86,6 +101,22 @@
+         {
+             serverdata.func_152584_a(ServerData.ServerResourceMode.PROMPT);
+         }
++        
++        if (p_78837_0_.func_150297_b("partner", 1))
++        {
++            if (p_78837_0_.func_74767_n("partner"))
++            {
++                serverdata.isPartner = true;
++            }
++            else
++            {
++                serverdata.isPartner = false;
++            }
++        }
++        else
++        {
++            serverdata.isPartner = false;
++        }
+ 
+         return serverdata;
+     }
+@@ -104,6 +135,10 @@
+     {
+         return this.field_181042_l;
+     }
++    
++    public boolean isPartner() {
++    	return this.isPartner;
++    }
+ 
+     public void func_152583_a(ServerData p_152583_1_)
+     {
+@@ -112,6 +147,7 @@
+         this.func_152584_a(p_152583_1_.func_152586_b());
+         this.field_147411_m = p_152583_1_.field_147411_m;
+         this.field_181042_l = p_152583_1_.field_181042_l;
++        this.isPartner = p_152583_1_.isPartner;
+     }
+ 
+     @SideOnly(Side.CLIENT)

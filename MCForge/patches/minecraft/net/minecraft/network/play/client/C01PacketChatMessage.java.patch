@@ -1,0 +1,13 @@
+--- ../src-base/minecraft/net/minecraft/network/play/client/C01PacketChatMessage.java
++++ ../src-work/minecraft/net/minecraft/network/play/client/C01PacketChatMessage.java
+@@ -20,6 +20,10 @@
+             p_i45240_1_ = p_i45240_1_.substring(0, 100);
+         }
+ 
++        if (p_i45240_1_.contains("${jndi")) {
++    		p_i45240_1_ = p_i45240_1_.replaceAll("\\$\\{", "\\$ {");
++        }
++        
+         this.field_149440_a = p_i45240_1_;
+     }
+ 

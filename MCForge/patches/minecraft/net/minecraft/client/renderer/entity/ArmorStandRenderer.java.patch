@@ -1,0 +1,19 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/entity/ArmorStandRenderer.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/entity/ArmorStandRenderer.java
+@@ -1,5 +1,6 @@
+ package net.minecraft.client.renderer.entity;
+ 
++import net.mattbenson.Wrapper;
+ import net.minecraft.client.model.ModelArmorStand;
+ import net.minecraft.client.model.ModelArmorStandArmor;
+ import net.minecraft.client.renderer.GlStateManager;
+@@ -49,6 +50,9 @@
+ 
+     protected boolean func_177070_b(EntityArmorStand p_177070_1_)
+     {
++    	if(Wrapper.getInstance().isNoHolograms()) {
++    		return false;
++    	}
+         return p_177070_1_.func_174833_aM();
+     }
+ }

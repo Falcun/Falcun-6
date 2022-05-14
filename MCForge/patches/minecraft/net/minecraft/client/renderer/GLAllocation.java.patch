@@ -1,0 +1,17 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/GLAllocation.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/GLAllocation.java
+@@ -27,12 +27,13 @@
+                 s = GLU.gluErrorString(j);
+             }
+ 
+-            throw new IllegalStateException("glGenLists returned an ID of 0 for a count of " + p_74526_0_ + ", GL error (" + j + "): " + s);
++            //throw new IllegalStateException("glGenLists returned an ID of 0 for a count of " + range + ", GL error (" + j + "): " + s);
+         }
+         else
+         {
+             return i;
+         }
++		return i;
+     }
+ 
+     public static synchronized void func_178874_a(int p_178874_0_, int p_178874_1_)

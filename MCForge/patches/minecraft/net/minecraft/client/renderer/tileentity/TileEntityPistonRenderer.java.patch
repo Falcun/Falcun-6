@@ -1,0 +1,29 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/tileentity/TileEntityPistonRenderer.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/tileentity/TileEntityPistonRenderer.java
+@@ -1,5 +1,6 @@
+ package net.minecraft.client.renderer.tileentity;
+ 
++import net.mattbenson.Wrapper;
+ import net.minecraft.block.Block;
+ import net.minecraft.block.BlockPistonBase;
+ import net.minecraft.block.BlockPistonExtension;
+@@ -17,16 +18,16 @@
+ import net.minecraft.tileentity.TileEntityPiston;
+ import net.minecraft.util.BlockPos;
+ import net.minecraft.world.World;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
+ 
+-@SideOnly(Side.CLIENT)
+ public class TileEntityPistonRenderer extends TileEntitySpecialRenderer<TileEntityPiston>
+ {
+     private final BlockRendererDispatcher field_178462_c = Minecraft.func_71410_x().func_175602_ab();
+ 
+     public void func_180535_a(TileEntityPiston p_180535_1_, double p_180535_2_, double p_180535_4_, double p_180535_6_, float p_180535_8_, int p_180535_9_)
+     {
++    	if(Wrapper.getInstance().isPistonExtention()) {
++    		return;
++    	}
+         BlockPos blockpos = p_180535_1_.func_174877_v();
+         IBlockState iblockstate = p_180535_1_.func_174927_b();
+         Block block = iblockstate.func_177230_c();

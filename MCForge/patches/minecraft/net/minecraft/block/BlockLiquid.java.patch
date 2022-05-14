@@ -1,0 +1,22 @@
+--- ../src-base/minecraft/net/minecraft/block/BlockLiquid.java
++++ ../src-work/minecraft/net/minecraft/block/BlockLiquid.java
+@@ -1,6 +1,8 @@
+ package net.minecraft.block;
+ 
+ import java.util.Random;
++
++import net.mattbenson.Wrapper;
+ import net.minecraft.block.material.Material;
+ import net.minecraft.block.properties.IProperty;
+ import net.minecraft.block.properties.PropertyInteger;
+@@ -194,6 +196,10 @@
+     @SideOnly(Side.CLIENT)
+     public int func_176207_c(IBlockAccess p_176207_1_, BlockPos p_176207_2_)
+     {
++    	if(Wrapper.getInstance().isRemoveLightCalculations()) {
++    		return 1000;
++    	}
++    	
+         int i = p_176207_1_.func_175626_b(p_176207_2_, 0);
+         int j = p_176207_1_.func_175626_b(p_176207_2_.func_177984_a(), 0);
+         int k = i & 255;

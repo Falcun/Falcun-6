@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>Forge</name>
+	<comment/>
+	<projects/>
+	<natures>
+		<nature>org.eclipse.jdt.core.javanature</nature>
+	</natures>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.jdt.core.javabuilder</name>
+			<arguments/>
+		</buildCommand>
+	</buildSpec>
+	<linkedResources>
+		<link>
+			<name>main-java</name>
+			<type>2</type>
+			<location>D:/FALCUN/FalcunClient/MCForge/src/main/java</location>
+		</link>
+		<link>
+			<name>main-resources</name>
+			<type>2</type>
+			<location>D:/FALCUN/FalcunClient/MCForge/src/main/resources</location>
+		</link>
+	</linkedResources>
+</projectDescription>
