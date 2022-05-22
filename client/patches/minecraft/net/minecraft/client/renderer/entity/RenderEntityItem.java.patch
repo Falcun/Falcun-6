@@ -1,0 +1,74 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/entity/RenderEntityItem.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/entity/RenderEntityItem.java
+@@ -41,7 +41,7 @@
+             boolean flag = p_177077_9_.func_177556_c();
+             int i = this.func_177078_a(itemstack);
+             float f = 0.25F;
+-            float f1 = MathHelper.func_76126_a(((float)p_177077_1_.func_174872_o() + p_177077_8_) / 10.0F + p_177077_1_.field_70290_d) * 0.1F + 0.1F;
++            float f1 = shouldBob() ? MathHelper.func_76126_a(((float)p_177077_1_.func_174872_o() + p_177077_8_) / 10.0F + p_177077_1_.field_70290_d) * 0.1F + 0.1F : 0;
+             float f2 = p_177077_9_.func_177552_f().func_181688_b(ItemCameraTransforms.TransformType.GROUND).field_178363_d.y;
+             GlStateManager.func_179109_b((float)p_177077_2_, (float)p_177077_4_ + f1 + 0.25F * f2, (float)p_177077_6_);
+ 
+@@ -110,7 +110,6 @@
+ 
+         for (int j = 0; j < i; ++j)
+         {
+-            if (ibakedmodel.func_177556_c())
+             {
+                 GlStateManager.func_179094_E();
+ 
+@@ -119,25 +118,15 @@
+                     float f = (this.field_177079_e.nextFloat() * 2.0F - 1.0F) * 0.15F;
+                     float f1 = (this.field_177079_e.nextFloat() * 2.0F - 1.0F) * 0.15F;
+                     float f2 = (this.field_177079_e.nextFloat() * 2.0F - 1.0F) * 0.15F;
+-                    GlStateManager.func_179109_b(f, f1, f2);
++                    GlStateManager.func_179109_b(shouldSpreadItems() ? f : 0.0F, shouldSpreadItems() ? f1 : 0.0F, f2);
+                 }
+ 
++                if (ibakedmodel.func_177556_c())
+                 GlStateManager.func_179152_a(0.5F, 0.5F, 0.5F);
+-                ibakedmodel.func_177552_f().func_181689_a(ItemCameraTransforms.TransformType.GROUND);
++                ibakedmodel = net.minecraftforge.client.ForgeHooksClient.handleCameraTransforms(ibakedmodel, ItemCameraTransforms.TransformType.GROUND);
+                 this.field_177080_a.func_180454_a(itemstack, ibakedmodel);
+                 GlStateManager.func_179121_F();
+             }
+-            else
+-            {
+-                GlStateManager.func_179094_E();
+-                ibakedmodel.func_177552_f().func_181689_a(ItemCameraTransforms.TransformType.GROUND);
+-                this.field_177080_a.func_180454_a(itemstack, ibakedmodel);
+-                GlStateManager.func_179121_F();
+-                float f3 = ibakedmodel.func_177552_f().field_181699_o.field_178363_d.x;
+-                float f4 = ibakedmodel.func_177552_f().field_181699_o.field_178363_d.y;
+-                float f5 = ibakedmodel.func_177552_f().field_181699_o.field_178363_d.z;
+-                GlStateManager.func_179109_b(0.0F * f3, 0.0F * f4, 0.046875F * f5);
+-            }
+         }
+ 
+         GlStateManager.func_179121_F();
+@@ -157,4 +146,25 @@
+     {
+         return TextureMap.field_110575_b;
+     }
++
++    /*==================================== FORGE START ===========================================*/
++
++    /**
++     * Items should spread out when rendered in 3d?
++     * @return
++     */
++    public boolean shouldSpreadItems()
++    {
++        return true;
++    }
++
++    /**
++     * Items should have a bob effect
++     * @return
++     */
++    public boolean shouldBob()
++    {
++        return true;
++    }
++    /*==================================== FORGE END =============================================*/
+ }
