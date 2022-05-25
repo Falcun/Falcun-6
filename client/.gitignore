@@ -44,6 +44,7 @@
 /projects/Forge/*.hprof
 /projects/Forge/crash-reports/
 /projects/Forge/build.gradle
+/projects/Forge/src/
 *.hprof
 
 #Patch rejects
