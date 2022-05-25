@@ -13,7 +13,7 @@ public final class ExampleFalcunModule extends FalcunModule implements FalcunEve
 
 	@FalcunSetting("numbers")
 	@FalcunBounds(min = 0, max = 10)
-	public static FalcunValue<Integer> intSave = new FalcunValue<>(1);
+	public FalcunValue<Integer> intSave = new FalcunValue<>(1);
 
 	@FalcunSetting("string")
 	public static FalcunValue<String> stringSave = new FalcunValue<>("Hello World");

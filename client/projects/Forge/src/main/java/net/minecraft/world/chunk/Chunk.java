@@ -51,7 +51,7 @@ public class Chunk
     public final int zPosition;
     private boolean isGapLightingUpdated;
     private final Map<BlockPos, TileEntity> chunkTileEntityMap;
-    private final ClassInheritanceMultiMap<Entity>[] entityLists;
+    public final ClassInheritanceMultiMap<Entity>[] entityLists;
     private boolean isTerrainPopulated;
     private boolean isLightPopulated;
     private boolean field_150815_m;

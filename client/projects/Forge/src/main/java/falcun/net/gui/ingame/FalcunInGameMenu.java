@@ -193,6 +193,7 @@ public class FalcunInGameMenu extends FalcunMenu {
 
 	@Override
 	protected void init() {
+		bgComponents.clear();
 		float scale = 1f / new FalcunScaling(Falcun.minecraft).getScaleFactor();
 		final int newWidth = Math.round((float) width / scale);
 		final int newHeight = Math.round((float) height / scale);
@@ -200,7 +201,7 @@ public class FalcunInGameMenu extends FalcunMenu {
 		int top = (newHeight >> 1) - (FalcunEmptyPage.emptyPage.getBackgroundHeight() >> 1);
 		top += 58;
 		bgComponents = getBGComponents(width, height, FalcunEmptyPage.emptyPage);
-		if (isScaled || FalcunDevEnvironment.isDevEnvironment ) {
+		if (isScaled || FalcunDevEnvironment.isDevEnvironment) {
 			modsPage = new FalcunModPage(left, top);
 			fpsPage = new FalcunFPSPage(left, top);
 			macrosPage = new FalcunMacrosPage(left, top);
