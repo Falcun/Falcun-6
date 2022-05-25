@@ -29,6 +29,7 @@
 /repo/
 /buildSrc
 /projects/.gradle/
+/projects/Forge/build/
 /projects/.idea/
 /projects/Forge/config/
 /projects/Forge/logs/
@@ -38,6 +39,9 @@
 /projects/Forge/Forge Server.launch
 /projects/Forge/options.txt
 /projects/Forge/src/main/start/
+/projects/Forge/usercache.json
+/projects/Forge/usernamecache.json
+/projects/Forge/*.hprof
 
 #Patch rejects
 *.rej
