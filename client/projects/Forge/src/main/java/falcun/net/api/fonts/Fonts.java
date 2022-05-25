@@ -1,6 +1,7 @@
 package falcun.net.api.fonts;
 
-import net.minecraft.client.Minecraft;
+import falcun.net.Falcun;
+import falcun.xyz.dev.boredhuman.dancore.falcunfork.fonts.DanFont;
 import net.minecraft.util.ResourceLocation;
 
 import java.io.InputStream;
@@ -32,6 +33,18 @@ public final class Fonts {
 
 	public static FalcunFont panton;
 	public static FalcunFont exo2;
+
+	public static FalcunFont TIMES = new DanFont("falcun:fonts/times.ttf", 32);
+	public static FalcunFont OXYGEN = new DanFont("falcun:fonts/Oxygen.ttf", 32);
+	public static FalcunFont SANSATION = new DanFont("falcun:fonts/Sansation.ttf", 32);
+	public static FalcunFont NUNITO = new DanFont("falcun:fonts/nunito/Nunito-Regular.ttf", 32);
+	public static FalcunFont NUNITO_BOLD = new DanFont("falcun:fonts/nunito/Nunito-Bold.ttf", 32);
+	public static FalcunFont NUNITO_ITALIC = new DanFont("falcun:fonts/nunito/Nunito-Italic.ttf", 32);
+	public static FalcunFont NUNITO_LIGHT = new DanFont("falcun:fonts/nunito/Nunito-Light.ttf", 32);
+	public static FalcunFont MONTSERRAT_SMALL = new DanFont("falcun:fonts/monR.ttf", 24);
+	public static FalcunFont MONTSERRAT_MEDIUM = new DanFont("falcun:fonts/monR.ttf", 28);
+	public static FalcunFont MONTSERRAT = new DanFont("falcun:fonts/monR.ttf", 32);
+	public static FalcunFont MONTSERRAT_LARGE = new DanFont("falcun:fonts/monR.ttf", 38);
 
 
 	static {
@@ -71,12 +84,14 @@ public final class Fonts {
 	}
 
 	private static FontV2 setupFont(String name, int size, boolean normal) {
-		try (InputStream is = Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation("falcun:fonts/" + name + ".ttf")).getInputStream()) {
+		ResourceLocation location = new ResourceLocation("falcun:fonts/" + name + ".ttf");
+		try {
+			InputStream is = Falcun.minecraft.getResourceManager().getResource(location).getInputStream();
 			return new FontV2(is, size, normal);
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (Throwable err){
+			err.printStackTrace();
 		}
-
+		System.out.println(name + " FAILED TO REGISTER");
 		return new FontV2("Arial", size, normal);
 	}
 }
