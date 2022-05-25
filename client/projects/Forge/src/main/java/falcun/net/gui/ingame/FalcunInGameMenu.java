@@ -40,7 +40,7 @@ public class FalcunInGameMenu extends FalcunMenu {
 
 	public static Page page = MODS;
 
-	public enum Page { // t
+	public enum Page { // tt
 		MODS, FPS, MACROS, PROFILES, COSMETICS, GROUPS, HUD
 	}
 
