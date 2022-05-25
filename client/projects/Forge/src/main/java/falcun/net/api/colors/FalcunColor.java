@@ -29,4 +29,11 @@ public final class FalcunColor implements Serializable {
 		return a << 24 | ((rgb & 16711680) >> 16 | rgb & '\uff00' | rgb << 16) & 16777215;
 	}
 
+	public static FalcunColor i(int color) {
+		return new FalcunColor(color);
+	}
+
+	public static FalcunColor of(int color) {
+		return i(color);
+	}
 }
