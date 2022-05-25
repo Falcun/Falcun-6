@@ -16,7 +16,6 @@ import falcun.net.api.gui.region.GuiRegion;
 import falcun.net.api.gui.scaling.FalcunScaling;
 import falcun.net.api.textures.FalcunTexture;
 import falcun.net.managers.FalcunGuiManager;
-import net.minecraft.util.ResourceLocation;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -90,8 +89,7 @@ public class FalcunMainMenu extends FalcunMenu {
 		comps.addAll(addButton(gr, "REPLAY RECORDINGS", font, () -> {
 		}));
 		gr = gr.offSet(0, -45);
-		comps.addAll(addButton(gr, "ACCOUNTS", font, () -> {
-		}));
+		comps.addAll(addButton(gr, "ACCOUNTS", font, () -> FalcunGuiManager.openAccountSwitchMenu(this)));
 		gr.x = x;
 		gr.y = y + 20;
 

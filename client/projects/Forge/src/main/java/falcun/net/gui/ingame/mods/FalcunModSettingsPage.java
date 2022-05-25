@@ -7,6 +7,7 @@ import falcun.net.api.gui.components.Component;
 import falcun.net.api.gui.components.number.NumberSlider;
 import falcun.net.api.gui.components.rect.ColorSquare;
 import falcun.net.api.gui.components.scroll.VerticalScroll;
+import falcun.net.api.gui.components.text.Label;
 import falcun.net.api.gui.menu.FalcunPage;
 import falcun.net.api.gui.region.GuiRegion;
 import falcun.net.api.modules.FalcunModule;
@@ -67,10 +68,24 @@ public class FalcunModSettingsPage implements FalcunPage {
 				final FalcunBounds bounds = field.getBounds();
 				final double min = bounds.min();
 				final double max = bounds.max();
-				GuiRegion gr = new GuiRegion(x, y, boxWidth, 10);
-				final NumberSlider slider = new NumberSlider(gr, 0x00000000, FalcunGuiColorPalette.getToggleColor(true), (FalcunValue<Number>) field.getValue(), min, max);
+				final GuiRegion gr = new GuiRegion(x, y, boxWidth, 10);
+				final Label label = new Label(gr, () -> name + " | " + ((FalcunValue<Number>) field.getValue()).getValue(), 0, () -> 0xffffffff, font);
+				scroll.addComponent(label);
+				final NumberSlider slider = new NumberSlider(gr.offSet(0, 15), 0x00000000, FalcunGuiColorPalette.getToggleColor(true), (FalcunValue<Number>) field.getValue(), min, max);
+				slider.region.height += 2;
 				scroll.addComponent(slider);
+				y += 12;
+				y += 17;
+				y += 10;
 			} else if (type == Boolean.class || type == boolean.class) {
+				final GuiRegion gr = new GuiRegion(x, y, boxWidth, 10);
+				final Label label = new Label(gr, name, 0 ,0xffffffff, font);
+
+				scroll.addComponent(label);
+				GuiRegion gr1 = new GuiRegion(gr.getRight() - 10, y, 10, 10);
+
+				y += 24;
+
 
 			} else if (type == String.class) {
 

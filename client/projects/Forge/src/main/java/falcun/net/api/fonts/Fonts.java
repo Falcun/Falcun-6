@@ -68,8 +68,11 @@ public final class Fonts {
 		RobotoHUD = setupFont("Roboto-Bold", 24, false);
 
 		Roboto = setupFont("Roboto-Bold", 11, true);
+//		Roboto = new DanFont("falcun:fonts/Roboto-Bold.ttf", 11);
 		Roboto12 = setupFont("Roboto-Bold", 12, true);
+//		Roboto12 = new DanFont("falcun:fonts/Roboto-Bold.ttf", 11);
 		RobotoSmall = setupFont("Roboto-Bold", 8, true);
+//		RobotoSmall = new DanFont("falcun:fonts/Roboto-Bold.ttf", 8);
 
 		RobotoMiniHeader = setupFont("Roboto-Bold", 14, true);
 		RobotoHeader = setupFont("Roboto-Bold", 22, true);
@@ -82,6 +85,10 @@ public final class Fonts {
 		panton = setupFont("Panton-LightitalicCaps", 16, false);
 		exo2 = setupFont("Exo2-Regular", 16, false);
 	}
+
+//	private static DanFont setupFont(String name, int size, boolean normal) {
+//		return DanFont.getOrCreateFont("falcun:fonts/" + name + ".ttf", size);
+//	}
 
 	private static FontV2 setupFont(String name, int size, boolean normal) {
 		ResourceLocation location = new ResourceLocation("falcun:fonts/" + name + ".ttf");

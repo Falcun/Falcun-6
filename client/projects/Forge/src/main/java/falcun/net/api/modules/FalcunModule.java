@@ -16,10 +16,8 @@ import java.util.*;
 
 public abstract class FalcunModule {
 
-	protected static transient final Minecraft minecraft = Minecraft.getMinecraft();
-	protected static transient final Falcun falcun = Falcun.instance;
-	private final transient FalcunModuleInfo info;
-	public transient ModuleCategory category;
+	private final  transient FalcunModuleInfo info;
+	public  transient ModuleCategory category;
 
 	private volatile boolean enabled = false;
 	public transient boolean serverDisabled = false;

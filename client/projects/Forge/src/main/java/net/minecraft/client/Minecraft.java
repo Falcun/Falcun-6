@@ -223,7 +223,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 	private Entity renderViewEntity;
 	public Entity pointedEntity;
 	public EffectRenderer effectRenderer;
-	private final Session session;
+	public Session session;
 	private boolean isGamePaused;
 	public FontRenderer fontRendererObj;
 	public FontRenderer standardGalacticFontRenderer;
@@ -787,6 +787,12 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 	}
 
 	public void displayGuiScreen(GuiScreen guiScreenIn) {
+		if (guiScreenIn != null){
+			if (guiScreenIn instanceof GuiMainMenu){
+				FalcunGuiManager.openMainMenu();
+			}
+		}
+
 		if (guiScreenIn == null && this.theWorld == null) {
 //            guiScreenIn = new GuiMainMenu();
 			guiScreenIn = new FalcunMainMenu();

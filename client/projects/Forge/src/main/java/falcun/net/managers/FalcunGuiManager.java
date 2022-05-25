@@ -5,10 +5,9 @@ import falcun.net.gui.container.playerinventory.FalcunGuiInventory;
 import falcun.net.gui.mainmenu.FalcunMainMenu;
 import falcun.net.gui.ingame.FalcunInGameMenu;
 //import falcun.net.gui.mainmenu.FalcunModListMenu;
-import net.minecraft.client.gui.GuiMainMenu;
-import net.minecraft.client.gui.GuiMultiplayer;
-import net.minecraft.client.gui.GuiOptions;
-import net.minecraft.client.gui.GuiSelectWorld;
+import falcun.net.gui.mainmenu.FalcunModListMenu;
+import falcun.xyz.accswitcher.the_fireplace.ias.gui.GuiAccountSelector;
+import net.minecraft.client.gui.*;
 import net.minecraft.network.play.client.C16PacketClientStatus;
 import net.minecraftforge.fml.client.GuiModList;
 import net.minecraftforge.fml.common.ModContainer;
@@ -38,7 +37,11 @@ public final class FalcunGuiManager {
 	}
 
 	public static void openModListMenu() {
-//		Falcun.minecraft.displayGuiScreen(new FalcunModListMenu());
+		Falcun.minecraft.displayGuiScreen(new FalcunModListMenu());
+	}
+
+	public static void openAccountSwitchMenu(GuiScreen guiScreen){
+		Falcun.minecraft.displayGuiScreen(new GuiAccountSelector(guiScreen));
 	}
 
 	public static void openModConfigMenu(ModContainer modContainer) {

@@ -31,9 +31,9 @@ public final class FalcunKeyBindManager {
 
 	@SubscribeEvent
 	public void key(InputEvent.KeyInputEvent e) {
-		if (Falcun.minecraft.gameSettings.keyBindInventory.isPressed()) {
-			FalcunGuiManager.openInventoryGui();
-		}
+//		if (Falcun.minecraft.gameSettings.keyBindInventory.isPressed()) {
+//			FalcunGuiManager.openInventoryGui();
+//		}
 		for (Map.Entry<KeyBinding, Runnable> kv : falcunKeyBindings.entrySet()) {
 			if (kv.getKey().isPressed()) {
 				kv.getValue().run();

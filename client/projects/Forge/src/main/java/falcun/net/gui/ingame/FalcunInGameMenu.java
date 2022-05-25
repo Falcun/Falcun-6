@@ -28,7 +28,7 @@ import falcun.net.gui.ingame.hud.FalcunHUDPage;
 import falcun.net.gui.ingame.macros.FalcunMacrosPage;
 import falcun.net.gui.ingame.mods.FalcunModPage;
 import falcun.net.gui.ingame.profiles.FalcunProfilesPage;
-import falcun.net.tweakers.TweakManager;
+import falcun.net.util.FalcunDevEnvironment;
 import net.minecraft.util.ResourceLocation;
 
 import java.util.LinkedList;
@@ -40,7 +40,7 @@ public class FalcunInGameMenu extends FalcunMenu {
 
 	public static Page page = MODS;
 
-	public enum Page {
+	public enum Page { // t
 		MODS, FPS, MACROS, PROFILES, COSMETICS, GROUPS, HUD
 	}
 
@@ -200,7 +200,7 @@ public class FalcunInGameMenu extends FalcunMenu {
 		int top = (newHeight >> 1) - (FalcunEmptyPage.emptyPage.getBackgroundHeight() >> 1);
 		top += 58;
 		bgComponents = getBGComponents(width, height, FalcunEmptyPage.emptyPage);
-		if (isScaled || !TweakManager.deObfEnv || true) {
+		if (isScaled || FalcunDevEnvironment.isDevEnvironment ) {
 			modsPage = new FalcunModPage(left, top);
 			fpsPage = new FalcunFPSPage(left, top);
 			macrosPage = new FalcunMacrosPage(left, top);

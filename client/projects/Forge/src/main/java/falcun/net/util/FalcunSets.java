@@ -8,7 +8,5 @@ import net.minecraft.entity.item.EntityTNTPrimed;
 import java.util.List;
 
 public class FalcunSets {
-	public static List<EntityTNTPrimed> tnt = new ObjectArrayList<>();
-	public static List<EntityFallingBlock> sand = new ObjectArrayList<>();
-	public static List<Position> explosions = new ObjectArrayList<>();
+
 }

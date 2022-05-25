@@ -4,7 +4,6 @@ import falcun.net.api.fonts.FalcunFont;
 import falcun.net.api.fonts.Fonts;
 import falcun.net.api.gui.components.Component;
 import falcun.net.api.gui.region.GuiRegion;
-import net.minecraft.client.gui.FontRenderer;
 
 import java.util.function.Supplier;
 

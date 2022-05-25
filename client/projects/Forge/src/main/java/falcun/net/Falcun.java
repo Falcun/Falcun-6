@@ -2,10 +2,8 @@ package falcun.net;
 
 import falcun.net.api.fonts.Fonts;
 import falcun.net.api.textures.FalcunTexture;
-import falcun.net.managers.FalcunGuiManager;
 import falcun.net.managers.FalcunKeyBindManager;
 import falcun.net.managers.FalcunModuleManager;
-import falcun.net.util.*;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
@@ -39,7 +37,7 @@ public final class Falcun {
 
 	@Mod.EventHandler
 	public void postInit(FMLPostInitializationEvent e) {
-		System.out.println(Fonts.Roboto.getStringWidth("1"));
+		System.out.println(Fonts.Roboto.getStringWidth("aaAA"));
 	}
 
 }

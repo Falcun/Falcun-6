@@ -15,8 +15,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class Fonts implements FalcunFont {
-	private static final Map<Pair<String, Integer>, Fonts> cache = new Object2ObjectOpenHashMap<>();
+public class DanFont implements FalcunFont {
+	private static final Map<Pair<String, Integer>, DanFont> cache = new Object2ObjectOpenHashMap<>();
 
 
 	private final ResourceLocation location;
@@ -31,16 +31,16 @@ public class Fonts implements FalcunFont {
 	 * @param resolution       the resolution of the font
 	 * @return the font
 	 */
-	public static Fonts getOrCreateFont(String resourcelocation, int resolution) {
+	public static DanFont getOrCreateFont(String resourcelocation, int resolution) {
 		Pair<String, Integer> pair = Pair.of(resourcelocation, resolution);
-		return Fonts.cache.computeIfAbsent(pair, data -> new Fonts(data.first, data.second));
+		return DanFont.cache.computeIfAbsent(pair, data -> new DanFont(data.first, data.second));
 	}
 
-	public Fonts(String location, int resolution) {
+	public DanFont(String location, int resolution) {
 		this.location = new ResourceLocation(location);
 		this.resolution = resolution;
 		this.texture = new FontTexture(this.location, this.resolution);
-		Fonts.cache.put(Pair.of(location, resolution), this);
+		DanFont.cache.put(Pair.of(location, resolution), this);
 	}
 
 	public Number getStringWidth(String text) {
