@@ -787,8 +787,8 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 	}
 
 	public void displayGuiScreen(GuiScreen guiScreenIn) {
-		if (guiScreenIn != null){
-			if (guiScreenIn instanceof GuiMainMenu){
+		if (guiScreenIn != null) {
+			if (guiScreenIn instanceof GuiMainMenu) {
 				FalcunGuiManager.openMainMenu();
 			}
 		}
@@ -799,6 +799,10 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 
 		} else if (guiScreenIn == null && this.thePlayer.getHealth() <= 0.0F) {
 			guiScreenIn = new GuiGameOver();
+		}
+
+		if (guiScreenIn instanceof GuiMainMenu) {
+			FalcunGuiManager.openMainMenu();
 		}
 
 		GuiScreen old = this.currentScreen;

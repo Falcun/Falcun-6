@@ -10,6 +10,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import falcun.net.managers.FalcunGuiManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -158,6 +160,11 @@ public class GuiMainMenu extends GuiScreen implements GuiYesNoCallback
 
     public void initGui()
     {
+
+        if (true) {
+            FalcunGuiManager.openMainMenu();
+            return;
+        }
         this.viewportTexture = new DynamicTexture(256, 256);
         this.backgroundTexture = this.mc.getTextureManager().getDynamicTextureLocation("background", this.viewportTexture);
         Calendar calendar = Calendar.getInstance();
