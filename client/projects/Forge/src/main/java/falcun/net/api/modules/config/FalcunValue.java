@@ -32,4 +32,7 @@ public class FalcunValue<T> {
 			this.value = this.defaultValue;
 		}
 	}
+	public static <T> FalcunValue<T> of(T t) {
+		return new FalcunValue<>(t);
+	}
 }
