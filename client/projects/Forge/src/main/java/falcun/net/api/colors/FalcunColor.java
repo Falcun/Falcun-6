@@ -21,7 +21,7 @@ public final class FalcunColor implements Serializable {
 	}
 
 	public static int getBGRA(int color) {
-		int a = 0xFF;
+		int a = 0xFF & (color >> 24);
 		int r = 0xFF & (color >> 16);
 		int g = 0xFF & (color >> 8);
 		int b = 0xFF & color;

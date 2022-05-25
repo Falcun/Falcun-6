@@ -41,28 +41,28 @@ public abstract class FalcunModule {
 	}
 
 
-	public void toggle() {
+	public final void toggle() {
 		this.setEnabled(!this.isEnabled());
 	}
 
-	public boolean isEnabled() {
+	public final boolean isEnabled() {
 		return enabled && !serverDisabled;
 	}
 
-	public boolean setEnabled(boolean enabled) {
+	public final boolean setEnabled(boolean enabled) {
 		this.enabled = enabled;
 		return this.enabled;
 	}
 
 	private final transient boolean eventBusMod = this instanceof FalcunEventBusModule;
 
-	public void onEnable() {
+	public final void onEnable() {
 		if (eventBusMod) {
 			MinecraftForge.EVENT_BUS.register(this);
 		}
 	}
 
-	public void onDisable() {
+	public final void onDisable() {
 		if (eventBusMod) {
 			MinecraftForge.EVENT_BUS.unregister(this);
 		}
