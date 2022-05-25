@@ -42,6 +42,7 @@
 /projects/Forge/usercache.json
 /projects/Forge/usernamecache.json
 /projects/Forge/*.hprof
+/projects/Forge/crash-reports/
 
 #Patch rejects
 *.rej
