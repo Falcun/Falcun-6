@@ -37,6 +37,7 @@
 /projects/Forge/Forge Client.launch
 /projects/Forge/Forge Server.launch
 /projects/Forge/options.txt
+/projects/Forge/src/main/start/
 
 #Patch rejects
 *.rej
