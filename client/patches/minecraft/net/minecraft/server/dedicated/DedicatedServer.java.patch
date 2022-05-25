@@ -1,0 +1,60 @@
+--- ../src-base/minecraft/net/minecraft/server/dedicated/DedicatedServer.java
++++ ../src-work/minecraft/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -49,6 +49,7 @@
+     private boolean field_71338_p;
+     private WorldSettings.GameType field_71337_q;
+     private boolean field_71335_s;
++    public static boolean allowPlayerLogins = false;
+ 
+     public DedicatedServer(File p_i1508_1_)
+     {
+@@ -82,6 +83,7 @@
+         {
+             public void run()
+             {
++                if (net.minecraftforge.server.console.TerminalHandler.handleCommands(DedicatedServer.this)) return;
+                 BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(System.in));
+                 String s4;
+ 
+@@ -107,6 +109,8 @@
+             field_155771_h.warn("To start the server with more ram, launch it as \"java -Xmx1024M -Xms1024M -jar minecraft_server.jar\"");
+         }
+ 
++        net.minecraftforge.fml.common.FMLCommonHandler.instance().onServerStart(this);
++
+         field_155771_h.info("Loading properties");
+         this.field_71340_o = new PropertyManager(new File("server.properties"));
+         this.field_154332_n = new ServerEula(new File("eula.txt"));
+@@ -198,6 +202,7 @@
+             }
+             else
+             {
++                net.minecraftforge.fml.common.FMLCommonHandler.instance().onServerStarted();
+                 this.func_152361_a(new DedicatedPlayerList(this));
+                 long j = System.nanoTime();
+ 
+@@ -244,6 +249,7 @@
+                 this.func_71191_d((this.func_71207_Z() + 8) / 16 * 16);
+                 this.func_71191_d(MathHelper.func_76125_a(this.func_71207_Z(), 64, 256));
+                 this.field_71340_o.func_73667_a("max-build-height", Integer.valueOf(this.func_71207_Z()));
++                if (!net.minecraftforge.fml.common.FMLCommonHandler.instance().handleServerAboutToStart(this)) return false;
+                 field_155771_h.info("Preparing level \"" + this.func_71270_I() + "\"");
+                 this.func_71247_a(this.func_71270_I(), this.func_71270_I(), k, worldtype, s2);
+                 long i1 = System.nanoTime() - j;
+@@ -272,7 +278,7 @@
+                     thread1.start();
+                 }
+ 
+-                return true;
++                return net.minecraftforge.fml.common.FMLCommonHandler.instance().handleServerStarting(this);
+             }
+         }
+     }
+@@ -621,4 +627,7 @@
+         this.field_71321_q.func_71556_a(RConConsoleSource.func_175570_h(), p_71252_1_);
+         return RConConsoleSource.func_175570_h().func_70008_c();
+     }
++
++    //Forge: Enable formated text for colors in console.
++    @Override public void func_145747_a(net.minecraft.util.IChatComponent message) { field_155771_h.info(message.func_150254_d()); }
+ }
