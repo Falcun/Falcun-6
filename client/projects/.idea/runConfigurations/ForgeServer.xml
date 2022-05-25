@@ -1,1 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><component name="ProjectRunConfigurationManager"><configuration default="false" factoryName="Application" name="Forge Server" type="Application"><module name="Forge"/><option name="MAIN_CLASS_NAME" value="GradleStartServer"/><option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$/run"/></configuration></component>
