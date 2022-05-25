@@ -43,7 +43,7 @@
 /projects/Forge/usernamecache.json
 /projects/Forge/*.hprof
 /projects/Forge/crash-reports/
-/projects/Forge/build.gradle
+
 *.hprof
 
 #Patch rejects
