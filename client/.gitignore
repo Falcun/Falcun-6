@@ -15,9 +15,29 @@
 /.gradle
 
 #occupational hazards
-/projects/
+/projects/Clean/
+/projects/Forge/logs/
+/projects/Forge/config/
+/projects/Forge/.settings/
+/projects/Forge/.idea/
+/projects/Forge/saves/
+/projects/Forge/options.txt
+/projects/Forge/logs/
+/patches/
+/projects/projects.iml
+/projects/projects.ipr
+/projects/projects.iws
 /repo/
 /buildSrc
+/projects/.gradle/
+/projects/.idea/
+/projects/Forge/config/
+/projects/Forge/logs/
+/projects/Forge/.classpath
+/projects/Forge/.project
+/projects/Forge/Forge Client.launch
+/projects/Forge/Forge Server.launch
+/projects/Forge/options.txt
 
 #Patch rejects
 *.rej
