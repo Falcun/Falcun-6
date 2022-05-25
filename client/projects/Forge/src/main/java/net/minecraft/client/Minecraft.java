@@ -465,6 +465,9 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 		this.effectRenderer = new EffectRenderer(this.theWorld, this.renderEngine);
 		net.minecraftforge.fml.common.ProgressManager.pop(bar);
 		net.minecraftforge.fml.client.FMLClientHandler.instance().finishMinecraftLoading();
+
+		 // init evnet here
+
 		this.checkGLError("Post startup");
 		this.ingameGUI = new net.minecraftforge.client.GuiIngameForge(this);
 
