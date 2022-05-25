@@ -17,7 +17,7 @@ public final class Falcun {
 
 	public static Minecraft minecraft = Minecraft.getMinecraft();
 
-	public static Falcun instance;
+	public static Falcun instance; // r
 
 	public Falcun() {
 		instance = this;
