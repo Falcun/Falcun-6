@@ -38,23 +38,23 @@ public final class FalcunColorCreator {
 
 	public FalcunColorCreator(float a, int r, int g, int b) {
 		this(r, g, b);
-		this.a = validate(255, a);
+		this.a = validate(a);
 	}
 
 	private static int validate(int i) {
 		return Math.max(0, Math.min(i, 255));
 	}
 
-	private static int validate(int i, float f) {
-		return (int) Math.max(0, Math.min(i * f, 255));
+	private static int validate(float f) {
+		return (int) Math.max(0, Math.min(255 * f, 255));
 	}
 
 
 	public FalcunColorCreator(float a, float r, float g, float b) {
-		this.a = validate(255, a);
-		this.r = validate(255, r);
-		this.g = validate(255, g);
-		this.b = validate(255, b);
+		this.a = validate(a);
+		this.r = validate(r);
+		this.g = validate(g);
+		this.b = validate(b);
 	}
 
 	public FalcunColorCreator(float r, float g, float b) {
@@ -204,7 +204,7 @@ public final class FalcunColorCreator {
 	}
 
 	public static int HSBAtoBGRA(float hh, float s, float bb, float a) {
-		return HSBAtoBGRA(hh, s, bb, Math.max(0, Math.min((int) (255 * a), 255)));
+		return HSBAtoBGRA(hh, s, bb, validate(a));
 	}
 
 	public static int HSBtoBGRA(float hh, float s, float bb) {
