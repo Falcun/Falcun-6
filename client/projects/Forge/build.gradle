@@ -1,0 +1,7 @@
+sourceSets {
+    main.java.srcDir 'src/main/start'
+    main.java.srcDir '/D:/FALCUN/FalcunClient/client/src/main/java/'
+    main.resources.srcDir '/D:/FALCUN/FalcunClient/client/src/main/resources/'
+    test.java.srcDir '/D:/FALCUN/FalcunClient/client/src/test/java/'
+    test.resources.srcDir '/D:/FALCUN/FalcunClient/client/src/test/resources/'
+}
