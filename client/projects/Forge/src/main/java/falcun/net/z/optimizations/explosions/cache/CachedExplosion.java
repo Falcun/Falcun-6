@@ -42,7 +42,7 @@ public abstract class CachedExplosion {
 
 	public void cache() {
 		if (this.source == null) {
-			this.cache = new ExplosionCache();
+			this.cache = new ExplosionCache(this.world);
 			return;
 		}
 		long locationHash = Hash.fnv1a(this.source.prevPosX, this.source.prevPosY, this.source.prevPosZ);
@@ -68,8 +68,9 @@ public abstract class CachedExplosion {
 				if (!cache.checkTick() || !cache.swinging) {
 					cache.swingingExplosions = 7;
 					{
-						this.blockAt =  ChunkUtil.getBlock((int)this.posX, (int) this.posY, (int) this.posZ);
+//						this.blockAt =  ChunkUtil.getBlock((int)this.posX, (int) this.posY, (int) this.posZ);
 //						this.blockAt = this.chunkUtils.getBlock(this.posX, this.posY, this.posZ);
+						this.blockAt = this.world.getChunkFromChunkCoords(((int) this.posX) >> 4, ((int) this.posZ) >> 4).getBlock((int) this.posX, (int) this.posY, (int) this.posZ);
 						cache.setWatered(this.blockAt.getMaterial().isLiquid());
 					}
 				}
@@ -92,10 +93,10 @@ public abstract class CachedExplosion {
 
 	private void createCache(long locationHash, double movedX, double movedY, double movedZ) {
 		ExplosionCache cache;
-		this.cache = cache = new ExplosionCache();
+		this.cache = cache = new ExplosionCache(this.world);
 		this.world.explosionCache.put(locationHash, this.cache);
 		if (cache.swingingExplosions <= 1) {
-			if (!Falcun.minecraft.theWorld.isRemote) {
+			if (!this.world.isRemote) {
 //				EntityExplodeEvent event = new EntityExplodeEvent(this.source.getBukkitEntity(), location, list, 0.3f);
 //				this.world.getServer().getPluginManager().callEvent(event);
 				cache.blockBreaking = false;
@@ -106,7 +107,8 @@ public abstract class CachedExplosion {
 		cache.updateId();
 
 //		this.blockAt = this.chunkUtils.getBlock(this.posX, this.posY, this.posZ);
-		this.blockAt = ChunkUtil.getBlock((int)this.posX, (int) this.posY, (int) this.posZ);
+//		this.blockAt = ChunkUtil.getBlock((int) this.posX, (int) this.posY, (int) this.posZ);
+		this.blockAt = this.world.getChunkFromChunkCoords(((int) this.posX) >> 4, ((int) this.posZ) >> 4).getBlock((int) this.posX, (int) this.posY, (int) this.posZ);
 		cache.setWatered(this.blockAt.getMaterial().isLiquid());
 	}
 
@@ -180,10 +182,13 @@ public abstract class CachedExplosion {
 	private int mergeStationary() {
 		if (this.blockAt == null) {
 //			this.blockAt = this.chunkUtils.getBlock(this.posX, this.posY, this.posZ);
-			this.blockAt = ChunkUtil.getBlock((int)this.posX, (int) this.posY, (int) this.posZ);
+//			this.blockAt = ChunkUtil.getBlock((int) this.posX, (int) this.posY, (int) this.posZ);
+			this.blockAt = this.world.getChunkFromChunkCoords(((int) this.posX) >> 4, ((int) this.posZ) >> 4).getBlock((int) this.posX, (int) this.posY, (int) this.posZ);
 		}
 //		Block underBlock = this.chunkUtils.getBlock(this.posX, this.posY - 1.0, this.posZ);
-		Block underBlock = ChunkUtil.getBlock((int)this.posX, (int) this.posY - 1, (int) this.posZ);
+//		Block underBlock = ChunkUtil.getBlock((int) this.posX, (int) this.posY - 1, (int) this.posZ);
+		Block underBlock = this.world.getChunkFromChunkCoords(((int) this.posX) >> 4, ((int) this.posZ) >> 4).getBlock((int) this.posX, (int) this.posY - 1, (int) this.posZ);
+
 		if (!this.cache.isWatered && (underBlock instanceof BlockFalling)) {
 			return 1;
 		}
@@ -225,6 +230,9 @@ public abstract class CachedExplosion {
 				Ray[] rays = BlockSearching.generalRays;
 				if (this.source != null && cache.swingingExplosions == 0 && !cache.swinging && (distanceSq = (x = this.source.posX - this.source.prevPosX) * x + (y = this.source.posY - this.source.prevPosY) * y + (z = this.source.posZ - this.source.prevPosZ) * z) > 64.0) {
 					rays = BlockSearching.nukingRays;
+				}
+				if (rays == null) {
+					BlockSearching.process();
 				}
 				this.affectBlocks(blockposition, rays);
 			}

@@ -10,7 +10,7 @@ public class EntityTNTPrimed extends Entity {
 	public int fuse;
 	private EntityLivingBase tntPlacedBy;
 
-	public boolean canExplode =true;
+	public boolean canExplode = true;
 
 	public EntityTNTPrimed(World worldIn) {
 		super(worldIn);
@@ -23,10 +23,12 @@ public class EntityTNTPrimed extends Entity {
 	public EntityTNTPrimed(World worldIn, double p_i1730_2_, double p_i1730_4_, double p_i1730_6_, EntityLivingBase p_i1730_8_) {
 		this(worldIn);
 		this.setPosition(p_i1730_2_, p_i1730_4_, p_i1730_6_);
-		float f = (float) (Math.random() * Math.PI * 2.0D);
-		this.motionX = (double) (-((float) Math.sin((double) f)) * 0.02F);
+//		float f = (float) (Math.random() * Math.PI * 2.0D);
+//		this.motionX = (double) (-((float) Math.sin((double) f)) * 0.02F);
+		this.motionX = 0;
 		this.motionY = 0.20000000298023224D;
-		this.motionZ = (double) (-((float) Math.cos((double) f)) * 0.02F);
+//		this.motionZ = (double) (-((float) Math.cos((double) f)) * 0.02F);
+		this.motionZ = 0;
 		this.fuse = 80;
 		this.prevPosX = p_i1730_2_;
 		this.prevPosY = p_i1730_4_;

@@ -1,11 +1,8 @@
 package falcun.net.z.optimizations.explosions;
 
-import falcun.net.util.ChunkUtil;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockObsidian;
-import net.minecraft.block.state.BlockState;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
@@ -58,7 +55,7 @@ public class DurabilityHandler {
 			if (!this.blocks.containsKey(key)) {
 				int durability = 3;
 //				Block block = this.world.chunkUtils.getBlockAt(x, y, z);
-				Block block = ChunkUtil.getBlock(x,y,z);
+//				Block block = ChunkUtil.getBlock(x,y,z);
 				--durability;
 				this.blocks.put(key, new DurabilityHandler.DurabilityInformation(durability));
 			}
@@ -118,7 +115,8 @@ public class DurabilityHandler {
 			if (durabilityInformation.getDurability() <= 0 || potential >= durabilityInformation.getBreakLimit()) {
 //				this.world.chunkUtils.setTypeAndData(blockposition, air, flags);
 //				ChunkUtil.getBlock(blockposition);
-				ChunkUtil.getChunk(blockposition.getX() >> 4, blockposition.getZ() >> 4).setBlockState(blockposition, air);
+				this.world.getChunkFromBlockCoords(blockposition).setBlockState(blockposition, air);
+//				ChunkUtil.getChunk(blockposition.getX() >> 4, blockposition.getZ() >> 4).setBlockState(blockposition, air);
 				this.blocks.remove(key);
 				return true;
 			}

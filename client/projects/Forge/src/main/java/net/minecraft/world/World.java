@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
+import falcun.net.z.optimizations.chunks.ChunkGetter;
 import falcun.net.z.optimizations.explosions.cache.ExplosionCache;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -241,12 +242,20 @@ public abstract class World implements IBlockAccess {
 	protected boolean isChunkLoaded(int x, int z, boolean allowEmpty) {
 		return this.chunkProvider.chunkExists(x, z) && (allowEmpty || !this.chunkProvider.provideChunk(x, z).isEmpty());
 	}
+	public final ChunkGetter chunkGetter = new ChunkGetter(this);
 
 	public Chunk getChunkFromBlockCoords(BlockPos pos) {
+//		return chunkGetter.getChunk(pos);
 		return this.getChunkFromChunkCoords(pos.getX() >> 4, pos.getZ() >> 4);
 	}
 
+
 	public Chunk getChunkFromChunkCoords(int chunkX, int chunkZ) {
+		return chunkGetter.getChunk(chunkX, chunkZ);
+//		return this.chunkProvider.provideChunk(chunkX, chunkZ);
+	}
+
+	public Chunk provide(int chunkX, int chunkZ) {
 		return this.chunkProvider.provideChunk(chunkX, chunkZ);
 	}
 
@@ -1769,6 +1778,7 @@ public abstract class World implements IBlockAccess {
 	}
 
 	public Explosion newExplosion(Entity entityIn, double x, double y, double z, float strength, boolean isFlaming, boolean isSmoking) {
+		System.out.println("T");
 		Explosion explosion = new Explosion(this, entityIn, x, y, z, strength, isFlaming, isSmoking);
 		if (net.minecraftforge.event.ForgeEventFactory.onExplosionStart(this, explosion)) return explosion;
 		explosion.a();

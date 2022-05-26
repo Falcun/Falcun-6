@@ -79,7 +79,7 @@ public class Explosion extends CachedExplosion {
 
 
 	public void a() {
-		if (!(this.explosionSize < 0.1F) && !Falcun.minecraft.theWorld.isRemote) {
+		if (!(this.explosionSize < 0.1F) ) {
 			this.cache();
 			if (this.isSmoking) {
 				this.handleBlocks();

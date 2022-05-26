@@ -4,6 +4,8 @@ import falcun.net.Falcun;
 import it.unimi.dsi.fastutil.ints.Int2FloatLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2FloatMap;
 import net.minecraft.entity.Entity;
+import net.minecraft.world.World;
+
 public class ExplosionCache {
 	private static double locX;
 	private static double locY;
@@ -32,8 +34,10 @@ public class ExplosionCache {
 	public double momentum;
 	public boolean blockDensity = true;
 	private int tick;
+	private final World     world;
 
-	public ExplosionCache() {
+	public ExplosionCache(World worldIn) {
+		this.world = worldIn;
 		++identification;
 	}
 
@@ -46,11 +50,16 @@ public class ExplosionCache {
 	}
 
 	public boolean checkTick() {
-		return this.tick == Falcun.minecraft.theWorld.currentTick;
+//		return this.tick == Falcun.minecraft.theWorld.currentTick;
+		return this.tick == this.world.currentTick;
 	}
 
 	public void updateId() {
-		this.tick = Falcun.minecraft.theWorld.currentTick;
+//		if (Falcun.minecraft.theWorld == null) {
+//			this.tick = 0;
+//		} else
+//			this.tick = Falcun.minecraft.theWorld.currentTick;
+		this.tick = this.world.currentTick;
 		lastId = identification;
 		locX = this.posX;
 		locY = this.posY;
