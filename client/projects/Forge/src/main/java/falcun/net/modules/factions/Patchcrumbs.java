@@ -83,18 +83,18 @@ public class Patchcrumbs extends FalcunModule implements FalcunEventBusModule {
     enum wallCoord{
     }
 
-    private ArrayList<WallCoord> wallCoords = new ArrayList<WallCoord>();
-    public PatchCrumb currentCrumb = null;
-    private PatchCrumb lastCrumb;
+    private transient ArrayList<WallCoord> wallCoords = new ArrayList<WallCoord>();
+    public transient PatchCrumb currentCrumb = null;
+    private transient PatchCrumb lastCrumb;
 
-    private int currentCoordX;
-    private int currentCoordZ;
-    private double highestY;
-    private TNTCrumb currentCrumbEntity;
-    private TNTCrumb lastCrumb1;
+    private transient int currentCoordX;
+    private transient int currentCoordZ;
+    private transient double highestY;
+    private transient TNTCrumb currentCrumbEntity;
+    private transient TNTCrumb lastCrumb1;
 
-    private long nextAllowed = 0L;
-    private int timeout = 2;
+    private transient long nextAllowed = 0L;
+    private transient int timeout = 2;
 
 //    private HUDElement hud;
 
