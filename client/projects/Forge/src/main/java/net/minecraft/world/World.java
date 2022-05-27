@@ -251,8 +251,8 @@ public abstract class World implements IBlockAccess {
 
 
 	public Chunk getChunkFromChunkCoords(int chunkX, int chunkZ) {
-		return chunkGetter.getChunk(chunkX, chunkZ);
-//		return this.chunkProvider.provideChunk(chunkX, chunkZ);
+//		return chunkGetter.getChunk(chunkX, chunkZ);
+		return this.chunkProvider.provideChunk(chunkX, chunkZ);
 	}
 
 	public Chunk provide(int chunkX, int chunkZ) {

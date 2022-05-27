@@ -4,6 +4,7 @@ import falcun.net.api.oldgui.animations.FalcunSaberSnake;
 import falcun.net.api.oldgui.components.Component;
 import falcun.net.api.oldgui.components.gradient.HorizontalGradient;
 import falcun.net.api.oldgui.components.gradient.VerticalGradient;
+import falcun.net.api.oldgui.components.rect.ColorSquare;
 import falcun.net.api.oldgui.region.GuiRegion;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
@@ -21,6 +22,14 @@ public final class GuiUtils {
 		List<Component> gradients = makeBoxVerticalShadows(gr, len);
 		gradients.addAll(makeBoxHorizontalShadows(gr, len));
 		return gradients;
+	}
+
+	public static ColorSquare makeSquare(GuiRegion gr, int color, int curve) {
+		return new ColorSquare(gr, () -> color, curve);
+	}
+
+	public static ColorSquare makeSquare(GuiRegion gr, int color) {
+		return makeSquare(gr, color, 0);
 	}
 
 	public static void addSaberSnake(Component comp) {

@@ -130,9 +130,9 @@ public class VerticalScroll extends Component {
 		if (scrollRemain != 0) {
 			getScrollRemaining();
 			if (lastDir == Direction.DOWN) {
-				scrolledAmount += (0.01 / 2);
+				scrolledAmount += (0.013);
 			} else {
-				scrolledAmount -= (0.01 / 2);
+				scrolledAmount -= (0.013);
 			}
 			scrolledAmount = Math.min(scrolledAmount, 1);
 			scrolledAmount = Math.max(scrolledAmount, 0);
@@ -162,10 +162,10 @@ public class VerticalScroll extends Component {
 		if (isDragging) {
 			if (mY < region.y + (scrollRegion.height / 2)) {
 				scrolledAmount = 0;
-			} else if (mY > (region.getBottom() - (scrollRegion.height / 2))) {
+			} else if (mY > (region.getBottom() - (scrollRegion.height / 2d))) {
 				scrolledAmount = 1;
 			} else {
-				scrolledAmount = (mY - (region.y + scrollRegion.height / 2)) / (double) (region.height - scrollRegion.height);
+				scrolledAmount = (mY - (region.y + scrollRegion.height / 2d)) / (double) (region.height - scrollRegion.height);
 			}
 		}
 	}

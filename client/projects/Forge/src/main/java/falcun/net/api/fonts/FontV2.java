@@ -52,6 +52,7 @@ public final class FontV2 implements FalcunFont {
 		this.size = size;
 		Font font = Font.createFont(Font.TRUETYPE_FONT, inputStream).deriveFont((float) size);
 		init(font, normal);
+		inputStream.close();
 	}
 
 	public FontV2(String fontName, int size, boolean normal) {

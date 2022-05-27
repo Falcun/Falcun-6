@@ -7,8 +7,10 @@ import falcun.net.api.oldgui.GuiUtils;
 import falcun.net.api.oldgui.components.Component;
 import falcun.net.api.oldgui.components.number.NumberSlider;
 import falcun.net.api.oldgui.components.rect.ColorSquare;
+import falcun.net.api.oldgui.components.rect.ColorSquareOutline;
 import falcun.net.api.oldgui.components.scroll.VerticalScroll;
 import falcun.net.api.oldgui.components.text.Label;
+import falcun.net.api.oldgui.effects.OnClickEffect;
 import falcun.net.api.oldgui.menu.FalcunPage;
 import falcun.net.api.oldgui.region.GuiRegion;
 import falcun.net.api.modules.FalcunModule;
@@ -49,7 +51,7 @@ public class FalcunModSettingsPage implements FalcunPage {
 		boxHeight -= 20;
 		final GuiRegion boxRegion = new GuiRegion(x, y, boxWidth, boxHeight);
 		{ // TODO: MAKE THIS LOOK NICE
-			final ColorSquare square = new ColorSquare(boxRegion, () -> 0x66ffffff);
+			final ColorSquare square = new ColorSquare(boxRegion, () -> 0x80111111);
 			components.add(square);
 		}
 		GuiRegion scrollRegion = new GuiRegion(boxRegion.getRight() - 8, boxRegion.y + 1, 8, boxRegion.height - 2);
@@ -65,7 +67,7 @@ public class FalcunModSettingsPage implements FalcunPage {
 			final FalcunValue<?> fieldValue = (FalcunValue<?>) field.getValue();
 			final Class<?> type = field.getParameterizedFieldType();
 			final String name = setting.value().toUpperCase();
-			final FalcunFont font = Fonts.Roboto;
+			final FalcunFont font = Fonts.Roboto12;
 			final int wid = (int) font.getStringWidth(name);
 			if (Number.class.isAssignableFrom(type)) {
 				final FalcunBounds bounds = field.getBounds();
@@ -80,7 +82,7 @@ public class FalcunModSettingsPage implements FalcunPage {
 				scroll.addComponent(slider);
 				y += 12;
 				y += 17;
-				y += 10;
+				y += 17;
 			} else if (type == Boolean.class || type == boolean.class) {
 				final GuiRegion gr = new GuiRegion(x, y, boxWidth, 10);
 				final Label label = new Label(gr, name, 0, 0xffffffff, font);
@@ -115,7 +117,7 @@ public class FalcunModSettingsPage implements FalcunPage {
 				};
 				scroll.addComponent(component);
 
-				y += 24;
+				y += 31;
 
 
 			} else if (type == String.class) {
@@ -125,7 +127,6 @@ public class FalcunModSettingsPage implements FalcunPage {
 				Enum<?> currentValue = fieldCasted.getValue();
 				final Enum[] allValues = currentValue.getDeclaringClass().getEnumConstants();
 				final int len = allValues.length;
-
 				Runnable leftArrowClick = () -> {
 					int i = (fieldCasted.getValue().ordinal() - 1) % len;
 					if (i < 0) {
@@ -142,14 +143,48 @@ public class FalcunModSettingsPage implements FalcunPage {
 					Enum<?> newValue = allValues[i];
 					fieldCasted.setValue(newValue);
 				};
-
-				final GuiRegion gr = new GuiRegion(x, y, boxWidth, 10);
+				final GuiRegion gr = new GuiRegion(x, y, boxWidth, 14);
 				final Label label = new Label(gr, name, 0, 0xffffffff, font);
+				final GuiRegion right = gr.offSet(0, 0);
+				right.x = right.getRight() - right.height;
+				right.x -= 10;
+				right.width = right.height;
+				right.width += 5;
+				ColorSquare rightSq = GuiUtils.makeSquare(right, 0xff000000);
+				ColorSquareOutline rightOutline = new ColorSquareOutline(right, 0x66ffffff, 0.04f, 0);
+				int stringlen = 0;
+				for (Enum allValue : allValues) {
+					stringlen = Math.max((int) font.getStringWidth(allValue.name().toUpperCase()), stringlen);
+				}
+				stringlen += 10;
+				GuiRegion center = new GuiRegion(right.x - stringlen, right.y, stringlen, right.height);
+				ColorSquare fontbg = GuiUtils.makeSquare(center, 0xff000000);
+
+				GuiRegion left = new GuiRegion(center.x - right.width, right.y, right.width, right.height);
+				ColorSquare leftSq = GuiUtils.makeSquare(left, 0xff000000);
+				leftSq.effects.add(new OnClickEffect(comp -> leftArrowClick.run()));
+				rightSq.effects.add(new OnClickEffect(comp -> rightArrowClick.run()));
+
+				ColorSquareOutline leftOutline = new ColorSquareOutline(left, 0x66ffffff, 0.04f, 0);
+				Label val = new Label(center.offSet(0, -2), () -> fieldCasted.getValue().name().toUpperCase().replaceAll("_", " "), 1, () -> 0xffffffff, font);
 				scroll.addComponent(label);
 
+				ColorSquareOutline centerOutline = new ColorSquareOutline(center, 0x44ffffff, 0.04f, 0);
 
-				y += 24;
+				Label leftArrow = new Label(left.offSet(0, -3), "<", 1, 0xffffffff, Fonts.Roboto);
+				Label rightArrow = new Label(right.offSet(0, -3), ">", 1, 0xffffffff, Fonts.Roboto);
 
+				scroll.addComponent(rightSq);
+				scroll.addComponent(leftSq);
+				scroll.addComponent(fontbg);
+
+				scroll.addComponent(centerOutline);
+				scroll.addComponent(leftOutline);
+				scroll.addComponent(rightOutline);
+				scroll.addComponent(val);
+				scroll.addComponent(leftArrow);
+				scroll.addComponent(rightArrow);
+				y += 31;
 
 
 			} else if (type == FalcunKeyBind.class) {
