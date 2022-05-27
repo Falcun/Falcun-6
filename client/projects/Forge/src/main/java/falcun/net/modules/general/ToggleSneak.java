@@ -10,7 +10,7 @@ import falcun.net.modules.ModuleCategory;
 
 import java.awt.*;
 
-@FalcunModuleInfo(fileName = "ToggleSneak", name = "ToggleSneak", description = "ToggleSneak", version = "1.0.0", category = ModuleCategory.MISC)
+@FalcunModuleInfo(fileName = "ToggleSneak", name = "Toggle Sneak", description = "ToggleSneak", version = "1.0.0", category = ModuleCategory.MISC)
 public class ToggleSneak extends FalcunModule {
     @FalcunSetting("Background")
     FalcunValue<Boolean> backGround = new FalcunValue<>(false);

@@ -9,7 +9,7 @@ import falcun.net.modules.ModuleCategory;
 
 import java.awt.*;
 
-@FalcunModuleInfo(fileName = "DispenserChecker", name = "DispenserChecker", description = "DispenserChecker", version = "1.0.0", category = ModuleCategory.FACS)
+@FalcunModuleInfo(fileName = "DispenserChecker", name = "Dispenser Checker", description = "DispenserChecker", version = "1.0.0", category = ModuleCategory.FACS)
 public class DispenserChecker extends FalcunModule {
 
     @FalcunSetting("Empty Highlight Color")

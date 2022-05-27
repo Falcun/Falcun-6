@@ -6,7 +6,7 @@ import falcun.net.api.modules.config.FalcunSetting;
 import falcun.net.api.modules.config.FalcunValue;
 import falcun.net.modules.ModuleCategory;
 
-@FalcunModuleInfo(fileName = "Screenshotupload", name = "Screenshotupload", description = "Screenshot to imgur", version = "1.0.0", category = ModuleCategory.MISC)
+@FalcunModuleInfo(fileName = "Screenshotupload", name = "Screenshot Upload", description = "Screenshot to imgur", version = "1.0.0", category = ModuleCategory.MISC)
 public class ScreenshotUpload extends FalcunModule {
     @FalcunSetting("Link")
     public FalcunValue<Boolean> link = new FalcunValue<>(true);

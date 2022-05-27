@@ -9,7 +9,7 @@ import falcun.net.modules.ModuleCategory;
 
 import java.awt.*;
 
-@FalcunModuleInfo(fileName = "ArmorStatus", name = "ArmorStatus", description = "ArmorStatus", version = "1.0.0", category = ModuleCategory.MISC)
+@FalcunModuleInfo(fileName = "ArmorStatus", name = "Armor Status", description = "ArmorStatus", version = "1.0.0", category = ModuleCategory.MISC)
 public class ArmorStatus extends FalcunModule {
 
     @FalcunSetting("Item Name")

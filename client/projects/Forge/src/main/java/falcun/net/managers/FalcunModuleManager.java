@@ -124,7 +124,7 @@ public final class FalcunModuleManager {
 	}
 
 
-	public void saveAllModules() {
+	public synchronized void saveAllModules() {
 		falcunModules.values().forEach(this::saveModule);
 	}
 

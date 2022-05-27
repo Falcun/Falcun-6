@@ -62,6 +62,7 @@ public class FalcunModSettingsPage implements FalcunPage {
 		for (final Pair<FalcunSetting, FalcunField<?>> configDatum : module.configData) {
 			final FalcunSetting setting = configDatum.first;
 			final FalcunField<?> field = configDatum.second;
+			final FalcunValue<?> fieldValue = (FalcunValue<?>) field.getValue();
 			final Class<?> type = field.getParameterizedFieldType();
 			final String name = setting.value().toUpperCase();
 			final FalcunFont font = Fonts.Roboto;
@@ -94,7 +95,7 @@ public class FalcunModSettingsPage implements FalcunPage {
 					@Override
 					public void draw(int mX, int mY) {
 						int drawcolor = color.get();
-						if (isOver(mX,mY) && ((FalcunValue<Boolean>) field.getValue()).getValue()){
+						if (isOver(mX, mY) && ((FalcunValue<Boolean>) field.getValue()).getValue()) {
 							drawcolor = FalcunGuiColorPalette.getToggleColor(true);
 						}
 						GuiUtils.drawShape(toggGr.offSet(0, 0), drawcolor, 0, true, 0);
@@ -120,6 +121,36 @@ public class FalcunModSettingsPage implements FalcunPage {
 			} else if (type == String.class) {
 
 			} else if (Enum.class.isAssignableFrom(type)) {
+				FalcunValue<Enum<?>> fieldCasted = ((FalcunValue<Enum<?>>) fieldValue);
+				Enum<?> currentValue = fieldCasted.getValue();
+				final Enum[] allValues = currentValue.getDeclaringClass().getEnumConstants();
+				final int len = allValues.length;
+
+				Runnable leftArrowClick = () -> {
+					int i = (fieldCasted.getValue().ordinal() - 1) % len;
+					if (i < 0) {
+						i = len - 1;
+					}
+					Enum<?> newValue = allValues[i];
+					fieldCasted.setValue(newValue);
+				};
+				Runnable rightArrowClick = () -> {
+					int i = (fieldCasted.getValue().ordinal() + 1) % len;
+					if (i > len - 1) {
+						i = 0;
+					}
+					Enum<?> newValue = allValues[i];
+					fieldCasted.setValue(newValue);
+				};
+
+				final GuiRegion gr = new GuiRegion(x, y, boxWidth, 10);
+				final Label label = new Label(gr, name, 0, 0xffffffff, font);
+				scroll.addComponent(label);
+
+
+				y += 24;
+
+
 
 			} else if (type == FalcunKeyBind.class) {
 

@@ -61,4 +61,5 @@ public final class Falcun {
 	public static <T> void submitJob(Callable<T> job, Consumer<T> callBack) {
 		workerPool.submit(new FutureCallBack<>(job, callBack));
 	}
+
 }

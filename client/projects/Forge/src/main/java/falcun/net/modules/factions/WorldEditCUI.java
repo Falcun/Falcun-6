@@ -10,7 +10,7 @@ import falcun.net.modules.ModuleCategory;
 
 import java.awt.*;
 
-@FalcunModuleInfo(fileName = "WorldEditCUI", name = "WorldEditCUI", description = "WorldEditCUI", version = "1.0.0", category = ModuleCategory.FACS)
+@FalcunModuleInfo(fileName = "WorldEditCUI", name = "World Edit CUI", description = "WorldEditCUI", version = "1.0.0", category = ModuleCategory.FACS)
 public class WorldEditCUI extends FalcunModule {
     @FalcunSetting("See Through")
     FalcunValue<Boolean> seeThrough = new FalcunValue<>(true);

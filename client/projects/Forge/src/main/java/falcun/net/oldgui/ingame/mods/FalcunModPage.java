@@ -152,9 +152,9 @@ public class FalcunModPage implements FalcunPage {
 		final Collection<FalcunModule> modules = filter.isEmpty() || filter.replaceAll(" ", "").isEmpty() ? FalcunModuleManager.getModulesSorted(category) : FalcunModuleManager.getModulesSorted(category).stream().filter(m -> m.getName().toLowerCase().contains(filter.toLowerCase())).collect(Collectors.toList());
 
 		block1: { // TODO: REMOVE FULL BLOCK WHEN FINISHED
-//			if (true){
-//				break block1;
-//			}
+			if (true){
+				break block1;
+			}
 			for (int i = 0; i < 99; ++i) { // TODO: REMOVE THIS ONCE MODULE DEVELOPMENT HAS STARTED
 				for (FalcunModule module : modules) {
 					modules.add(module);

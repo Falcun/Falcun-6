@@ -9,7 +9,7 @@ import falcun.net.modules.ModuleCategory;
 
 import java.awt.*;
 
-@FalcunModuleInfo(fileName = "TickCounter", name = "TickCounter", description = "TickCounter", version = "1.0.0", category = ModuleCategory.FACS)
+@FalcunModuleInfo(fileName = "TickCounter", name = "Tick Counter", description = "TickCounter", version = "1.0.0", category = ModuleCategory.FACS)
 public class TickCounter extends FalcunModule {
     @FalcunSetting("Fill")
     FalcunValue<Boolean> turbosettingsfill = new FalcunValue<>(true);
