@@ -1,7 +1,5 @@
 package falcun.net.managers;
 
-import falcun.net.Falcun;
-import falcun.net.gui.container.playerinventory.FalcunGuiInventory;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;

@@ -16,6 +16,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -201,7 +202,7 @@ public final class NahrFont implements FalcunFont {
 
 
 	public void drawCenteredString(String text, float x, float y, int color) {
-		drawString(text, x - getStringWidthFloat(text) / 2, y, color, false );
+		drawString(text, x - getStringWidthFloat(text) / 2, y, color, false);
 	}
 
 	public void drawString(String text, float x, float y, FontType fontType, int color, int color2) {
@@ -275,6 +276,17 @@ public final class NahrFont implements FalcunFont {
 		return getStringHeight(text);
 	}
 
+	@Override
+	public int size(){
+		return (int)fontSize;
+	}
+
+	@Override
+	public List<String> getLinesWrapped(String text, int maxWid) {
+		ArrayList<String> t = new ArrayList<>();
+		t.add(text);
+		return t;
+	}
 
 
 	private void drawTexturedModalRect(double x, double y, double u, double v, double width, double height) {
@@ -349,7 +361,7 @@ public final class NahrFont implements FalcunFont {
 	}
 
 	public Number getStringWidth(String text) {
-		return (Number)getStringWidth(text);
+		return (Number) getStringWidth(text);
 	}
 
 	public float getStringWidthFloat(String text) {
@@ -522,7 +534,7 @@ public final class NahrFont implements FalcunFont {
 	}
 
 	public void drawString(String text, Number x, Number y, int color, boolean underline) {
-		drawString(text, (float)x,(float) y, FontType.NORMAL, color, 0xFF000000);
+		drawString(text, (float) x, (float) y, FontType.NORMAL, color, 0xFF000000);
 	}
 
 	public int drawString2(String text, float x, float y, int color) {

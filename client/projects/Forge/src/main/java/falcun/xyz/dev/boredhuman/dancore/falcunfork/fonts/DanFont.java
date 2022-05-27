@@ -107,6 +107,12 @@ public class DanFont implements FalcunFont {
 		tessellator.draw();
 	}
 
+	@Override
+	public int size(){
+		return resolution;
+	}
+
+	@Override
 	public List<String> getLinesWrapped(String text, int maxWidth) {
 		String[] words = text.split(" ");
 		if (words.length == 0) {

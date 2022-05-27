@@ -5,11 +5,15 @@ import falcun.net.api.modules.FalcunModule;
 public final class FalcunGuiColorPalette {
 
 	public static int getToggleColor(FalcunModule module) {
-		return getToggleColor(module.isEnabled());
+		return getToggleColorDarker(module.isEnabled());
 	}
 
 	public static int getToggleColor(boolean bool) {
 		return bool ? 0xFF17fc03 : 0xfffc0303;
+	}
+
+	public static int getToggleColorDarker(boolean bool){
+		return bool ? 0xff0a5a20 : 0xff5a0a0c;
 	}
 
 	public static int getBackgroundColor() {

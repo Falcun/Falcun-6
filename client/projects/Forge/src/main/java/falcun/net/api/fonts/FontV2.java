@@ -9,6 +9,9 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
@@ -38,12 +41,21 @@ public final class FontV2 implements FalcunFont {
 	private final static int SPACING = 4;
 	private final static int HEIGHT_ADD = 1;
 
+	private final int size;
+
+	@Override
+	public int size(){
+		return size;
+	}
+
 	public FontV2(InputStream inputStream, int size, boolean normal) throws FontFormatException, IOException {
+		this.size = size;
 		Font font = Font.createFont(Font.TRUETYPE_FONT, inputStream).deriveFont((float) size);
 		init(font, normal);
 	}
 
 	public FontV2(String fontName, int size, boolean normal) {
+		this.size = size;
 		Font font = new Font(fontName, Font.PLAIN, size);
 		init(font, normal);
 	}
@@ -201,6 +213,36 @@ public final class FontV2 implements FalcunFont {
 	@Override
 	public Number stringHeight(String text) {
 		return getStringHeight(text);
+	}
+
+	@Override
+	public List<String> getLinesWrapped(String text, int maxWid) {
+		String[] words = text.split(" ");
+		if (words.length == 0) {
+			return Collections.emptyList();
+		} else if (words.length == 1) {
+			return Collections.singletonList(words[0]);
+		}
+		int width = 0;
+		List<String> lines = new ArrayList<>();
+		StringBuilder line = new StringBuilder();
+		for (String word : words) {
+			width += (int) this.getStringWidth(word);
+
+			if (width > maxWid) {
+				lines.add(line.toString());
+				line = new StringBuilder(word);
+				width = 0;
+			} else {
+				if (line.length() != 0) {
+					line.append(" ");
+					width += size / 4;
+				}
+				line.append(word);
+			}
+		}
+		lines.add(line.toString());
+		return lines;
 	}
 
 	public int getStringWidthInt(String string) {

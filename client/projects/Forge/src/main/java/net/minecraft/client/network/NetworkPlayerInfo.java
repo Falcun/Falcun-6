@@ -22,8 +22,8 @@ public class NetworkPlayerInfo
     private WorldSettings.GameType gameType;
     private int responseTime;
     private boolean playerTexturesLoaded = false;
-    private ResourceLocation locationSkin;
-    private ResourceLocation locationCape;
+    public ResourceLocation locationSkin;
+    public ResourceLocation locationCape;
     private String skinType;
     private IChatComponent displayName;
     private int field_178873_i = 0;
