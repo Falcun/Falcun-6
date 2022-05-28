@@ -42,9 +42,12 @@
     engine.on('event', async event => {
       await Websocket.onEvent(event);
     });
-    client.on('disconnect', async => {
+    client.on('disconnect', async () => {
       const socket = sockets.find(socket => socket.socketId === client.id);
-      if (socket) sockets.splice(sockets.indexOf(socket), 1);
+      if (socket) {
+        sockets.splice(sockets.indexOf(socket), 1);
+        await Websocket.setConnections(sockets);
+      }
     });
   });
 })();
