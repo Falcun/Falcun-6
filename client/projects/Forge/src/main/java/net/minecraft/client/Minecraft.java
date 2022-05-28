@@ -37,6 +37,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import javax.imageio.ImageIO;
 
+import falcun.net.gui.mainmenu.FalcunGuiMainMenu;
 import falcun.net.oldgui.mainmenu.FalcunMainMenu;
 import falcun.net.managers.FalcunGuiManager;
 import net.minecraft.block.material.Material;
@@ -186,7 +187,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 	private static final Logger logger = LogManager.getLogger();
 	private static final ResourceLocation locationMojangPng = new ResourceLocation("textures/gui/title/mojang.png");
 	public static final boolean isRunningOnMac = Util.getOSType() == Util.EnumOS.OSX;
-	public static byte[] memoryReserve = new byte[10485760];
+	public static byte[] memoryReserve = new byte[0];
 	private static final List<DisplayMode> macDisplayModes = Lists.newArrayList(new DisplayMode[]{new DisplayMode(2560, 1600), new DisplayMode(2880, 1800)});
 	private final File fileResourcepacks;
 	private final PropertyMap twitchDetails;
@@ -456,7 +457,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 		net.minecraftforge.fml.common.ProgressManager.pop(bar);
 		net.minecraftforge.fml.client.FMLClientHandler.instance().finishMinecraftLoading();
 
-		 // init evnet here
+		// init evnet here
 
 		this.checkGLError("Post startup");
 		this.ingameGUI = new net.minecraftforge.client.GuiIngameForge(this);
@@ -788,8 +789,8 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 
 		if (guiScreenIn == null && this.theWorld == null) {
 //            guiScreenIn = new GuiMainMenu();
+//			guiScreenIn = new FalcunGuiMainMenu();
 			guiScreenIn = new FalcunMainMenu();
-
 		} else if (guiScreenIn == null && this.thePlayer.getHealth() <= 0.0F) {
 			guiScreenIn = new GuiGameOver();
 		}
@@ -811,7 +812,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 //        if (guiScreenIn instanceof GuiMainMenu)
 		if (guiScreenIn instanceof FalcunMainMenu) {
 			this.gameSettings.showDebugInfo = false;
-			this.ingameGUI.getChatGUI().clearChatMessages();
+//			this.ingameGUI.getChatGUI().clearChatMessages();
 		}
 
 		this.currentScreen = guiScreenIn;
@@ -1032,7 +1033,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 
 		try {
 			System.gc();
-			this.loadWorld((WorldClient) null);
+			this.loadWorld(null);
 		} catch (Throwable var2) {
 			;
 		}
@@ -1044,7 +1045,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 		List<Profiler.Result> list = this.mcProfiler.getProfilingData(this.debugProfilerName);
 
 		if (list != null && !list.isEmpty()) {
-			Profiler.Result profiler$result = (Profiler.Result) list.remove(0);
+			Profiler.Result profiler$result = list.remove(0);
 
 			if (keyCount == 0) {
 				if (profiler$result.field_76331_c.length() > 0) {
@@ -1062,7 +1063,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 						this.debugProfilerName = this.debugProfilerName + ".";
 					}
 
-					this.debugProfilerName = this.debugProfilerName + ((Profiler.Result) list.get(keyCount)).field_76331_c;
+					this.debugProfilerName = this.debugProfilerName + list.get(keyCount).field_76331_c;
 				}
 			}
 		}

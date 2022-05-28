@@ -4,7 +4,6 @@ import falcun.net.Falcun;
 import falcun.net.oldgui.container.playerinventory.FalcunGuiInventory;
 import falcun.net.oldgui.mainmenu.FalcunMainMenu;
 import falcun.net.oldgui.ingame.FalcunInGameMenu;
-//import falcun.net.gui.mainmenu.FalcunModListMenu;
 import falcun.net.oldgui.test.DanFrame;
 import falcun.xyz.accswitcher.the_fireplace.ias.gui.GuiAccountSelector;
 import net.minecraft.client.gui.*;
@@ -35,7 +34,8 @@ public final class FalcunGuiManager {
 
 	public static void openModListMenu() {
 //		Falcun.minecraft.displayGuiScreen(new FalcunModListMenu());
-		Falcun.minecraft.displayGuiScreen(new DanFrame());
+//		Falcun.minecraft.displayGuiScreen(new DanFrame());
+		Falcun.minecraft.displayGuiScreen(new FalcunMainMenu());
 	}
 
 	public static void openAccountSwitchMenu(GuiScreen guiScreen) {

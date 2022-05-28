@@ -4,6 +4,7 @@ import falcun.net.api.fonts.FalcunFont;
 import falcun.net.api.fonts.Fonts;
 import falcun.net.api.gui.util.Horizontal;
 import falcun.net.api.gui.util.Vertical;
+import falcun.xyz.dev.boredhuman.dancore.falcunfork.fonts.DanFont;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.gui.elements.BasicElement;
 
 import java.util.List;
@@ -60,7 +61,10 @@ public class FalcunLabel extends BasicElement<FalcunLabel> {
 					this.font.drawString(line, this.x + this.width - (int) this.font.getStringWidth(this.text), yOffset, this.color, this.underline);
 					break;
 				case 1:
-					this.font.drawString(line, (this.x + this.width) - (int) font.getStringWidth(line), y, this.color, this.underline);
+					if (this.font instanceof DanFont) {
+						((DanFont) this.font).drawCenteredString(line, this.x + this.width / 2, yOffset, this.color, false);
+					} else
+						this.font.drawString(line, (this.x + this.width) - (int) font.getStringWidth(line), y, this.color, this.underline);
 					break;
 			}
 			yOffset += this.font.size();

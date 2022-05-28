@@ -1,6 +1,7 @@
 package falcun.net.api.gui;
 
 import falcun.net.api.gui.pages.FalcunGuiPage;
+import falcun.net.util.FalcunDevEnvironment;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.gui.ElementRenderer;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.gui.elements.BasicElement;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.gui.listener.KeyListener;
@@ -17,6 +18,22 @@ import java.util.LinkedList;
 import java.util.List;
 
 public abstract class FalcunGui extends GuiScreen {
+
+	private static int lastWidth = -1, lastHeight = -1;
+	public static boolean forceRefresh = true;
+
+	@Override
+	public final void initGui() {
+		if (FalcunDevEnvironment.isDevEnvironment || (lastWidth != width || lastHeight != height) || forceRefresh) {
+			init();
+		}
+		lastWidth = width;
+		lastHeight = height;
+
+	}
+
+
+	protected abstract void init();
 
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {

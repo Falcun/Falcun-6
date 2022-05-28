@@ -74,13 +74,14 @@ public class FalcunModSettingsPage implements FalcunPage {
 				final double min = bounds.min();
 				final double max = bounds.max();
 				final GuiRegion gr = new GuiRegion(x, y, boxWidth, 10);
-				final Label label = new Label(gr, () -> name + " | " + ((FalcunValue<Number>) field.getValue()).getValue(), 0, () -> 0xffffffff, font);
+				final Supplier<String> txt = () -> name + " | " + Math.round(100 * ((FalcunValue<Number>) field.getValue()).getValue().doubleValue() ) / 100d;
+				final Label label = new Label(gr, txt, 0, () -> 0xffffffff, font);
 				scroll.addComponent(label);
 
 				final NumberSlider slider = new NumberSlider(gr.offSet(0, 15), 0x00000000, FalcunGuiColorPalette.getToggleColorDarker(true), (FalcunValue<Number>) field.getValue(), min, max);
-				slider.region.height += 2;
+				slider.region.height += 6;
 				scroll.addComponent(slider);
-				y += 12;
+				y += 18;
 				y += 17;
 				y += 17;
 			} else if (type == Boolean.class || type == boolean.class) {
@@ -90,6 +91,7 @@ public class FalcunModSettingsPage implements FalcunPage {
 				scroll.addComponent(label);
 				final Supplier<Integer> color = () -> FalcunGuiColorPalette.getToggleColorDarker(((FalcunValue<Boolean>) field.getValue()).getValue());
 				final GuiRegion toggGr = gr.offSet(0, 0);
+				toggGr.height += 3;
 				toggGr.x = toggGr.getRight() - toggGr.height;
 				toggGr.x -= 5;
 				toggGr.width = toggGr.height;

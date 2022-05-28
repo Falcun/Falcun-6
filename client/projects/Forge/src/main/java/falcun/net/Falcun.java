@@ -3,6 +3,7 @@ package falcun.net;
 import com.google.common.util.concurrent.FutureCallback;
 import falcun.net.api.fonts.Fonts;
 import falcun.net.api.textures.FalcunTexture;
+import falcun.net.managers.FalcunConfigManager;
 import falcun.net.managers.FalcunKeyBindManager;
 import falcun.net.managers.FalcunModuleManager;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.util.FutureCallBack;
@@ -14,6 +15,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
+import javax.swing.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,7 +43,7 @@ public final class Falcun {
 	public static native void render();
 
 	public static native void run();
-	
+
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
@@ -53,7 +55,7 @@ public final class Falcun {
 
 	@Mod.EventHandler
 	public void postInit(FMLPostInitializationEvent e) {
-		System.out.println(Fonts.Roboto.getStringWidth("aaAA"));
+		FalcunConfigManager.init();
 	}
 
 	private static final ExecutorService workerPool = Executors.newFixedThreadPool(4);
