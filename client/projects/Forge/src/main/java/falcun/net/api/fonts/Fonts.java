@@ -86,9 +86,9 @@ public final class Fonts {
 		exo2 = setupFont("Exo2-Regular", 16, false);
 	}
 
-//	private static DanFont setupFont(String name, int size, boolean normal) {
-//		return DanFont.getOrCreateFont("falcun:fonts/" + name + ".ttf", size);
-//	}
+	private static DanFont setupFont(String name, int size) {
+		return DanFont.getOrCreateFont("falcun:fonts/" + name + ".ttf", size);
+	}
 
 	private static FontV2 setupFont(String name, int size, boolean normal) {
 		ResourceLocation location = new ResourceLocation("falcun:fonts/" + name + ".ttf");
