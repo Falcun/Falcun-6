@@ -1,11 +1,8 @@
 package falcun.net;
 
-import com.google.common.util.concurrent.FutureCallback;
-import falcun.net.api.fonts.Fonts;
 import falcun.net.api.textures.FalcunTexture;
 import falcun.net.managers.FalcunConfigManager;
 import falcun.net.managers.FalcunKeyBindManager;
-import falcun.net.managers.FalcunModuleManager;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.util.FutureCallBack;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
@@ -15,7 +12,6 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-import javax.swing.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -49,7 +45,6 @@ public final class Falcun {
 	public void preInit(FMLPreInitializationEvent e) {
 		FalcunTexture.setupArrays();
 		MinecraftForge.EVENT_BUS.register(this);
-		FalcunModuleManager.init();
 		MinecraftForge.EVENT_BUS.register(FalcunKeyBindManager.instance);
 	}
 
@@ -62,6 +57,10 @@ public final class Falcun {
 
 	public static <T> void submitJob(Callable<T> job, Consumer<T> callBack) {
 		workerPool.submit(new FutureCallBack<>(job, callBack));
+	}
+
+	public static void runLater(Runnable r, long delayInMillis) { // TODO: MAKE A SYNC METHOD FOR RUNNING A TASK LATER ON MAIN THREAD WITHOUT USE OF SCHEDULER
+
 	}
 
 }
