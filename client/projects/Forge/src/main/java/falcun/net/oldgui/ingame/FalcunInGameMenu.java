@@ -21,7 +21,7 @@ import falcun.net.api.oldgui.menu.FalcunPage;
 import falcun.net.api.oldgui.region.GuiRegion;
 import falcun.net.api.oldgui.scaling.FalcunScaling;
 import falcun.net.api.textures.FalcunTexture;
-import falcun.net.managers.FalcunModuleManager;
+import falcun.net.managers.FalcunConfigManager;
 import falcun.net.oldgui.ingame.cosmetics.FalcunCosmeticsPage;
 import falcun.net.oldgui.ingame.fps.FalcunFPSPage;
 import falcun.net.oldgui.ingame.groups.FalcunGroupsPage;
@@ -216,7 +216,7 @@ public class FalcunInGameMenu extends FalcunMenu {
 	public void onGuiClosed() {
 		Falcun.submitJob(()-> {
 			try {
-				FalcunModuleManager.instance.saveAllModules();
+				FalcunConfigManager.saveAllModules();
 				return true;
 			} catch (Throwable err){
 				err.printStackTrace();

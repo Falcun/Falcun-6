@@ -1,10 +1,7 @@
 package falcun.net.api.modules;
 
 import falcun.net.Falcun;
-import falcun.net.api.modules.config.FalcunField;
-import falcun.net.api.modules.config.FalcunModuleInfo;
-import falcun.net.api.modules.config.FalcunSetting;
-import falcun.net.api.modules.config.FalcunValue;
+import falcun.net.api.modules.config.*;
 import falcun.net.api.modules.inheritance.FalcunEventBusModule;
 import falcun.net.modules.ModuleCategory;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.util.Pair;
@@ -16,9 +13,10 @@ import java.util.*;
 
 public abstract class FalcunModule {
 
-	private final  transient FalcunModuleInfo info;
-	public  transient ModuleCategory category;
+	private final transient FalcunModuleInfo info;
+	public transient ModuleCategory category;
 
+	@FalcunConfigValue("enabled")
 	private volatile boolean enabled = false;
 	public transient boolean serverDisabled = false;
 
@@ -90,7 +88,6 @@ public abstract class FalcunModule {
 	public void save() {
 
 	}
-
 
 
 }

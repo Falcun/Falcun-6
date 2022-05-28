@@ -21,8 +21,8 @@ import falcun.net.api.oldgui.menu.FalcunPage;
 import falcun.net.api.oldgui.region.GuiRegion;
 import falcun.net.api.modules.FalcunModule;
 import falcun.net.api.modules.inheritance.FalcunSettingsModule;
+import falcun.net.managers.FalcunConfigManager;
 import falcun.net.oldgui.ingame.FalcunInGameMenu;
-import falcun.net.managers.FalcunModuleManager;
 import falcun.net.modules.ModuleCategory;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ChatComponentText;
@@ -149,7 +149,7 @@ public class FalcunModPage implements FalcunPage {
 		GuiRegion boxRegion = new GuiRegion(x, y, right - x, bottom - y);
 		y += 7;
 		x += 7;
-		final Collection<FalcunModule> modules = filter.isEmpty() || filter.replaceAll(" ", "").isEmpty() ? FalcunModuleManager.getModulesSorted(category) : FalcunModuleManager.getModulesSorted(category).stream().filter(m -> m.getName().toLowerCase().contains(filter.toLowerCase())).collect(Collectors.toList());
+		final Collection<FalcunModule> modules = filter.isEmpty() || filter.replaceAll(" ", "").isEmpty() ? FalcunConfigManager.getModulesSorted(category) : FalcunConfigManager.getModulesSorted(category).stream().filter(m -> m.getName().toLowerCase().contains(filter.toLowerCase())).collect(Collectors.toList());
 
 		block1: { // TODO: REMOVE FULL BLOCK WHEN FINISHED
 			if (true){
