@@ -33,7 +33,6 @@ public final class FalcunColorCreator {
 		this.r = validate(r);
 		this.g = validate(g);
 		this.b = validate(b);
-
 	}
 
 	public FalcunColorCreator(float a, int r, int g, int b) {

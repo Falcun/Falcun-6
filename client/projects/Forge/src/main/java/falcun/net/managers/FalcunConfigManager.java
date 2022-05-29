@@ -82,7 +82,7 @@ public final class FalcunConfigManager {
 //					if (!FalcunDevEnvironment.isDevEnvironment) {
 //						jsonString = changeBytes(jsonString);
 //					}
-						jsonString = decodeBase32(jsonString);
+//						jsonString = decodeBase32(jsonString);
 						try {
 							falcunModule = (FalcunModule) gson.fromJson(jsonString, moduleClass);
 						} catch (Throwable err) {
@@ -148,7 +148,7 @@ public final class FalcunConfigManager {
 //			if (!FalcunDevEnvironment.isDevEnvironment) {
 //			jsonString = changeBytes(jsonString);
 //			}
-			jsonString = encodeBase32(jsonString);
+//			jsonString = encodeBase32(jsonString);
 			writer.write(jsonString);
 		} catch (Throwable err) {
 			err.printStackTrace();
