@@ -1,5 +1,6 @@
 package falcun.net;
 
+import falcun.net.api.fonts.Fonts;
 import falcun.net.api.textures.FalcunTexture;
 import falcun.net.managers.FalcunConfigManager;
 import falcun.net.managers.FalcunKeyBindManager;
@@ -50,6 +51,7 @@ public final class Falcun {
 
 	@Mod.EventHandler
 	public void postInit(FMLPostInitializationEvent e) {
+		System.out.println(Fonts.Roboto.getStringWidth("Falcun Client Loading..."));
 		FalcunConfigManager.init();
 	}
 

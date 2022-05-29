@@ -4,7 +4,7 @@ import org.lwjgl.input.Keyboard;
 
 import java.io.Serializable;
 
-public final class FalcunKeyBind implements Serializable {
+public final class FalcunKeyBind  {
 	public int keyBind;
 	public FalcunKeyBind() {
 		this.keyBind = 0;

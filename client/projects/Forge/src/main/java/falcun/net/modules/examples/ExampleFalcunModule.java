@@ -5,6 +5,9 @@ import falcun.net.api.modules.config.*;
 import falcun.net.api.modules.inheritance.FalcunEventBusModule;
 import falcun.net.modules.ModuleCategory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @FalcunModuleInfo(fileName = "ExampleFalcunModule", name = "Example Falcun Module", description = "Example Falcun Module", version = "1.0.0", category = ModuleCategory.MISC)
 public final class ExampleFalcunModule extends FalcunModule implements FalcunEventBusModule {
 
@@ -23,6 +26,19 @@ public final class ExampleFalcunModule extends FalcunModule implements FalcunEve
 
 	@FalcunConfigValue
 	public int timesPlayed = 0;
+
+
+	private static final List<String> listVals;
+
+	static {
+		listVals = new ArrayList<>();
+		listVals.add("a");
+		listVals.add("b");
+		listVals.add("c");
+	}
+
+
+
 
 	enum TestEnum {
 		ONE, TWO, THREE

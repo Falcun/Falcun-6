@@ -9,6 +9,7 @@ import falcun.net.api.modules.config.FalcunConfigValue;
 import falcun.net.api.modules.config.FalcunFPSModule;
 import falcun.net.api.modules.config.FalcunModuleInfo;
 import falcun.net.api.modules.config.FalcunSetting;
+import falcun.net.api.modules.throwables.FinalFalcunSettingException;
 import falcun.net.modules.ModuleCategory;
 import falcun.net.util.FalcunDevEnvironment;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -16,6 +17,8 @@ import org.apache.commons.codec.binary.Base32;
 import org.reflections.Reflections;
 
 import java.io.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Map;
@@ -47,7 +50,7 @@ public final class FalcunConfigManager {
 
 	private static final Class<?>[] moduleClasses;
 
-	private static final Gson gson = new GsonBuilder().setPrettyPrinting().setExclusionStrategies(exclusionStrategy).create();
+	private static final Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithModifiers(java.lang.reflect.Modifier.TRANSIENT).setExclusionStrategies(exclusionStrategy).create();
 
 	static {
 		Set<Class<?>> moduleStuff = reflections.getTypesAnnotatedWith(FalcunModuleInfo.class);
@@ -79,11 +82,14 @@ public final class FalcunConfigManager {
 //					if (!FalcunDevEnvironment.isDevEnvironment) {
 //						jsonString = changeBytes(jsonString);
 //					}
+						jsonString = decodeBase32(jsonString);
 						try {
 							falcunModule = (FalcunModule) gson.fromJson(jsonString, moduleClass);
 						} catch (Throwable err) {
 							err.printStackTrace();
 							falcunModule = (FalcunModule) moduleClass.newInstance();
+							file.delete();
+							file.createNewFile();
 							break block1;
 						}
 						if (falcunModule.isEnabled()) falcunModule.onEnable();
@@ -97,6 +103,24 @@ public final class FalcunConfigManager {
 			} catch (Throwable err) {
 				err.printStackTrace();
 			}
+		}
+		modules.values().forEach(FalcunConfigManager::checkForFinal);
+		fps.values().forEach(FalcunConfigManager::checkForFinal);
+		System.out.println("All modules successfully have loaded.");
+	}
+
+	private static void checkForFinal(FalcunModule value) {
+		try {
+			for (Field field : value.getClass().getDeclaredFields()) {
+				if (!field.isAnnotationPresent(FalcunSetting.class)) continue;
+				if ((field.getModifiers() & Modifier.FINAL) == Modifier.FINAL) {
+					FalcunSetting setting = field.getAnnotation(FalcunSetting.class);
+					String s = field.getClass() + " " + field.getName() + " " + setting.value() + " IS FINAL";
+					throw new FinalFalcunSettingException(s);
+				}
+			}
+		} catch (Throwable err) {
+			err.printStackTrace();
 		}
 	}
 
@@ -124,6 +148,7 @@ public final class FalcunConfigManager {
 //			if (!FalcunDevEnvironment.isDevEnvironment) {
 //			jsonString = changeBytes(jsonString);
 //			}
+			jsonString = encodeBase32(jsonString);
 			writer.write(jsonString);
 		} catch (Throwable err) {
 			err.printStackTrace();

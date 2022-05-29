@@ -5,7 +5,7 @@ import net.minecraft.util.MathHelper;
 
 import java.io.Serializable;
 
-public final class FalcunPosition implements Serializable {
+public final class FalcunPosition  {
 	public int x;
 	public int y;
 	public int z;
