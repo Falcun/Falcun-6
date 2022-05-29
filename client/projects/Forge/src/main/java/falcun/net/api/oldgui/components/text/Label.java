@@ -5,6 +5,7 @@ import falcun.net.api.fonts.Fonts;
 import falcun.net.api.oldgui.components.Component;
 import falcun.net.api.oldgui.region.GuiRegion;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 public class Label extends Component {
@@ -58,17 +59,59 @@ public class Label extends Component {
 	@Override
 	public void draw(int mx, int my) {
 		int y = getY() - 2;
-		switch (alignment.get()) {
-			case LEFT:
-				font.drawString(text.get(), region.x + 1, y, color.get(), underline);
-				break;
-			case CENTER:
-				font.drawString(text.get(), 2 + (region.getMidX() - (int) font.getStringWidth(text.get()) / 2), y, color.get(), underline);
-				break;
-			case RIGHT:
-				font.drawString(text.get(), region.getRight() - (int) font.getStringWidth(text.get()), y, color.get(), underline);
-				break;
+		int yOffset = -font.size();
+
+		if (true) {
+
+			switch (alignment.get()) {
+				case LEFT:
+					font.drawString(text.get(), region.x + 1, y, color.get(), underline);
+					break;
+				case CENTER:
+					font.drawString(text.get(), 2 + (region.getMidX() - (int) font.getStringWidth(text.get()) / 2), y, color.get(), underline);
+					break;
+				case RIGHT:
+					font.drawString(text.get(), region.getRight() - (int) font.getStringWidth(text.get()), y, color.get(), underline);
+					break;
+			}
+
+return;
 		}
+
+		int maxwid = (int) (region.width * 0.8);
+
+		List<String> lines = font.getLinesWrapped(text.get(), maxwid);
+		if (lines.size() > 1) {
+			y += (yOffset * lines.size()) >> 2;
+		}
+		for (String line : lines) {
+			yOffset += font.size();
+			switch (alignment.get()) {
+				case LEFT:
+					font.drawString(line, region.x + 1, y + yOffset, color.get(), underline);
+					continue;
+				case CENTER:
+					font.drawString(line, 2 + (region.getMidX() - (int) font.getStringWidth(line) / 2), y + yOffset, color.get(), underline);
+					continue;
+				case RIGHT:
+					font.drawString(line, region.getRight() - (int) font.getStringWidth(line), y + yOffset, color.get(), underline);
+					continue;
+			}
+
+
+			//			switch (alignment.get()) {
+			//				case LEFT:
+			//					font.drawString(text.get(), region.x + 1, y, color.get(), underline);
+			//					break;
+			//				case CENTER:
+			//					font.drawString(text.get(), 2 + (region.getMidX() - (int) font.getStringWidth(text.get()) / 2), y, color.get(), underline);
+			//					break;
+			//				case RIGHT:
+			//					font.drawString(text.get(), region.getRight() - (int) font.getStringWidth(text.get()), y, color.get(), underline);
+			//					break;
+			//			}
+		}
+
 	}
 
 	public int getY() {

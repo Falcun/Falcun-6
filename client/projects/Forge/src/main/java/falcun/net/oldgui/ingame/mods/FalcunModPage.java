@@ -8,6 +8,7 @@ import falcun.net.api.oldgui.animations.FalcunSaberSnake;
 import falcun.net.api.oldgui.components.Component;
 
 import falcun.net.api.oldgui.components.OutlinedComponent;
+import falcun.net.api.oldgui.components.modules.ModuleBoxComponent;
 import falcun.net.api.oldgui.components.rect.ColorSquare;
 import falcun.net.api.oldgui.components.rect.ColorSquareOutline;
 import falcun.net.api.oldgui.components.scroll.VerticalScroll;
@@ -151,8 +152,9 @@ public class FalcunModPage implements FalcunPage {
 		x += 7;
 		final Collection<FalcunModule> modules = filter.isEmpty() || filter.replaceAll(" ", "").isEmpty() ? FalcunConfigManager.getModulesSorted(category) : FalcunConfigManager.getModulesSorted(category).stream().filter(m -> m.getName().toLowerCase().contains(filter.toLowerCase())).collect(Collectors.toList());
 
-		block1: { // TODO: REMOVE FULL BLOCK WHEN FINISHED
-			if (true){
+		block1:
+		{ // TODO: REMOVE FULL BLOCK WHEN FINISHED
+			if (true) {
 				break block1;
 			}
 			for (int i = 0; i < 99; ++i) { // TODO: REMOVE THIS ONCE MODULE DEVELOPMENT HAS STARTED
@@ -213,11 +215,26 @@ public class FalcunModPage implements FalcunPage {
 				scroll.addComponent(enabledOutline);
 				scroll.addComponent(enabledLabel);
 			}
+
+
+//			GuiRegion gr = new GuiRegion(x, y, 170, 50);
+//			ModuleBoxComponent box = new ModuleBoxComponent(gr, falcunModule);
+//			box.effects.add(new EnterExitEffect((comp, over) -> {
+//				box.label.underline = over;
+//			}));
+//			box.effects.add(new OnClickEffect(comp->{
+//				falcunModule.toggle();
+//			}));
+//			scroll.addComponent(box);
+
+
 			x += 16;
-			x += 170;
+//			x += 170;
+			x += gr.width;
 			if (x + 170 + 16 > right) {
 				x = startX;
-				y += 150;
+//				y += 150;
+				y += gr.height;
 				y += 16;
 			}
 		}

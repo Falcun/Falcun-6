@@ -27,6 +27,9 @@ public final class ExampleFalcunModule extends FalcunModule implements FalcunEve
 
 
 
+
+
+
 	enum TestEnum {
 		ONE, TWO, THREE
 	}
