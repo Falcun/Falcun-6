@@ -37,7 +37,7 @@ public final class FalcunHudEditor extends FalcunMenu {
 		super.initGui();
 	}
 
-	private final List<HudComponent> components = new LinkedList<>();
+	public final List<HudComponent> components = new LinkedList<>();
 
 	@Override
 	protected void init() {
@@ -53,11 +53,9 @@ public final class FalcunHudEditor extends FalcunMenu {
 					falcunModule.screenPosition.getValue().setFirst((double) component.region.x).setSecond((double) component.region.y);
 					hudComponent.region.width = falcunModule.width.getValue();
 					hudComponent.region.height = falcunModule.height.getValue();
-//					Gui.drawRect(hudComponent.region.x, hudComponent.region.y, hudComponent.region.getRight(), hudComponent.region.getBottom(), 0x22ffffff);
 				}
 			});
 			HudComponent.ScalingEffect scalingEffect = hudComponent.createScaling(0xffffffff, hudComponent);
-			// TODO: ADD DRAGGING HERE
 			HudDrag drag = new HudDrag(falcunModule);
 			drag.doDrag = () -> !scalingEffect.selected;
 
