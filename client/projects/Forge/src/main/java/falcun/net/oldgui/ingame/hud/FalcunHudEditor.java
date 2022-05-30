@@ -29,7 +29,7 @@ public final class FalcunHudEditor extends FalcunMenu {
 	private final static int HOVER_TEXT = new Color(200, 200, 200, 255).getRGB();
 	private final static int HOVER_BACKGROUND = new Color(75, 75, 75, 255).getRGB();
 	private final static int HOVER_BORDER = new Color(0, 0, 0, 255).getRGB();
-
+//
 
 
 	@Override
