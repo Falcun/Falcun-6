@@ -372,6 +372,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 		}
 
 		logger.info("LWJGL Version: " + Sys.getVersion());
+
 		this.setWindowIcon();
 		this.setInitialDisplayMode();
 		this.createDisplay();
@@ -507,7 +508,8 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 
 	private void createDisplay() throws LWJGLException {
 		Display.setResizable(true);
-		Display.setTitle("Minecraft 1.8.9");
+//		Display.setTitle("Minecraft 1.8.9");
+		Display.setTitle("Falcun Client");
 
 		try {
 			Display.create((new PixelFormat()).withDepthBits(24));
@@ -549,11 +551,17 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 			try {
 				inputstream = this.mcDefaultResourcePack.getInputStreamAssets(new ResourceLocation("icons/icon_16x16.png"));
 				inputstream1 = this.mcDefaultResourcePack.getInputStreamAssets(new ResourceLocation("icons/icon_32x32.png"));
+//				inputstream = this.mcDefaultResourcePack.getInputStreamAssets(new ResourceLocation("falcun:falcun16x16.png"));
+//				inputstream1 = this.mcDefaultResourcePack.getInputStreamAssets(new ResourceLocation("falcun:falcun16x16.png"));
+//				inputstream = getClass().getResourceAsStream("assets/falcun/falcun16x16.png");
+//				inputstream1 = getClass().getResourceAsStream("assets/falcun/falcun32x32.png");
+
 
 				if (inputstream != null && inputstream1 != null) {
 					Display.setIcon(new ByteBuffer[]{this.readImageToBuffer(inputstream), this.readImageToBuffer(inputstream1)});
 				}
 			} catch (IOException ioexception) {
+				ioexception.printStackTrace();
 				logger.error((String) "Couldn\'t set icon", (Throwable) ioexception);
 			} finally {
 				IOUtils.closeQuietly(inputstream);

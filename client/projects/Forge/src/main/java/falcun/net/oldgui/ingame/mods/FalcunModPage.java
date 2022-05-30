@@ -1,5 +1,6 @@
 package falcun.net.oldgui.ingame.mods;
 
+import falcun.net.Falcun;
 import falcun.net.api.colors.FalcunGuiColorPalette;
 import falcun.net.api.fonts.FalcunFont;
 import falcun.net.api.fonts.Fonts;
@@ -25,6 +26,7 @@ import falcun.net.api.modules.inheritance.FalcunSettingsModule;
 import falcun.net.managers.FalcunConfigManager;
 import falcun.net.oldgui.ingame.FalcunInGameMenu;
 import falcun.net.modules.ModuleCategory;
+import falcun.net.oldgui.ingame.hud.FalcunHudEditor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ResourceLocation;
@@ -72,10 +74,10 @@ public class FalcunModPage implements FalcunPage {
 		{ // TODO: MODULE CATEGORIES SCROLL
 			ModuleCategory[] categories = ModuleCategory.values();
 			int y = top + 5;
+			FalcunFont font = Fonts.Roboto;
 
 			for (final ModuleCategory moduleCategory : categories) {
 				String name = moduleCategory.name.toUpperCase();
-				FalcunFont font = Fonts.Roboto;
 				GuiRegion gr = new GuiRegion(left, y, catLineR.getRight() - left, 32);
 				ColorSquare sq3 = new ColorSquare(gr.offSet(0, 0), () -> 0x80111111);
 				OutlinedComponent snakey = new OutlinedComponent(gr, () -> 0x00000000, 1);
@@ -114,6 +116,18 @@ public class FalcunModPage implements FalcunPage {
 				y += 32;
 				y += 12;
 			}
+
+			final int edithudoffset = 32;
+			GuiRegion gr = new GuiRegion(left, categoriesBoxGR.getBottom() - edithudoffset, catLineR.getRight() - left, edithudoffset);
+			ColorSquare cs = new ColorSquare(gr, () -> 0x80111111);
+			Label label = new Label(cs.region.offSet(0, 0), "EDIT HUD", 1, 0xffffffff, font);
+			cs.effects.add(new EnterExitEffect((comp, over) -> {
+				label.underline = over;
+				cs.color = over ? () -> 0xff111111 : () -> 0x80111111;
+			}));
+			cs.effects.add(new OnClickEffect(comp -> Falcun.minecraft.displayGuiScreen(new FalcunHudEditor())));
+			components.add(cs);
+			components.add(label);
 		}
 		left = catLineR.getRight();
 

@@ -150,6 +150,7 @@ public final class FalcunConfigManager {
 //			}
 //			jsonString = encodeBase32(jsonString);
 			writer.write(jsonString);
+			writer.flush();
 		} catch (Throwable err) {
 			err.printStackTrace();
 		}

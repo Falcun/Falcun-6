@@ -34,13 +34,18 @@ public abstract class FalcunMenu extends GuiScreen {
 		GlStateManager.popMatrix();
 	}
 
+	@Override
+	protected void mouseReleased(int mouseX, int mouseY, int state) {
+		components.forEach(it -> handleMouseClick(mouseX, mouseY, state, it));
+	}
+
 	public abstract List<Component> getComponents();
 
 	private static int savedW = -1, savedH = -1;
 	protected boolean isScaled = false;
 
 	public void initGui() {
-		if (savedH != height || savedW != width) {
+		if (savedH != height || savedW != width || true) {
 			savedH = height;
 			savedW = width;
 			isScaled = true;

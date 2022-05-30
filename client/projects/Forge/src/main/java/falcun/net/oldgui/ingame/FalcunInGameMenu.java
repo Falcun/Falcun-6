@@ -214,18 +214,6 @@ public class FalcunInGameMenu extends FalcunMenu {
 	}
 
 	public void onGuiClosed() {
-		Falcun.submitJob(()-> {
-			try {
-				FalcunConfigManager.saveAllModules();
-				return true;
-			} catch (Throwable err){
-				err.printStackTrace();
-			}
-			return false;
-		}, bool -> {
-			if (!bool){
-
-			}
-		});
+		Falcun.saveConfig();
 	}
 }

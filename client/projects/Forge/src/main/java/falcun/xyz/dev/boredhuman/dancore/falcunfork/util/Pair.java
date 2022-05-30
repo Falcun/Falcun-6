@@ -2,13 +2,23 @@ package falcun.xyz.dev.boredhuman.dancore.falcunfork.util;
 
 import java.util.Objects;
 
-public final class Pair<A, B> {
+public class Pair<A, B> {
 	public A first;
 	public B second;
 
 	public Pair(A first, B second) {
 		this.first = first;
 		this.second = second;
+	}
+
+	public Pair<A,B> setFirst(A a) {
+		this.first = a;
+		return this;
+	}
+
+	public Pair<A,B>  setSecond(B b) {
+		this.second = b;
+		return this;
 	}
 
 	@Override
@@ -28,7 +38,7 @@ public final class Pair<A, B> {
 		return Objects.hash(this.first, this.second);
 	}
 
-	public static <A,B> Pair<A,B> of(A first, B second) {
+	public static <A, B> Pair<A, B> of(A first, B second) {
 		return new Pair<>(first, second);
 	}
 }
