@@ -32,7 +32,7 @@ public class DamageSource
     private boolean projectile;
     private boolean difficultyScaled;
     private boolean magicDamage;
-    public boolean explosion;
+    private boolean explosion;
     public String damageType;
 
     public static DamageSource causeMobDamage(EntityLivingBase mob)

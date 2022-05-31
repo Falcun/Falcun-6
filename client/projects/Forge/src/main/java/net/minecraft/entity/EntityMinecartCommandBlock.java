@@ -1,6 +1,8 @@
 package net.minecraft.entity;
 
 import io.netty.buffer.ByteBuf;
+import net.mattbenson.Wrapper;
+import net.mattbenson.events.types.entity.MinecartInteractEvent;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.server.CommandBlockLogic;
 import net.minecraft.entity.item.EntityMinecart;
@@ -109,6 +111,10 @@ public class EntityMinecartCommandBlock extends EntityMinecart
 
     public boolean interactFirst(EntityPlayer playerIn)
     {
+    	if(Wrapper.getInstance().post(new MinecartInteractEvent(playerIn, this))) {
+    		return true;
+    	}
+    	
         if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.minecart.MinecartInteractEvent(this, playerIn))) return true;
         this.commandBlockLogic.tryOpenEditCommandBlock(playerIn);
         return false;

@@ -135,7 +135,7 @@ public class TeleportToTeam implements ISpectatorMenuView, ISpectatorMenuObject
                 float f = (float)(i >> 16 & 255) / 255.0F;
                 float f1 = (float)(i >> 8 & 255) / 255.0F;
                 float f2 = (float)(i & 255) / 255.0F;
-                Gui.drawRect(1, 1, 15, 15, MathHelper.func_180183_b(f * p_178663_1_, f1 * p_178663_1_, f2 * p_178663_1_) | alpha << 24);
+                Gui.drawRectangle(1, 1, 15, 15, MathHelper.func_180183_b(f * p_178663_1_, f1 * p_178663_1_, f2 * p_178663_1_) | alpha << 24);
             }
 
             Minecraft.getMinecraft().getTextureManager().bindTexture(this.field_178677_c);

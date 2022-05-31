@@ -14,11 +14,18 @@ public class ClickEvent
         this.value = theValue;
     }
 
+    /**
+     * Gets the action to perform when this event is raised.
+     */
     public ClickEvent.Action getAction()
     {
         return this.action;
     }
 
+    /**
+     * Gets the value to perform the action on when this event is raised.  For example, if the action is "open URL",
+     * this would be the URL to open.
+     */
     public String getValue()
     {
         return this.value;
@@ -80,7 +87,11 @@ public class ClickEvent
         RUN_COMMAND("run_command", true),
         TWITCH_USER_INFO("twitch_user_info", false),
         SUGGEST_COMMAND("suggest_command", true),
-        CHANGE_PAGE("change_page", true);
+        CHANGE_PAGE("change_page", true),
+        LOAD_SCHEM("load_scheme", false),
+		DELETE_FILE("delete_file", false),
+		COPY_URL("copy_url", false),
+		LINK("link", false);
 
         private static final Map<String, ClickEvent.Action> nameMapping = Maps.<String, ClickEvent.Action>newHashMap();
         private final boolean allowedInChat;
@@ -107,8 +118,7 @@ public class ClickEvent
             return (ClickEvent.Action)nameMapping.get(canonicalNameIn);
         }
 
-        static
-        {
+        static {
             for (ClickEvent.Action clickevent$action : values())
             {
                 nameMapping.put(clickevent$action.getCanonicalName(), clickevent$action);

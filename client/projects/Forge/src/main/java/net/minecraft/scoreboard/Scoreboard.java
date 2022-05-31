@@ -198,6 +198,7 @@ public class Scoreboard
 
     public void removeObjective(ScoreObjective p_96519_1_)
     {
+    	if (p_96519_1_ != null) {
         this.scoreObjectives.remove(p_96519_1_.getName());
 
         for (int i = 0; i < 19; ++i)
@@ -221,6 +222,7 @@ public class Scoreboard
         }
 
         this.onScoreObjectiveRemoved(p_96519_1_);
+    	}
     }
 
     public void setObjectiveInDisplaySlot(int p_96530_1_, ScoreObjective p_96530_2_)
@@ -264,6 +266,7 @@ public class Scoreboard
 
     public void removeTeam(ScorePlayerTeam p_96511_1_)
     {
+    	if (p_96511_1_.getRegisteredName() != null)
         this.teams.remove(p_96511_1_.getRegisteredName());
 
         for (String s : p_96511_1_.getMembershipCollection())

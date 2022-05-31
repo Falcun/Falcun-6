@@ -27,12 +27,13 @@ public class GLAllocation
                 s = GLU.gluErrorString(j);
             }
 
-            throw new IllegalStateException("glGenLists returned an ID of 0 for a count of " + range + ", GL error (" + j + "): " + s);
+            //throw new IllegalStateException("glGenLists returned an ID of 0 for a count of " + range + ", GL error (" + j + "): " + s);
         }
         else
         {
             return i;
         }
+		return i;
     }
 
     public static synchronized void deleteDisplayLists(int list, int range)

@@ -1,10 +1,9 @@
 package net.minecraft.util;
 
+import net.mattbenson.Wrapper;
+import net.mattbenson.events.types.movement.MovementInputEvent;
 import net.minecraft.client.settings.GameSettings;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-@SideOnly(Side.CLIENT)
 public class MovementInputFromOptions extends MovementInput
 {
     private final GameSettings gameSettings;
@@ -16,6 +15,10 @@ public class MovementInputFromOptions extends MovementInput
 
     public void updatePlayerMoveState()
     {
+    	if(!Wrapper.getInstance().post(new MovementInputEvent(this))) {
+    		return;
+    	}
+    	
         this.moveStrafe = 0.0F;
         this.moveForward = 0.0F;
 

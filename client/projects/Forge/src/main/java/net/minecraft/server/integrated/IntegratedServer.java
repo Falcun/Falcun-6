@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
+
+import net.mattbenson.Wrapper;
+import net.mattbenson.events.types.world.WorldLoadEvent;
 import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ThreadLanServerPing;
@@ -97,6 +100,7 @@ public class IntegratedServer extends MinecraftServer
                 world.getWorldInfo().setGameType(getGameType());
             }
             net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.WorldEvent.Load(world));
+            Wrapper.getInstance().post(new WorldLoadEvent(world));
         }
 
         this.getConfigurationManager().setPlayerManager(new WorldServer[]{ overWorld });

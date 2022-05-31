@@ -38,4 +38,15 @@ public class RegistryNamespacedDefaultedByKey<K, V> extends RegistryNamespaced<K
         V v = super.getObjectById(id);
         return (V)(v == null ? this.defaultValue : v);
     }
+
+    public int getIdResource(K itemName)
+    {
+        V obj = getObject(itemName);
+        if (obj == null)
+        {
+            return -1;
+        }
+
+        return getIDForObject(obj);
+    }
 }

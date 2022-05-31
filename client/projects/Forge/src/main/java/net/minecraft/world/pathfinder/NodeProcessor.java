@@ -25,6 +25,8 @@ public abstract class NodeProcessor
 
     public void postProcess()
     {
+    	//MATT NEW FPS
+    	this.blockaccess = null;
     }
 
     protected PathPoint openPoint(int x, int y, int z)

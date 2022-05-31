@@ -56,6 +56,10 @@ public class S3FPacketCustomPayload implements Packet<INetHandlerPlayClient>
     public void processPacket(INetHandlerPlayClient handler)
     {
         handler.handleCustomPayload(this);
+	//MATT NEW FPS
+	if (this.data != null) {
+            this.data.release();
+        }
     }
 
     @SideOnly(Side.CLIENT)

@@ -994,8 +994,7 @@ public class WorldServer extends World implements IThreadListener
     {
         Explosion explosion = new Explosion(this, entityIn, x, y, z, strength, isFlaming, isSmoking);
         if (net.minecraftforge.event.ForgeEventFactory.onExplosionStart(this, explosion)) return explosion;
-        explosion.a();
-//        explosion.doExplosionA();
+        explosion.doExplosionA();
         explosion.doExplosionB(false);
 
         if (!isSmoking)

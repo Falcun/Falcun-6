@@ -396,6 +396,12 @@ public class ModelFluid implements IModelCustomData<ModelFluid>
         {
             return IPerspectiveAwareModel.MapWrapper.handlePerspective(this, transforms, type);
         }
+
+		@Override
+		public TextureAtlasSprite getTexture() {
+			// TODO Auto-generated method stub
+			return null;
+		}
     }
 
     @Override

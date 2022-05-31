@@ -165,4 +165,9 @@ public class ExtendedBlockStorage
     {
         this.skylightArray = newSkylightArray;
     }
+    
+    public int getBlockRefCount()
+    {
+        return this.blockRefCount;
+    }
 }

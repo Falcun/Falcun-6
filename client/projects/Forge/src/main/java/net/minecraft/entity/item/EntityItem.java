@@ -1,5 +1,6 @@
 package net.minecraft.entity.item;
 
+import net.mattbenson.Wrapper;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -154,6 +155,11 @@ public class EntityItem extends Entity
 
     private void searchForOtherItemsNearby()
     {
+    	if(Wrapper.getInstance().isItemSearching()) {
+    		if(getEntityItem().stackSize >= getEntityItem().getMaxStackSize()) {
+    			return;
+    		}
+    	}
         for (EntityItem entityitem : this.worldObj.getEntitiesWithinAABB(EntityItem.class, this.getEntityBoundingBox().expand(0.5D, 0.0D, 0.5D)))
         {
             this.combineItems(entityitem);

@@ -382,7 +382,7 @@ public class NBTTagCompound extends NBTBase
         return super.hashCode() ^ this.tagMap.hashCode();
     }
 
-    private static void writeEntry(String name, NBTBase data, DataOutput output) throws IOException
+    public static void writeEntry(String name, NBTBase data, DataOutput output) throws IOException
     {
         output.writeByte(data.getId());
 

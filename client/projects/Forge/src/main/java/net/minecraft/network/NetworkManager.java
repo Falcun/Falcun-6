@@ -32,6 +32,9 @@ import java.net.SocketAddress;
 import java.util.Queue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.crypto.SecretKey;
+
+import net.mattbenson.Wrapper;
+import net.mattbenson.events.types.network.IngoingPacketEvent;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.CryptManager;
@@ -81,7 +84,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
     private final EnumPacketDirection direction;
     private final Queue<NetworkManager.InboundHandlerTuplePacketListener> outboundPacketsQueue = Queues.<NetworkManager.InboundHandlerTuplePacketListener>newConcurrentLinkedQueue();
     private final ReentrantReadWriteLock field_181680_j = new ReentrantReadWriteLock();
-    private Channel channel;
+    public Channel channel;
     private SocketAddress socketAddress;
     private INetHandler packetListener;
     private IChatComponent terminationReason;
@@ -148,6 +151,10 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
         {
             try
             {
+            	if(!Wrapper.getInstance().post(new IngoingPacketEvent(p_channelRead0_2_))) {
+            		return;
+            	}
+            	
                 p_channelRead0_2_.processPacket(this.packetListener);
             }
             catch (ThreadQuickExitException var4)

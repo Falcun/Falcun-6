@@ -1,6 +1,7 @@
 package net.minecraft.world.chunk;
 
 import com.google.common.base.Predicate;
+
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 import java.util.Arrays;
@@ -9,8 +10,11 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import net.mattbenson.Wrapper;
+import net.mattbenson.events.types.world.ChunkLoadEvent;
+import net.mattbenson.patcher.ChunkHook;
 import net.minecraft.block.Block;
-import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
@@ -51,7 +55,7 @@ public class Chunk
     public final int zPosition;
     private boolean isGapLightingUpdated;
     private final Map<BlockPos, TileEntity> chunkTileEntityMap;
-    public final ClassInheritanceMultiMap<Entity>[] entityLists;
+    private final ClassInheritanceMultiMap<Entity>[] entityLists;
     private boolean isTerrainPopulated;
     private boolean isLightPopulated;
     private boolean field_150815_m;
@@ -512,60 +516,12 @@ public class Chunk
             throw reportedexception;
         }
     }
-
-    public IBlockState getBlockState(final BlockPos pos)
-    {
-        if (this.worldObj.getWorldType() == WorldType.DEBUG_WORLD)
-        {
-            IBlockState iblockstate = null;
-
-            if (pos.getY() == 60)
-            {
-                iblockstate = Blocks.barrier.getDefaultState();
-            }
-
-            if (pos.getY() == 70)
-            {
-                iblockstate = ChunkProviderDebug.func_177461_b(pos.getX(), pos.getZ());
-            }
-
-            return iblockstate == null ? Blocks.air.getDefaultState() : iblockstate;
-        }
-        else
-        {
-            try
-            {
-                if (pos.getY() >= 0 && pos.getY() >> 4 < this.storageArrays.length)
-                {
-                    ExtendedBlockStorage extendedblockstorage = this.storageArrays[pos.getY() >> 4];
-
-                    if (extendedblockstorage != null)
-                    {
-                        int j = pos.getX() & 15;
-                        int k = pos.getY() & 15;
-                        int i = pos.getZ() & 15;
-                        return extendedblockstorage.get(j, k, i);
-                    }
-                }
-
-                return Blocks.air.getDefaultState();
-            }
-            catch (Throwable throwable)
-            {
-                CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Getting block state");
-                CrashReportCategory crashreportcategory = crashreport.makeCategory("Block being got");
-                crashreportcategory.addCrashSectionCallable("Location", new Callable<String>()
-                {
-                    public String call() throws Exception
-                    {
-                        return CrashReportCategory.getCoordinateInfo(pos);
-                    }
-                });
-                throw new ReportedException(crashreport);
-            }
-        }
+    
+    //MATT NEW FPS
+    public IBlockState getBlockState(final BlockPos pos) {
+        return ChunkHook.getBlockState((Chunk)this, pos);
     }
-
+    
     private int getBlockMetadata(int x, int y, int z)
     {
         if (y >> 4 >= this.storageArrays.length)
@@ -912,6 +868,7 @@ public class Chunk
 
             this.worldObj.loadEntities(com.google.common.collect.ImmutableList.copyOf(this.entityLists[i]));
         }
+        Wrapper.getInstance().post(new ChunkLoadEvent(worldObj, this));
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(this));
     }
 
@@ -938,6 +895,7 @@ public class Chunk
 
     public void getEntitiesWithinAABBForEntity(Entity entityIn, AxisAlignedBB aabb, List<Entity> listToFill, Predicate <? super Entity > p_177414_4_)
     {
+    	//Matt Inspect TNT
         int i = MathHelper.floor_double((aabb.minY - World.MAX_ENTITY_RADIUS) / 16.0D);
         int j = MathHelper.floor_double((aabb.maxY + World.MAX_ENTITY_RADIUS) / 16.0D);
         i = MathHelper.clamp_int(i, 0, this.entityLists.length - 1);

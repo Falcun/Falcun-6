@@ -88,6 +88,12 @@ public interface ISmartBlockModel extends IBakedModel
                 {
                     return PerspectiveWrapper.this.handleBlockState(state);
                 }
+
+				@Override
+				public TextureAtlasSprite getTexture() {
+					// TODO Auto-generated method stub
+					return null;
+				}
             }, pair.getRight());
         }
     }

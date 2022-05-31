@@ -17,7 +17,7 @@ import org.apache.logging.log4j.Logger;
 public class CommandHandler implements ICommandManager
 {
     private static final Logger logger = LogManager.getLogger();
-    private final Map<String, ICommand> commandMap = Maps.<String, ICommand>newHashMap();
+    public final Map<String, ICommand> commandMap = Maps.<String, ICommand>newHashMap();
     private final Set<ICommand> commandSet = Sets.<ICommand>newHashSet();
 
     public int executeCommand(ICommandSender sender, String rawCommand)
@@ -93,7 +93,7 @@ public class CommandHandler implements ICommandManager
         return j;
     }
 
-    protected boolean tryExecute(ICommandSender sender, String[] args, ICommand command, String input)
+    public boolean tryExecute(ICommandSender sender, String[] args, ICommand command, String input)
     {
         try
         {

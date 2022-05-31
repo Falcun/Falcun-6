@@ -1,5 +1,6 @@
 package net.minecraft.world;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import net.minecraft.nbt.NBTTagCompound;
@@ -102,6 +103,13 @@ public class GameRules
         GameRules.Value gamerules$value = (GameRules.Value)this.theGameRules.get(key);
         return gamerules$value != null && (gamerules$value.getType() == otherValue || otherValue == GameRules.ValueType.ANY_VALUE);
     }
+    
+    public boolean getGameRuleBooleanValue(String name)
+    {
+        GameRules.Value gamerules$value = (GameRules.Value)this.theGameRules.get(name);
+        return gamerules$value != null ? gamerules$value.getGameRuleBooleanValue() : false;
+    }
+
 
     static class Value
         {
@@ -119,6 +127,10 @@ public class GameRules
 
             public void setValue(String value)
             {
+            	//MATT NEW FPS
+                if (Objects.equals(this.valueString, value)) {
+                    return;
+                }
                 this.valueString = value;
                 this.valueBoolean = Boolean.parseBoolean(value);
                 this.valueInteger = this.valueBoolean ? 1 : 0;
@@ -160,6 +172,11 @@ public class GameRules
             public GameRules.ValueType getType()
             {
                 return this.type;
+            }
+            
+            public boolean getGameRuleBooleanValue()
+            {
+                return this.valueBoolean;
             }
         }
 

@@ -9,10 +9,12 @@ import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.src.Config;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.model.ISmartItemModel;
+import net.optifine.CustomItems;
+import net.optifine.reflect.Reflector;
 
-@SideOnly(Side.CLIENT)
 public class ItemModelMesher
 {
     private final Map<Integer, ModelResourceLocation> simpleShapes = Maps.<Integer, ModelResourceLocation>newHashMap();
@@ -50,14 +52,19 @@ public class ItemModelMesher
             }
         }
 
-        if(ibakedmodel instanceof net.minecraftforge.client.model.ISmartItemModel)
+        if (Reflector.ForgeHooksClient.exists() && ibakedmodel instanceof ISmartItemModel)
         {
-            ibakedmodel = ((net.minecraftforge.client.model.ISmartItemModel)ibakedmodel).handleItemState(stack);
+            ibakedmodel = ((ISmartItemModel)ibakedmodel).handleItemState(stack);
         }
 
         if (ibakedmodel == null)
         {
             ibakedmodel = this.modelManager.getMissingModel();
+        }
+
+        if (Config.isCustomItems())
+        {
+            ibakedmodel = CustomItems.getCustomItemModel(stack, ibakedmodel, (ResourceLocation)null, true);
         }
 
         return ibakedmodel;

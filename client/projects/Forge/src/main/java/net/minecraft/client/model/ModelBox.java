@@ -8,20 +8,20 @@ public class ModelBox
 {
     private PositionTextureVertex[] vertexPositions;
     private TexturedQuad[] quadList;
-    public final float posX1;
-    public final float posY1;
-    public final float posZ1;
-    public final float posX2;
-    public final float posY2;
-    public final float posZ2;
+    public float posX1;
+    public float posY1;
+    public float posZ1;
+    public float posX2;
+    public float posY2;
+    public float posZ2;
     public String boxName;
 
-    public ModelBox(ModelRenderer renderer, int p_i46359_2_, int p_i46359_3_, float p_i46359_4_, float p_i46359_5_, float p_i46359_6_, int p_i46359_7_, int p_i46359_8_, int p_i46359_9_, float p_i46359_10_)
+    public ModelBox(ModelRenderer renderer, int p_i46359_2_, int p_i46359_3_, float p_i46359_4_, float p_i46359_5_, float p_i46359_6_, float p_i46359_7_, float p_i46359_8_, float p_i46359_9_, float p_i46359_10_)
     {
         this(renderer, p_i46359_2_, p_i46359_3_, p_i46359_4_, p_i46359_5_, p_i46359_6_, p_i46359_7_, p_i46359_8_, p_i46359_9_, p_i46359_10_, renderer.mirror);
     }
 
-    public ModelBox(ModelRenderer renderer, int textureX, int textureY, float p_i46301_4_, float p_i46301_5_, float p_i46301_6_, int p_i46301_7_, int p_i46301_8_, int p_i46301_9_, float p_i46301_10_, boolean p_i46301_11_)
+    public ModelBox(ModelRenderer renderer, int textureX, int textureY, float p_i46301_4_, float p_i46301_5_, float p_i46301_6_, float p_i46301_7_, float p_i46301_8_, float p_i46301_9_, float p_i46301_10_, boolean p_i46301_11_)
     {
         this.posX1 = p_i46301_4_;
         this.posY1 = p_i46301_5_;

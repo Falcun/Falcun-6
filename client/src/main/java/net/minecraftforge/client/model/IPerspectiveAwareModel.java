@@ -100,5 +100,11 @@ public interface IPerspectiveAwareModel extends IFlexibleBakedModel
         {
             return handlePerspective(this, transforms, cameraTransformType);
         }
+
+		@Override
+		public TextureAtlasSprite getTexture() {
+			// TODO Auto-generated method stub
+			return null;
+		}
     }
 }

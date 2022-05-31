@@ -1,6 +1,8 @@
 package net.minecraft.block;
 
 import java.util.Random;
+
+import net.mattbenson.Wrapper;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyInteger;
@@ -194,6 +196,10 @@ public abstract class BlockLiquid extends Block
     @SideOnly(Side.CLIENT)
     public int getMixedBrightnessForBlock(IBlockAccess worldIn, BlockPos pos)
     {
+    	if(Wrapper.getInstance().isRemoveLightCalculations()) {
+    		return 1000;
+    	}
+    	
         int i = worldIn.getCombinedLight(pos, 0);
         int j = worldIn.getCombinedLight(pos.up(), 0);
         int k = i & 255;

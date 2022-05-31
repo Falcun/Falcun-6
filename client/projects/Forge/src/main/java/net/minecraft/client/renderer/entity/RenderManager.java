@@ -1,7 +1,13 @@
 package net.minecraft.client.renderer.entity;
 
 import com.google.common.collect.Maps;
+
+import java.awt.Color;
+import java.util.Collections;
 import java.util.Map;
+
+import org.lwjgl.opengl.GL11;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
 import net.minecraft.block.state.IBlockState;
@@ -100,32 +106,43 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.optifine.entity.model.CustomEntityModels;
+import net.optifine.player.PlayerItemsLayer;
+import net.optifine.reflect.Reflector;
 
-@SideOnly(Side.CLIENT)
 public class RenderManager
 {
-    public Map < Class <? extends Entity > , Render <? extends Entity >> entityRenderMap = Maps. < Class <? extends Entity > , Render <? extends Entity >> newHashMap();
-    private Map<String, RenderPlayer> skinMap = Maps.<String, RenderPlayer>newHashMap();
-    private RenderPlayer playerRenderer;
+    public Map<Class<? extends Entity>, Render<? extends Entity>> entityRenderMap = Maps.newHashMap();
+    public Map<String, RenderPlayer> skinMap = Maps.newHashMap();
+    public RenderPlayer playerRenderer;
+
+    /** Renders fonts */
     private FontRenderer textRenderer;
-    private double renderPosX;
-    private double renderPosY;
-    private double renderPosZ;
+    public static double renderPosX;
+    public static double renderPosY;
+    public static double renderPosZ;
     public TextureManager renderEngine;
+
+    /** Reference to the World object. */
     public World worldObj;
+
+    /** Rendermanager's variable for the player */
     public Entity livingPlayer;
     public Entity pointedEntity;
     public float playerViewY;
     public float playerViewX;
+
+    /** Reference to the GameSettings object. */
     public GameSettings options;
     public double viewerPosX;
     public double viewerPosY;
     public double viewerPosZ;
     private boolean renderOutlines = false;
     private boolean renderShadow = true;
+
+    /** whether bounding box should be rendered or not */
     private boolean debugBoundingBox = false;
+    public Render renderRender = null;
 
     public RenderManager(TextureManager renderEngineIn, RenderItem itemRendererIn)
     {
@@ -192,11 +209,12 @@ public class RenderManager
         this.playerRenderer = new RenderPlayer(this);
         this.skinMap.put("default", this.playerRenderer);
         this.skinMap.put("slim", new RenderPlayer(this, true));
-        net.minecraftforge.fml.client.registry.RenderingRegistry.loadEntityRenderers(this, this.entityRenderMap);
-    }
-	
-    public Map<String, RenderPlayer> getSkinMap() {
-        return (Map<String, RenderPlayer>) java.util.Collections.unmodifiableMap(skinMap);
+        PlayerItemsLayer.register(this.skinMap);
+
+        if (Reflector.RenderingRegistry_loadEntityRenderers.exists())
+        {
+            Reflector.call(Reflector.RenderingRegistry_loadEntityRenderers, new Object[] {this, this.entityRenderMap});
+        }
     }
 
     public void setRenderPosition(double renderPosXIn, double renderPosYIn, double renderPosZIn)
@@ -246,10 +264,17 @@ public class RenderManager
             IBlockState iblockstate = worldIn.getBlockState(new BlockPos(livingPlayerIn));
             Block block = iblockstate.getBlock();
 
-            if (block.isBed(worldIn, new BlockPos(livingPlayerIn), (EntityLivingBase)livingPlayerIn))
+            if (Reflector.callBoolean(block, Reflector.ForgeBlock_isBed, new Object[] {iblockstate, worldIn, new BlockPos(livingPlayerIn), (EntityLivingBase)livingPlayerIn}))
             {
-                int i = block.getBedDirection(worldIn, new BlockPos(livingPlayerIn)).getHorizontalIndex();
+                EnumFacing enumfacing = (EnumFacing)Reflector.call(block, Reflector.ForgeBlock_getBedDirection, new Object[] {iblockstate, worldIn, new BlockPos(livingPlayerIn)});
+                int i = enumfacing.getHorizontalIndex();
                 this.playerViewY = (float)(i * 90 + 180);
+                this.playerViewX = 0.0F;
+            }
+            else if (block == Blocks.bed)
+            {
+                int j = ((EnumFacing)iblockstate.getValue(BlockBed.FACING)).getHorizontalIndex();
+                this.playerViewY = (float)(j * 90 + 180);
                 this.playerViewX = 0.0F;
             }
         }
@@ -262,6 +287,11 @@ public class RenderManager
         if (optionsIn.thirdPersonView == 2)
         {
             this.playerViewY += 180.0F;
+        }
+        
+        if(Wrapper.getInstance().isInPerspectiveMode()) {
+            this.playerViewY = Wrapper.getInstance().getCameraYaw();
+            this.playerViewX = Wrapper.getInstance().getCameraPitch();
         }
 
         this.viewerPosX = livingPlayerIn.lastTickPosX + (livingPlayerIn.posX - livingPlayerIn.lastTickPosX) * (double)partialTicks;
@@ -372,11 +402,16 @@ public class RenderManager
                         ((RendererLivingEntity)render).setRenderOutlines(this.renderOutlines);
                     }
 
+                    if (CustomEntityModels.isActive())
+                    {
+                        this.renderRender = render;
+                    }
+
                     render.doRender(entity, x, y, z, entityYaw, partialTicks);
                 }
                 catch (Throwable throwable2)
                 {
-                    throw new ReportedException(CrashReport.makeCrashReport(throwable2, "Rendering entity in world"));
+                    //throw new ReportedException(CrashReport.makeCrashReport(throwable2, "Rendering entity in world"));
                 }
 
                 try
@@ -388,7 +423,7 @@ public class RenderManager
                 }
                 catch (Throwable throwable1)
                 {
-                    throw new ReportedException(CrashReport.makeCrashReport(throwable1, "Post-rendering entity in world"));
+                    //throw new ReportedException(CrashReport.makeCrashReport(throwable1, "Post-rendering entity in world"));
                 }
 
                 if (this.debugBoundingBox && !entity.isInvisible() && !p_147939_10_)
@@ -399,7 +434,17 @@ public class RenderManager
                     }
                     catch (Throwable throwable)
                     {
-                        throw new ReportedException(CrashReport.makeCrashReport(throwable, "Rendering entity hitbox in world"));
+                        //throw new ReportedException(CrashReport.makeCrashReport(throwable, "Rendering entity hitbox in world"));
+                    }
+                }
+                if (Wrapper.getInstance().isHitboxEnabled() && !entity.isInvisible() && !p_147939_10_) {
+                    try
+                    {
+                        this.renderDebugBoundingBoxFalcun(entity, x, y, z, entityYaw, partialTicks);
+                    }
+                    catch (Throwable throwable)
+                    {
+                        //throw new ReportedException(CrashReport.makeCrashReport(throwable, "Rendering entity hitbox in world"));
                     }
                 }
             }
@@ -420,10 +465,13 @@ public class RenderManager
             crashreportcategory1.addCrashSection("Location", CrashReportCategory.getCoordinateInfo(x, y, z));
             crashreportcategory1.addCrashSection("Rotation", Float.valueOf(entityYaw));
             crashreportcategory1.addCrashSection("Delta", Float.valueOf(partialTicks));
-            throw new ReportedException(crashreport);
+            return true;
         }
     }
 
+    /**
+     * Renders the bounding box around an entity when F3+B is pressed
+     */
     private void renderDebugBoundingBox(Entity entityIn, double p_85094_2_, double p_85094_4_, double p_85094_6_, float p_85094_8_, float p_85094_9_)
     {
         GlStateManager.depthMask(false);
@@ -455,7 +503,45 @@ public class RenderManager
         GlStateManager.disableBlend();
         GlStateManager.depthMask(true);
     }
+    
+    private void renderDebugBoundingBoxFalcun(Entity entityIn, double p_85094_2_, double p_85094_4_, double p_85094_6_, float p_85094_8_, float p_85094_9_)
+    {
+        GlStateManager.depthMask(false);
+        GlStateManager.disableTexture2D();
+        GlStateManager.disableLighting();
+        GlStateManager.disableCull();
+        GlStateManager.disableBlend();
+        GL11.glLineWidth((float)Wrapper.getInstance().getHitBoxWidth());
+        AxisAlignedBB axisalignedbb = entityIn.getEntityBoundingBox();
+        AxisAlignedBB axisalignedbb1 = new AxisAlignedBB(axisalignedbb.minX - entityIn.posX + p_85094_2_, axisalignedbb.minY - entityIn.posY + p_85094_4_, axisalignedbb.minZ - entityIn.posZ + p_85094_6_, axisalignedbb.maxX - entityIn.posX + p_85094_2_, axisalignedbb.maxY - entityIn.posY + p_85094_4_, axisalignedbb.maxZ - entityIn.posZ + p_85094_6_);
+        Color color = Wrapper.getInstance().getHitBoxColor();
+        
+        if (Wrapper.getInstance().getHitBoxMode().equals("All")) {
+            RenderGlobal.drawOutlinedBoundingBox(axisalignedbb1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+        } else if (Wrapper.getInstance().getHitBoxMode().equals("Items Only")) {
+        	if (entityIn instanceof EntityItem) {
+            RenderGlobal.drawOutlinedBoundingBox(axisalignedbb1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+        	}
+        } else if (Wrapper.getInstance().getHitBoxMode().equals("Enderpearls Only")) {
+        	 if (entityIn.getDisplayName().getUnformattedText().contains("ThrownEnderpearl")) {
+                 RenderGlobal.drawOutlinedBoundingBox(axisalignedbb1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+        	 }	
+    	} else if (Wrapper.getInstance().getHitBoxMode().equals("Enderpearls & Items Only")) {
+       	 if (entityIn instanceof EntityItem || entityIn.getDisplayName().getUnformattedText().contains("ThrownEnderpearl")) {
+             RenderGlobal.drawOutlinedBoundingBox(axisalignedbb1, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+    	 }	
+	}
 
+        GlStateManager.enableTexture2D();
+        GlStateManager.enableLighting();
+        GlStateManager.enableCull();
+        GlStateManager.disableBlend();
+        GlStateManager.depthMask(true);
+    }
+
+    /**
+     * World sets this RenderManager's worldObj to the world provided
+     */
     public void set(World worldIn)
     {
         this.worldObj = worldIn;
@@ -469,6 +555,9 @@ public class RenderManager
         return d0 * d0 + d1 * d1 + d2 * d2;
     }
 
+    /**
+     * Returns the font renderer
+     */
     public FontRenderer getFontRenderer()
     {
         return this.textRenderer;
@@ -477,5 +566,20 @@ public class RenderManager
     public void setRenderOutlines(boolean renderOutlinesIn)
     {
         this.renderOutlines = renderOutlinesIn;
+    }
+
+    public Map getEntityRenderMap()
+    {
+        return this.entityRenderMap;
+    }
+
+    public void setEntityRenderMap(Map p_setEntityRenderMap_1_)
+    {
+        this.entityRenderMap = p_setEntityRenderMap_1_;
+    }
+
+    public Map<String, RenderPlayer> getSkinMap()
+    {
+        return Collections.<String, RenderPlayer>unmodifiableMap(this.skinMap);
     }
 }

@@ -172,6 +172,12 @@ public class MultiModel implements IModel
             Pair<Baked, TRSRTransformation> p = transforms.get(cameraTransformType);
             return Pair.of(p.getLeft(), p.getRight().getMatrix());
         }
+
+		@Override
+		public TextureAtlasSprite getTexture() {
+			// TODO Auto-generated method stub
+			return null;
+		}
     }
 
     protected final ResourceLocation location;

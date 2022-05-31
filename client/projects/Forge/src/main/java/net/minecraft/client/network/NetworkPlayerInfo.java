@@ -22,8 +22,8 @@ public class NetworkPlayerInfo
     private WorldSettings.GameType gameType;
     private int responseTime;
     private boolean playerTexturesLoaded = false;
-    public ResourceLocation locationSkin;
-    public ResourceLocation locationCape;
+    private ResourceLocation locationSkin;
+    private ResourceLocation locationCape;
     private String skinType;
     private IChatComponent displayName;
     private int field_178873_i = 0;
@@ -92,11 +92,10 @@ public class NetworkPlayerInfo
 
     public ResourceLocation getLocationCape()
     {
-        if (this.locationCape == null)
+    	if (this.locationCape == null)
         {
             this.loadPlayerTextures();
         }
-
         return this.locationCape;
     }
 
@@ -129,7 +128,7 @@ public class NetworkPlayerInfo
 
                                 break;
                             case CAPE:
-                                NetworkPlayerInfo.this.locationCape = location;
+                            	NetworkPlayerInfo.this.locationCape = location;
                         }
                     }
                 }, true);

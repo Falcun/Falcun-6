@@ -1,6 +1,7 @@
 package net.minecraft.entity;
 
 import com.google.common.base.Predicate;
+
 import com.google.common.base.Predicates;
 import com.google.common.collect.Maps;
 import java.util.Collection;
@@ -9,9 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+
+import net.mattbenson.Wrapper;
+import net.mattbenson.events.types.entity.EntityDeathEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.BaseAttributeMap;
@@ -887,6 +892,10 @@ public abstract class EntityLivingBase extends Entity
 
     public void onDeath(DamageSource cause)
     {
+    	if (!Wrapper.getInstance().post(new EntityDeathEvent(this, cause))) {
+    		return;
+    	}
+    	
         if (net.minecraftforge.common.ForgeHooks.onLivingDeath(this, cause)) return;
         Entity entity = cause.getEntity();
         EntityLivingBase entitylivingbase = this.func_94060_bK();
@@ -1926,19 +1935,31 @@ public abstract class EntityLivingBase extends Entity
         return this.getLook(1.0F);
     }
 
-    public Vec3 getLook(float partialTicks)
-    {
-        if (partialTicks == 1.0F)
-        {
-            return this.getVectorForRotation(this.rotationPitch, this.rotationYawHead);
-        }
-        else
-        {
-            float f = this.prevRotationPitch + (this.rotationPitch - this.prevRotationPitch) * partialTicks;
-            float f1 = this.prevRotationYawHead + (this.rotationYawHead - this.prevRotationYawHead) * partialTicks;
-            return this.getVectorForRotation(f, f1);
-        }
+	public Vec3 getLook(float partialTicks) {
+		if (Wrapper.getInstance().isMouseDelay()) {
+			if (this instanceof EntityPlayerSP) {
+				return super.getLook(partialTicks);
+			} else {
+				if (partialTicks == 1.0F) {
+					return this.getVectorForRotation(this.rotationPitch, this.rotationYawHead);
+				} else {
+					float f = this.prevRotationPitch + (this.rotationPitch - this.prevRotationPitch) * partialTicks;
+					float f1 = this.prevRotationYawHead
+							+ (this.rotationYawHead - this.prevRotationYawHead) * partialTicks;
+					return this.getVectorForRotation(f, f1);
+				}
+			}
+		} else {
+			if (partialTicks == 1.0F) {
+				return this.getVectorForRotation(this.rotationPitch, this.rotationYawHead);
+			} else {
+				float f = this.prevRotationPitch + (this.rotationPitch - this.prevRotationPitch) * partialTicks;
+				float f1 = this.prevRotationYawHead + (this.rotationYawHead - this.prevRotationYawHead) * partialTicks;
+				return this.getVectorForRotation(f, f1);
+			}
+		}
     }
+
 
     @SideOnly(Side.CLIENT)
     public float getSwingProgress(float partialTickTime)

@@ -27,7 +27,9 @@ import net.minecraft.client.gui.GuiButton;
  */
 public class GuiButtonExt extends GuiButton
 {
-    public GuiButtonExt(int id, int xPos, int yPos, String displayString)
+    public int packedFGColour;
+
+	public GuiButtonExt(int id, int xPos, int yPos, String displayString)
     {
         super(id, xPos, yPos, displayString);
     }

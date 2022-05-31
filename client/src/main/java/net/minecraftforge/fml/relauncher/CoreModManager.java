@@ -33,8 +33,20 @@ import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import org.apache.logging.log4j.Level;
+
+import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.ObjectArrays;
+import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
+import com.google.common.primitives.Ints;
+
+import net.mattbenson.patcher.Tweaker;
 import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
@@ -48,30 +60,19 @@ import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.Name;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.SortingIndex;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 
-import org.apache.logging.log4j.Level;
-
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.ObjectArrays;
-import com.google.common.collect.Sets;
-import com.google.common.primitives.Ints;
-
 public class CoreModManager {
-    private static final Attributes.Name COREMODCONTAINSFMLMOD = new Attributes.Name("FMLCorePluginContainsFMLMod");
-    private static final Attributes.Name MODTYPE = new Attributes.Name("ModType");
-    private static final Attributes.Name MODSIDE = new Attributes.Name("ModSide");
+    public static final Attributes.Name COREMODCONTAINSFMLMOD = new Attributes.Name("FMLCorePluginContainsFMLMod");
+    public static final Attributes.Name MODTYPE = new Attributes.Name("ModType");
+    public static final Attributes.Name MODSIDE = new Attributes.Name("ModSide");
     private static final Attributes.Name MODCONTAINSDEPS = new Attributes.Name("ContainedDeps");
     private static String[] rootPlugins = { "net.minecraftforge.fml.relauncher.FMLCorePlugin", "net.minecraftforge.classloading.FMLForgePlugin" };
-    private static List<String> ignoredModFiles = Lists.newArrayList();
+    public static List<String> ignoredModFiles = Lists.newArrayList();
     private static Map<String, List<String>> transformers = Maps.newHashMap();
     private static List<FMLPluginWrapper> loadPlugins;
     private static boolean deobfuscatedEnvironment;
     private static FMLTweaker tweaker;
     private static File mcDir;
-    private static List<String> candidateModFiles = Lists.newArrayList();
+    public static List<String> candidateModFiles = Lists.newArrayList();
     private static List<String> accessTransformers = Lists.newArrayList();
     private static Set<String> rootNames = Sets.newHashSet();
     private static final List<String> skipContainedDeps = Arrays.asList(System.getProperty("fml.skipContainedDeps","").split(","));
@@ -220,6 +221,14 @@ public class CoreModManager {
         }
 
         loadPlugins = new ArrayList<FMLPluginWrapper>();
+        
+		try {
+			FMLPluginWrapper falcunTweaker = new FMLPluginWrapper("Falcun/Tweaker", Tweaker.class.newInstance(), new File(FMLTweaker.getJarLocation()), 0);
+			loadPlugins.add(falcunTweaker);
+		} catch (InstantiationException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+        
         for (String rootPluginName : rootPlugins)
         {
             loadCoreMod(classLoader, rootPluginName, new File(FMLTweaker.getJarLocation()));
@@ -417,7 +426,7 @@ public class CoreModManager {
         }
     }
 
-    private static Map<String,File> extractContainedDepJars(JarFile jar, File versionedModsDir) throws IOException
+    public static Map<String,File> extractContainedDepJars(JarFile jar, File versionedModsDir) throws IOException
     {
         Map<String,File> result = Maps.newHashMap();
         if (!jar.getManifest().getMainAttributes().containsKey(MODCONTAINSDEPS)) return result;
@@ -463,7 +472,7 @@ public class CoreModManager {
 
     private static Method ADDURL;
 
-    private static void handleCascadingTweak(File coreMod, JarFile jar, String cascadedTweaker, LaunchClassLoader classLoader, Integer sortingOrder)
+    public static void handleCascadingTweak(File coreMod, JarFile jar, String cascadedTweaker, LaunchClassLoader classLoader, Integer sortingOrder)
     {
         try
         {
@@ -491,7 +500,7 @@ public class CoreModManager {
      */
     private static File setupCoreModDir(File mcDir)
     {
-        File coreModDir = new File(mcDir, "mods");
+        File coreModDir = new File(mcDir, "falcunmods");
         try
         {
             coreModDir = coreModDir.getCanonicalFile();
@@ -526,7 +535,7 @@ public class CoreModManager {
         return candidateModFiles;
     }
 
-    private static FMLPluginWrapper loadCoreMod(LaunchClassLoader classLoader, String coreModClass, File location)
+    public static FMLPluginWrapper loadCoreMod(LaunchClassLoader classLoader, String coreModClass, File location)
     {
         String coreModName = coreModClass.substring(coreModClass.lastIndexOf('.') + 1);
         try

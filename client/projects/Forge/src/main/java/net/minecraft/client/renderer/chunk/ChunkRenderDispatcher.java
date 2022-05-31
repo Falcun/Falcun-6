@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadFactory;
+
+import net.mattbenson.Wrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -193,6 +195,14 @@ public class ChunkRenderDispatcher
 
     public ChunkCompileTaskGenerator getNextChunkUpdate() throws InterruptedException
     {
+    	if(Minecraft.getMinecraft().thePlayer == null) return (ChunkCompileTaskGenerator)this.queueChunkUpdates.take();
+     	if (Wrapper.getInstance().isChunkLimiter()) {
+        	if(Wrapper.getInstance().getChunkLimiter() > 0) {
+        		while(RenderChunk.renderChunksUpdated > Wrapper.getInstance().getChunkLimiter()) {
+        			Thread.sleep(50L);
+        		}
+        	}
+        	}
         return (ChunkCompileTaskGenerator)this.queueChunkUpdates.take();
     }
 
@@ -262,7 +272,7 @@ public class ChunkRenderDispatcher
         }
     }
 
-    private void uploadDisplayList(WorldRenderer p_178510_1_, int p_178510_2_, RenderChunk chunkRenderer)
+    protected void uploadDisplayList(WorldRenderer p_178510_1_, int p_178510_2_, RenderChunk chunkRenderer)
     {
         GL11.glNewList(p_178510_2_, GL11.GL_COMPILE);
         GlStateManager.pushMatrix();
@@ -289,5 +299,11 @@ public class ChunkRenderDispatcher
                 chunkcompiletaskgenerator.finish();
             }
         }
+    }
+
+
+    public boolean hasChunkUpdates()
+    {
+        return this.queueChunkUpdates.isEmpty() && this.queueChunkUploads.isEmpty();
     }
 }

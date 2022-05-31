@@ -2,10 +2,14 @@ package net.minecraft.block;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
+import java.awt.Color;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+
+import net.mattbenson.Wrapper;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyEnum;
@@ -408,6 +412,21 @@ public class BlockRedstoneWire extends Block
         {
             f3 = 0.0F;
         }
+        
+      
+        if (Wrapper.getInstance().isRedstoneColor()) {
+        	Color color = Wrapper.getInstance().getRedstoneColor();
+        	int red = color.getRed();
+        	int green = color.getGreen();
+        	int blue = color.getBlue();
+        	
+        	red = MathHelper.clamp_int((int)(red * f1), 0, 255);
+          	green = MathHelper.clamp_int((int)(green * f1), 0, 255);
+          	blue = MathHelper.clamp_int((int)(blue * f1), 0, 255);
+        	return new Color(red,green,blue).getRGB();
+        }
+        
+        
 
         int i = MathHelper.clamp_int((int)(f1 * 255.0F), 0, 255);
         int j = MathHelper.clamp_int((int)(f2 * 255.0F), 0, 255);

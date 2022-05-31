@@ -149,6 +149,6 @@ public class RealmsBufferBuilder
 
     public void noColor()
     {
-        this.b.noColor();
+        this.b.markDirty();
     }
 }

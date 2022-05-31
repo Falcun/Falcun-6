@@ -81,7 +81,7 @@ import com.google.common.base.Throwables;
 @SuppressWarnings("ALL")
 public class ModelLoader extends ModelBakery
 {
-    private final Map<ModelResourceLocation, IModel> stateModels = Maps.newHashMap();
+    public final Map<ModelResourceLocation, IModel> stateModels = Maps.newHashMap();
     private final Set<ResourceLocation> textures = Sets.newHashSet();
     private final Set<ResourceLocation> loadingModels = Sets.newHashSet();
     private final Set<ModelResourceLocation> missingVariants = Sets.newHashSet();
@@ -170,7 +170,7 @@ public class ModelLoader extends ModelBakery
     }
 
     @Override
-    protected void registerVariant(ModelBlockDefinition definition, ModelResourceLocation location)
+	public void registerVariant(ModelBlockDefinition definition, ModelResourceLocation location)
     {
         Variants variants = null;
         try
@@ -194,13 +194,13 @@ public class ModelLoader extends ModelBakery
         }
     }
 
-    private void storeException(ResourceLocation location, Exception exception)
+    public void storeException(ResourceLocation location, Exception exception)
     {
         loadingExceptions.put(location, exception);
     }
 
     @Override
-    protected ModelBlockDefinition getModelBlockDefinition(ResourceLocation location)
+	public ModelBlockDefinition getModelBlockDefinition(ResourceLocation location)
     {
         try
         {
@@ -573,6 +573,12 @@ public class ModelLoader extends ModelBakery
                 {
                     return VanillaModelWrapper.this.handleBlockState(parent, bakedTextureGetter, modelState, state);
                 }
+
+				@Override
+				public TextureAtlasSprite getTexture() {
+					// TODO Auto-generated method stub
+					return null;
+				}
             };
         }
 

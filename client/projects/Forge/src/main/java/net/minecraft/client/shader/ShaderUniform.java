@@ -3,14 +3,11 @@ package net.minecraft.client.shader;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.util.vector.Matrix4f;
 
-@SideOnly(Side.CLIENT)
 public class ShaderUniform
 {
     private static final Logger logger = LogManager.getLogger();
@@ -263,15 +260,19 @@ public class ShaderUniform
             case 0:
                 OpenGlHelper.glUniform1(this.uniformLocation, this.uniformIntBuffer);
                 break;
+
             case 1:
                 OpenGlHelper.glUniform2(this.uniformLocation, this.uniformIntBuffer);
                 break;
+
             case 2:
                 OpenGlHelper.glUniform3(this.uniformLocation, this.uniformIntBuffer);
                 break;
+
             case 3:
                 OpenGlHelper.glUniform4(this.uniformLocation, this.uniformIntBuffer);
                 break;
+
             default:
                 logger.warn("Uniform.upload called, but count value (" + this.uniformCount + ") is " + " not in the range of 1 to 4. Ignoring.");
         }
@@ -284,15 +285,19 @@ public class ShaderUniform
             case 4:
                 OpenGlHelper.glUniform1(this.uniformLocation, this.uniformFloatBuffer);
                 break;
+
             case 5:
                 OpenGlHelper.glUniform2(this.uniformLocation, this.uniformFloatBuffer);
                 break;
+
             case 6:
                 OpenGlHelper.glUniform3(this.uniformLocation, this.uniformFloatBuffer);
                 break;
+
             case 7:
                 OpenGlHelper.glUniform4(this.uniformLocation, this.uniformFloatBuffer);
                 break;
+
             default:
                 logger.warn("Uniform.upload called, but count value (" + this.uniformCount + ") is " + "not in the range of 1 to 4. Ignoring.");
         }
@@ -305,9 +310,11 @@ public class ShaderUniform
             case 8:
                 OpenGlHelper.glUniformMatrix2(this.uniformLocation, true, this.uniformFloatBuffer);
                 break;
+
             case 9:
                 OpenGlHelper.glUniformMatrix3(this.uniformLocation, true, this.uniformFloatBuffer);
                 break;
+
             case 10:
                 OpenGlHelper.glUniformMatrix4(this.uniformLocation, true, this.uniformFloatBuffer);
         }

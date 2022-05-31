@@ -1,14 +1,20 @@
 package net.minecraft.entity.player;
 
 import com.google.common.base.Charsets;
+
 import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfile;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+
+import net.mattbenson.Wrapper;
+import net.mattbenson.events.types.entity.PlayerInteractEvent;
+import net.mattbenson.events.types.entity.PlayerInteractEvent.Action;
+import net.mattbenson.utils.Cooldown;
+import net.mattbenson.events.types.entity.PlayerTickEvent;
+import net.mattbenson.modules.types.render.Cooldowns;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockBed;
-import net.minecraft.block.BlockDirectional;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.server.CommandBlockLogic;
@@ -41,6 +47,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryEnderChest;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemAppleGold;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -425,6 +432,20 @@ public abstract class EntityPlayer extends EntityLivingBase
     {
         if (this.itemInUse != null)
         {
+        	if (Wrapper.getFalcun().moduleManager.getModule(Cooldowns.class).enabled) {
+        		if (itemInUse.getItem() instanceof ItemAppleGold) {
+        		if (itemInUse.getMetadata() == 1) {
+            		if (Cooldowns.gp) {
+            			Cooldown.add(322, (long) (Cooldowns.gapplelTime * 1000), System.currentTimeMillis(), "Gapple");
+            		}	
+        		} else {
+            		if (Cooldowns.cp) {
+            			Cooldown.add(322, (long) (Cooldowns.crappleTime * 1000), System.currentTimeMillis(), "Crapple");
+            		}
+        		}
+        		}
+        	}
+        	
             this.updateItemUse(this.itemInUse, 16);
             int i = this.itemInUse.stackSize;
             ItemStack itemstack = this.itemInUse.onItemUseFinish(this.worldObj, this);
@@ -521,6 +542,8 @@ public abstract class EntityPlayer extends EntityLivingBase
 
     public void onLivingUpdate()
     {
+    	Wrapper.getInstance().post(new PlayerTickEvent(this));
+    	
         if (this.flyToggleTimer > 0)
         {
             --this.flyToggleTimer;
@@ -1953,8 +1976,10 @@ public abstract class EntityPlayer extends EntityLivingBase
     {
         if (stack != this.itemInUse)
         {
-            duration = net.minecraftforge.event.ForgeEventFactory.onItemUseStart(this, stack, duration);
-            if (duration <= 0) return;
+        	duration = Wrapper.getInstance().post(new PlayerInteractEvent(Action.USE_ITEM, getPosition(), worldObj)) ? duration : -1;
+        	
+        	if (duration <= 0) return;
+        	
             this.itemInUse = stack;
             this.itemInUseCount = duration;
 

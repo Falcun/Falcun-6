@@ -19,7 +19,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class DefaultResourcePack implements IResourcePack
 {
-    public static final Set<String> defaultResourceDomains = ImmutableSet.<String>of("minecraft", "realms");
+	public static final Set defaultResourceDomains = ImmutableSet.of("minecraft", "realms", "wdl");
     private final Map<String, File> mapAssets;
 
     public DefaultResourcePack(Map<String, File> mapAssetsIn)

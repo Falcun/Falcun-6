@@ -2,10 +2,7 @@ package net.minecraft.client.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.MathHelper;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-@SideOnly(Side.CLIENT)
 public class ScaledResolution
 {
     private final double scaledWidthD;
@@ -16,11 +13,16 @@ public class ScaledResolution
 
     public ScaledResolution(Minecraft p_i46445_1_)
     {
-        this.scaledWidth = p_i46445_1_.displayWidth;
-        this.scaledHeight = p_i46445_1_.displayHeight;
+    	this(p_i46445_1_, p_i46445_1_.gameSettings.guiScale);
+    }
+    
+    public ScaledResolution(Minecraft minecraft, int scale)
+    {
+        this.scaledWidth = minecraft.displayWidth;
+        this.scaledHeight = minecraft.displayHeight;
         this.scaleFactor = 1;
-        boolean flag = p_i46445_1_.isUnicode();
-        int i = p_i46445_1_.gameSettings.guiScale;
+        boolean flag = minecraft.isUnicode();
+        int i = scale;
 
         if (i == 0)
         {
@@ -42,6 +44,7 @@ public class ScaledResolution
         this.scaledWidth = MathHelper.ceiling_double_int(this.scaledWidthD);
         this.scaledHeight = MathHelper.ceiling_double_int(this.scaledHeightD);
     }
+
 
     public int getScaledWidth()
     {

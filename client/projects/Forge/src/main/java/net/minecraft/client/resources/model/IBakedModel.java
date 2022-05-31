@@ -25,4 +25,6 @@ public interface IBakedModel
 
     @Deprecated
     ItemCameraTransforms getItemCameraTransforms();
+
+	TextureAtlasSprite getTexture();
 }

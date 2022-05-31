@@ -1601,6 +1601,12 @@ public class OBJModel implements IRetexturableModel<OBJModel>, IModelCustomData<
         {
             return this.model.modelLocation.toString();
         }
+
+		@Override
+		public TextureAtlasSprite getTexture() {
+			// TODO Auto-generated method stub
+			return null;
+		}
     }
 
     @SuppressWarnings("serial")

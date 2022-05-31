@@ -1,9 +1,9 @@
 package net.minecraft.client.resources;
 
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import java.util.Map;
 
-@SideOnly(Side.CLIENT)
+import net.mattbenson.Wrapper;
+
 public class I18n
 {
     private static Locale i18nLocale;
@@ -13,8 +13,22 @@ public class I18n
         i18nLocale = i18nLocaleIn;
     }
 
+    /**
+     * format(a, b) is equivalent to String.format(translate(a), b). Args: translationKey, params...
+     */
     public static String format(String translateKey, Object... parameters)
     {
-        return i18nLocale.formatMessage(translateKey, parameters);
+    	String msg = i18nLocale.formatMessage(translateKey, parameters);
+    	
+    	if(msg.equals(translateKey)) {
+    		return String.format(Wrapper.getInstance().langFiles(Wrapper.getInstance().langFiles(translateKey)), parameters);
+    	}
+    	
+        return msg;
+    }
+
+    public static Map getLocaleProperties()
+    {
+        return i18nLocale.properties;
     }
 }

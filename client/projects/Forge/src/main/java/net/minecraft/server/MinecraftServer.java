@@ -33,6 +33,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import javax.imageio.ImageIO;
+
+import net.mattbenson.Wrapper;
+import net.mattbenson.events.types.world.WorldLoadEvent;
+import net.mattbenson.events.types.world.WorldUnloadEvent;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandResultStats;
 import net.minecraft.command.ICommandManager;
@@ -270,6 +274,7 @@ public abstract class MinecraftServer implements Runnable, ICommandSender, IThre
                 world.getWorldInfo().setGameType(this.getGameType());
             }
             net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.WorldEvent.Load(world));
+            Wrapper.getInstance().post(new WorldLoadEvent(world));
         }
 
         this.serverConfigManager.setPlayerManager(new WorldServer[]{ overWorld });
@@ -401,6 +406,7 @@ public abstract class MinecraftServer implements Runnable, ICommandSender, IThre
                 {
                     WorldServer worldserver = this.worldServers[i];
                     net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.WorldEvent.Unload(worldserver));
+                    Wrapper.getInstance().post(new WorldUnloadEvent(worldserver));
                     worldserver.flush();
                 }
 
@@ -563,6 +569,9 @@ public abstract class MinecraftServer implements Runnable, ICommandSender, IThre
                 ImageIO.write(bufferedimage, "PNG", (OutputStream)(new ByteBufOutputStream(bytebuf)));
                 ByteBuf bytebuf1 = Base64.encode(bytebuf);
                 response.setFavicon("data:image/png;base64," + bytebuf1.toString(Charsets.UTF_8));
+                //MATT NEW FPS
+                bytebuf1.release();
+                bytebuf.release();
             }
             catch (Exception exception)
             {
@@ -1006,6 +1015,7 @@ public abstract class MinecraftServer implements Runnable, ICommandSender, IThre
             if (worldserver != null)
             {
                 net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.WorldEvent.Unload(worldserver));
+                Wrapper.getInstance().post(new WorldUnloadEvent(worldserver));
                 worldserver.flush();
             }
         }

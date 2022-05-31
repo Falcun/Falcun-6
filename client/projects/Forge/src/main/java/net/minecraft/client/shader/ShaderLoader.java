@@ -10,13 +10,10 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.util.JsonException;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.BufferUtils;
 
-@SideOnly(Side.CLIENT)
 public class ShaderLoader
 {
     private final ShaderLoader.ShaderType shaderType;
@@ -100,7 +97,6 @@ public class ShaderLoader
         return abyte;
     }
 
-    @SideOnly(Side.CLIENT)
     public static enum ShaderType
     {
         VERTEX("vertex", ".vsh", OpenGlHelper.GL_VERTEX_SHADER),

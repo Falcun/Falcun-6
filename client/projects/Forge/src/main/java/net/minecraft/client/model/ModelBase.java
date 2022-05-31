@@ -37,7 +37,7 @@ public abstract class ModelBase
         return (ModelRenderer)this.boxList.get(rand.nextInt(this.boxList.size()));
     }
 
-    protected void setTextureOffset(String partName, int x, int y)
+    public void setTextureOffset(String partName, int x, int y)
     {
         this.modelTextureMap.put(partName, new TextureOffset(x, y));
     }

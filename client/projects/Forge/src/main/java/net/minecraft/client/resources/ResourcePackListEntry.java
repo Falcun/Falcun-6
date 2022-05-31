@@ -37,7 +37,7 @@ public abstract class ResourcePackListEntry implements GuiListExtended.IGuiListE
         if (i != 1)
         {
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            Gui.drawRect(x - 1, y - 1, x + listWidth - 9, y + slotHeight + 1, -8978432);
+            Gui.drawRectangle(x - 1, y - 1, x + listWidth - 9, y + slotHeight + 1, -8978432);
         }
 
         this.func_148313_c();
@@ -49,7 +49,7 @@ public abstract class ResourcePackListEntry implements GuiListExtended.IGuiListE
         if ((this.mc.gameSettings.touchscreen || isSelected) && this.func_148310_d())
         {
             this.mc.getTextureManager().bindTexture(RESOURCE_PACKS_TEXTURE);
-            Gui.drawRect(x, y, x + 32, y + 32, -1601138544);
+            Gui.drawRectangle(x, y, x + 32, y + 32, -1601138544);
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             int j = mouseX - x;
             int k = mouseY - y;

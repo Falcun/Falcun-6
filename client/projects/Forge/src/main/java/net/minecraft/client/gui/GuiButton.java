@@ -1,5 +1,7 @@
 package net.minecraft.client.gui;
 
+import java.awt.Color;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
@@ -75,11 +77,6 @@ public class GuiButton extends Gui
             this.mouseDragged(mc, mouseX, mouseY);
             int j = 14737632;
 
-            if (packedFGColour != 0)
-            {
-                j = packedFGColour;
-            }
-            else
             if (!this.enabled)
             {
                 j = 10526880;

@@ -1,7 +1,10 @@
 package net.minecraft.client.renderer;
 
+import net.mattbenson.Wrapper;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockReed;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.IResourceManagerReloadListener;
@@ -11,6 +14,7 @@ import net.minecraft.client.resources.model.WeightedBakedModel;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
+import net.minecraft.src.Config;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ReportedException;
@@ -18,6 +22,7 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.optifine.shaders.SVertexBuilder;
 
 @SideOnly(Side.CLIENT)
 public class BlockRendererDispatcher implements IResourceManagerReloadListener
@@ -86,12 +91,44 @@ public class BlockRendererDispatcher implements IResourceManagerReloadListener
                 switch (i)
                 {
                     case 1:
-                        return this.fluidRenderer.renderFluid(blockAccess, state, pos, worldRendererIn);
+                        if (Config.isShaders())
+                        {
+                            SVertexBuilder.pushEntity(state, pos, blockAccess, worldRendererIn);
+                        }
+
+                        boolean flag1 = this.fluidRenderer.renderFluid(blockAccess, state, pos, worldRendererIn);
+
+                        if (Config.isShaders())
+                        {
+                            SVertexBuilder.popEntity(worldRendererIn);
+                        }
+
+                        return flag1;
+
                     case 2:
                         return false;
+
                     case 3:
                         IBakedModel ibakedmodel = this.getModelFromBlockState(state, blockAccess, pos);
-                        return this.blockModelRenderer.renderModel(blockAccess, ibakedmodel, state, pos, worldRendererIn);
+
+                        if (Config.isShaders())
+                        {
+                            SVertexBuilder.pushEntity(state, pos, blockAccess, worldRendererIn);
+                        }
+                      
+                        boolean flag = this.blockModelRenderer.renderModel(blockAccess, ibakedmodel, state, pos, worldRendererIn);
+
+                        if (Config.isShaders())
+                        {
+                            SVertexBuilder.popEntity(worldRendererIn);
+                        }
+                    	if(state.getBlock() instanceof BlockReed && Wrapper.getInstance().isNoCane()) {
+                        	if(Math.sqrt(Minecraft.getMinecraft().thePlayer.getPosition().distanceSq(pos.getX(),pos.getY(),pos.getZ())) >= 16) {
+                        		return false;
+                        	}
+                        }
+                        return flag;
+
                     default:
                         return false;
                 }
@@ -99,11 +136,12 @@ public class BlockRendererDispatcher implements IResourceManagerReloadListener
         }
         catch (Throwable throwable)
         {
-            CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Tesselating block in world");
-            CrashReportCategory crashreportcategory = crashreport.makeCategory("Block being tesselated");
-            CrashReportCategory.addBlockInfo(crashreportcategory, pos, state.getBlock(), state.getBlock().getMetaFromState(state));
-            throw new ReportedException(crashreport);
+            //CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Tesselating block in world");
+            //CrashReportCategory crashreportcategory = crashreport.makeCategory("Block being tesselated");
+            //CrashReportCategory.addBlockInfo(crashreportcategory, pos, state.getBlock(), state.getBlock().getMetaFromState(state));
+            //throw new ReportedException(crashreport);
         }
+		return false;
     }
 
     public BlockModelRenderer getBlockModelRenderer()

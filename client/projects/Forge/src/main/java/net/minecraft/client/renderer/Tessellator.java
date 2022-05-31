@@ -1,28 +1,41 @@
 package net.minecraft.client.renderer;
 
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.optifine.SmartAnimations;
 
-@SideOnly(Side.CLIENT)
-public class Tessellator {
-	public WorldRenderer worldRenderer;
-	private WorldVertexBufferUploader vboUploader = new WorldVertexBufferUploader();
-	public static final Tessellator instance = new Tessellator(2097152);
+public class Tessellator
+{
+    private WorldRenderer worldRenderer;
+    private WorldVertexBufferUploader vboUploader = new WorldVertexBufferUploader();
 
-	public static Tessellator getInstance() {
-		return instance;
-	}
+    /** The static instance of the Tessellator. */
+    public static final Tessellator instance = new Tessellator(2097152);
 
-	public Tessellator(int bufferSize) {
-		this.worldRenderer = new WorldRenderer(bufferSize);
-	}
+    public static Tessellator getInstance()
+    {
+        return instance;
+    }
 
-	public void draw() {
-		this.worldRenderer.finishDrawing();
-		this.vboUploader.draw(this.worldRenderer);
-	}
+    public Tessellator(int bufferSize)
+    {
+        this.worldRenderer = new WorldRenderer(bufferSize);
+    }
 
-	public WorldRenderer getWorldRenderer() {
-		return this.worldRenderer;
-	}
+    /**
+     * Draws the data set up in this tessellator and resets the state to prepare for new drawing.
+     */
+    public void draw()
+    {
+        if (this.worldRenderer.animatedSprites != null)
+        {
+            SmartAnimations.spritesRendered(this.worldRenderer.animatedSprites);
+        }
+
+        this.worldRenderer.finishDrawing();
+        this.vboUploader.draw(this.worldRenderer);
+    }
+
+    public WorldRenderer getWorldRenderer()
+    {
+        return this.worldRenderer;
+    }
 }

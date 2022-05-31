@@ -1,5 +1,6 @@
 package net.minecraft.client.model;
 
+import net.mattbenson.Wrapper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -30,9 +31,13 @@ public class ModelChest extends ModelBase
 
     public void renderAll()
     {
-        this.chestKnob.rotateAngleX = this.chestLid.rotateAngleX;
-        this.chestLid.render(0.0625F);
-        this.chestKnob.render(0.0625F);
-        this.chestBelow.render(0.0625F);
+    	if(Wrapper.getInstance().isBetterChests()) {
+    		this.chestBelow.render(0.0625F);
+    	} else {
+	        this.chestKnob.rotateAngleX = this.chestLid.rotateAngleX;
+	        this.chestLid.render(0.0625F);
+	        this.chestKnob.render(0.0625F);
+	        this.chestBelow.render(0.0625F);
+    	}
     }
 }

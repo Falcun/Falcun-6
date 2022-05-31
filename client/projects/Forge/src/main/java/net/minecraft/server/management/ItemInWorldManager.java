@@ -1,5 +1,8 @@
 package net.minecraft.server.management;
 
+import net.mattbenson.Wrapper;
+import net.mattbenson.events.types.entity.PlayerInteractEvent;
+import net.mattbenson.events.types.entity.PlayerInteractEvent.Action;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockChest;
 import net.minecraft.block.material.Material;
@@ -132,6 +135,9 @@ public class ItemInWorldManager
 
     public void onBlockClicked(BlockPos pos, EnumFacing side)
     {
+    	if(!Wrapper.getInstance().post(new PlayerInteractEvent(Action.LEFT_CLICK_BLOCK, pos, this.theWorld))) {
+    		return;
+    	}
         net.minecraftforge.event.entity.player.PlayerInteractEvent event = net.minecraftforge.event.ForgeEventFactory.onPlayerInteract(thisPlayerMP,
                 net.minecraftforge.event.entity.player.PlayerInteractEvent.Action.LEFT_CLICK_BLOCK, theWorld, pos, side, net.minecraftforge.common.ForgeHooks.rayTraceEyeHitVec(thisPlayerMP, getBlockReachDistance() + 1));
         if (event.isCanceled())

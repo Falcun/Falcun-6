@@ -15,6 +15,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.stream.GuiTwitchUserMode;
 import net.minecraft.client.renderer.GlStateManager;
@@ -398,6 +399,26 @@ public abstract class GuiScreen extends Gui implements GuiYesNoCallback
                 {
                     URI uri1 = (new File(clickevent.getValue())).toURI();
                     this.openWebLink(uri1);
+                } else if(clickevent.getAction() == ClickEvent.Action.COPY_URL) {
+                	setClipboardString(clickevent.getValue());
+                }
+                else if(clickevent.getAction() == ClickEvent.Action.LOAD_SCHEM) {
+                }
+                else if (clickevent.getAction() == ClickEvent.Action.DELETE_FILE)
+                {
+                    File file = new File(clickevent.getValue());
+                   	if(file.exists()) {
+                   		file.delete();
+                   	}
+                }
+                else if (clickevent.getAction() == ClickEvent.Action.LINK)
+                {
+					try {
+					   	URI uri = new URI(clickevent.getValue());
+					    this.openWebLink(uri);
+					} catch (URISyntaxException e) {
+						e.printStackTrace();
+					}
                 }
                 else if (clickevent.getAction() == ClickEvent.Action.SUGGEST_COMMAND)
                 {

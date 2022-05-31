@@ -1,5 +1,6 @@
 package net.minecraft.client.multiplayer;
 
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -7,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.EntityHorse;
 import net.minecraft.entity.player.EntityPlayer;
@@ -165,6 +167,7 @@ public class PlayerControllerMP
 
     public boolean clickBlock(BlockPos loc, EnumFacing face)
     {
+
         if (this.currentGameType.isAdventure())
         {
             if (this.currentGameType == WorldSettings.GameType.SPECTATOR)
@@ -458,6 +461,14 @@ public class PlayerControllerMP
 
     public void attackEntity(EntityPlayer playerIn, Entity targetEntity)
     {
+    	if (playerIn == this.mc.thePlayer) {
+			final Vec3 vec3 = this.mc.getRenderViewEntity().getPositionEyes(1.0f);
+			final EntityRenderer entityRenderer = this.mc.entityRenderer;
+			final double distanceTo = this.mc.objectMouseOver.hitVec.distanceTo(vec3);
+			entityRenderer.lastRange = distanceTo;
+			this.mc.entityRenderer.lastAttackTime = System.currentTimeMillis();
+		}
+    	
         this.syncCurrentPlayItem();
         this.netClientHandler.addToSendQueue(new C02PacketUseEntity(targetEntity, C02PacketUseEntity.Action.ATTACK));
 

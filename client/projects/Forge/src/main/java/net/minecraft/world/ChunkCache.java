@@ -1,6 +1,6 @@
 package net.minecraft.world;
 
-import net.minecraft.block.material.Material;
+import net.mattbenson.Wrapper;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
@@ -110,6 +110,10 @@ public class ChunkCache implements IBlockAccess
     @SideOnly(Side.CLIENT)
     private int getLightForExt(EnumSkyBlock p_175629_1_, BlockPos pos)
     {
+    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
+    		return 1000;
+    	}
+    	
         if (p_175629_1_ == EnumSkyBlock.SKY && this.worldObj.provider.getHasNoSky())
         {
             return 0;

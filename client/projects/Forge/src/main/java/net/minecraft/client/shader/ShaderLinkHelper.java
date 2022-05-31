@@ -3,12 +3,9 @@ package net.minecraft.client.shader;
 import java.io.IOException;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.util.JsonException;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@SideOnly(Side.CLIENT)
 public class ShaderLinkHelper
 {
     private static final Logger logger = LogManager.getLogger();

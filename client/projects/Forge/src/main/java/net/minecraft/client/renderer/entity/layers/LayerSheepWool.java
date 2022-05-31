@@ -14,7 +14,7 @@ public class LayerSheepWool implements LayerRenderer<EntitySheep>
 {
     private static final ResourceLocation TEXTURE = new ResourceLocation("textures/entity/sheep/sheep_fur.png");
     private final RenderSheep sheepRenderer;
-    private final ModelSheep1 sheepModel = new ModelSheep1();
+    public ModelSheep1 sheepModel = new ModelSheep1();
 
     public LayerSheepWool(RenderSheep sheepRendererIn)
     {

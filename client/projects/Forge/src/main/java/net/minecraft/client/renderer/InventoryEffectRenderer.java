@@ -1,6 +1,8 @@
 package net.minecraft.client.renderer;
 
 import java.util.Collection;
+
+import net.mattbenson.Wrapper;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.inventory.Container;
@@ -27,14 +29,13 @@ public abstract class InventoryEffectRenderer extends GuiContainer
 
     protected void updateActivePotionEffects()
     {
-        boolean hasVisibleEffect = false;
-        for(PotionEffect potioneffect : this.mc.thePlayer.getActivePotionEffects()) {
-            Potion potion = Potion.potionTypes[potioneffect.getPotionID()];
-            if(potion.shouldRender(potioneffect)) { hasVisibleEffect = true; break; }
-        }
-        if (!this.mc.thePlayer.getActivePotionEffects().isEmpty() && hasVisibleEffect)
+        if (!this.mc.thePlayer.getActivePotionEffects().isEmpty())
         {
-            this.guiLeft = 160 + (this.width - this.xSize - 200) / 2;
+        	if(Wrapper.getInstance().isInventoryAlign()) {
+        		this.guiLeft = (this.width - this.xSize) / 2;
+        	} else {
+        		this.guiLeft = 160 + (this.width - this.xSize - 200) / 2;
+        	}
             this.hasActivePotionEffects = true;
         }
         else

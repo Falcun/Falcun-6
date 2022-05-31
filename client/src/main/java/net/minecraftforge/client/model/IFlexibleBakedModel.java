@@ -74,5 +74,11 @@ public interface IFlexibleBakedModel extends IBakedModel
         {
             return new VertexFormat(format);
         }
+
+		@Override
+		public TextureAtlasSprite getTexture() {
+			// TODO Auto-generated method stub
+			return null;
+		}
     }
 }

@@ -10,11 +10,8 @@ import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.util.JsonException;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.util.vector.Matrix4f;
 
-@SideOnly(Side.CLIENT)
 public class Shader
 {
     private final ShaderManager manager;

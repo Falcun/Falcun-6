@@ -1,15 +1,19 @@
 package net.minecraft.client.model;
 
+import net.mattbenson.patcher.TexturedQuadHook;
+import net.mattbenson.patcher.transformers.ModelRendererTransformer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.src.Config;
 import net.minecraft.util.Vec3;
+import net.optifine.shaders.SVertexFormat;
 
 public class TexturedQuad
 {
     public PositionTextureVertex[] vertexPositions;
     public int nVertices;
-    private boolean invertNormal;
+    public boolean invertNormal;
 
     public TexturedQuad(PositionTextureVertex[] vertices)
     {
@@ -17,7 +21,7 @@ public class TexturedQuad
         this.nVertices = vertices.length;
     }
 
-    public TexturedQuad(PositionTextureVertex[] vertices, int texcoordU1, int texcoordV1, int texcoordU2, int texcoordV2, float textureWidth, float textureHeight)
+    public TexturedQuad(PositionTextureVertex[] vertices, float texcoordU1, float texcoordV1, float texcoordU2, float texcoordV2, float textureWidth, float textureHeight)
     {
         this(vertices);
         float f = 0.0F / textureWidth;
@@ -40,8 +44,21 @@ public class TexturedQuad
         this.vertexPositions = apositiontexturevertex;
     }
 
+    /**
+     * Draw this primitve. This is typically called only once as the generated drawing instructions are saved by the
+     * renderer and reused later.
+     *  
+     * @param renderer The renderer instance
+     * @param scale The amount of scale to apply to this object
+     */
     public void draw(WorldRenderer renderer, float scale)
     {
+    	//TODO: Falcun patcher
+    	if(ModelRendererTransformer.batchModelRendering) {
+    		TexturedQuadHook.draw(this, renderer, scale);
+    		return;
+    	}
+    	
         Vec3 vec3 = this.vertexPositions[1].vector3D.subtractReverse(this.vertexPositions[0].vector3D);
         Vec3 vec31 = this.vertexPositions[1].vector3D.subtractReverse(this.vertexPositions[2].vector3D);
         Vec3 vec32 = vec31.crossProduct(vec3).normalize();
@@ -56,7 +73,14 @@ public class TexturedQuad
             f2 = -f2;
         }
 
-        renderer.begin(7, DefaultVertexFormats.OLDMODEL_POSITION_TEX_NORMAL);
+        if (Config.isShaders())
+        {
+            renderer.begin(7, SVertexFormat.defVertexFormatTextured);
+        }
+        else
+        {
+            renderer.begin(7, DefaultVertexFormats.OLDMODEL_POSITION_TEX_NORMAL);
+        }
 
         for (int i = 0; i < 4; ++i)
         {

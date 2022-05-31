@@ -6,6 +6,11 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.mattbenson.Falcun;
+import net.mattbenson.events.types.render.RenderEvent;
+import net.mattbenson.events.types.render.RenderType;
+import net.mattbenson.modules.types.mods.OldAnimations;
+import net.mattbenson.modules.types.other.BossBar;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -150,6 +155,9 @@ public class GuiIngameForge extends GuiIngame
         renderRecordOverlay(width, height, partialTicks);
         renderTitle(width, height, partialTicks);
 
+        if(!Falcun.EVENT_BUS.post(new RenderEvent(RenderType.INGAME_OVERLAY, partialTicks))) {
+        	return;
+        }
 
         Scoreboard scoreboard = this.mc.theWorld.getScoreboard();
         ScoreObjective objective = null;
@@ -162,7 +170,9 @@ public class GuiIngameForge extends GuiIngame
         ScoreObjective scoreobjective1 = objective != null ? objective : scoreboard.getObjectiveInDisplaySlot(1);
         if (renderObjective && scoreobjective1 != null)
         {
-            this.renderScoreboard(scoreobjective1, res);
+            if(Falcun.getInstance().EVENT_BUS.post(new RenderEvent(RenderType.SCOREBOARD))) {
+            	this.renderScoreboard(scoreobjective1, res);
+            }
         }
 
         GlStateManager.enableBlend();
@@ -204,6 +214,7 @@ public class GuiIngameForge extends GuiIngame
     @Override
     protected void renderBossHealth()
     {
+    	if (Falcun.getInstance().moduleManager.getModule(BossBar.class).isEnabled()) {
         if (pre(BOSSHEALTH)) return;
         bind(Gui.icons);
         GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
@@ -213,6 +224,7 @@ public class GuiIngameForge extends GuiIngame
         GlStateManager.disableBlend();
         mc.mcProfiler.endSection();
         post(BOSSHEALTH);
+    	}
     }
 
     private void renderHelmet(ScaledResolution res, float partialTicks)
@@ -338,6 +350,10 @@ public class GuiIngameForge extends GuiIngame
         int health = MathHelper.ceiling_float_int(player.getHealth());
         boolean highlight = healthUpdateCounter > (long)updateCounter && (healthUpdateCounter - (long)updateCounter) / 3L %2L == 1L;
 
+        if(Falcun.getInstance().moduleManager.getModule(OldAnimations.class).DISABLE_HEALTH_FLASH) {
+        	highlight = false;
+        }
+        
         if (health < this.playerHealth && player.hurtResistantTime > 0)
         {
             this.lastSystemTime = Minecraft.getSystemTime();
@@ -500,7 +516,7 @@ public class GuiIngameForge extends GuiIngame
             }
 
             int color = (int)(220.0F * opacity) << 24 | 1052704;
-            drawRect(0, 0, width, height, color);
+            drawRectangle(0, 0, width, height, color);
             GlStateManager.enableAlpha();
             GlStateManager.enableDepth();
             mc.mcProfiler.endSection();
@@ -669,7 +685,7 @@ public class GuiIngameForge extends GuiIngame
             for (String msg : listL)
             {
                 if (msg == null) continue;
-                drawRect(1, top - 1, 2 + fontrenderer.getStringWidth(msg) + 1, top + fontrenderer.FONT_HEIGHT - 1, -1873784752);
+                drawRectangle(1, top - 1, 2 + fontrenderer.getStringWidth(msg) + 1, top + fontrenderer.FONT_HEIGHT - 1, -1873784752);
                 fontrenderer.drawString(msg, 2, top, 14737632);
                 top += fontrenderer.FONT_HEIGHT;
             }
@@ -680,7 +696,7 @@ public class GuiIngameForge extends GuiIngame
                 if (msg == null) continue;
                 int w = fontrenderer.getStringWidth(msg);
                 int left = width - 2 - w;
-                drawRect(left - 1, top - 1, left + w + 1, top + fontrenderer.FONT_HEIGHT - 1, -1873784752);
+                drawRectangle(left - 1, top - 1, left + w + 1, top + fontrenderer.FONT_HEIGHT - 1, -1873784752);
                 fontrenderer.drawString(msg, left, top, 14737632);
                 top += fontrenderer.FONT_HEIGHT;
             }

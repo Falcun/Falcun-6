@@ -1,10 +1,13 @@
 package net.minecraft.client.renderer.chunk;
 
-import com.google.common.collect.Lists;
 import java.util.BitSet;
 import java.util.EnumSet;
 import java.util.Queue;
 import java.util.Set;
+
+import com.google.common.collect.Lists;
+
+import net.mattbenson.Wrapper;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.IntegerCache;
@@ -20,7 +23,9 @@ public class VisGraph
     private final BitSet field_178612_d = new BitSet(4096);
     private static final int[] field_178613_e = new int[1352];
     private int field_178611_f = 4096;
-
+    
+    private static boolean patcherLimitScan;
+    
     public void func_178606_a(BlockPos pos)
     {
         this.field_178612_d.set(getIndex(pos), true);
@@ -40,8 +45,9 @@ public class VisGraph
     public SetVisibility computeVisibility()
     {
         SetVisibility setvisibility = new SetVisibility();
-
-        if (4096 - this.field_178611_f < 256)
+        
+        //TODO: Falcun patcher
+        if (4096 - this.field_178611_f < (Wrapper.getInstance().isCullingFix() ? 4097 : 256))
         {
             setvisibility.setAllVisible(true);
         }
@@ -68,7 +74,7 @@ public class VisGraph
         return this.func_178604_a(getIndex(pos));
     }
 
-    private Set<EnumFacing> func_178604_a(int p_178604_1_)
+    public Set<EnumFacing> func_178604_a(int p_178604_1_)
     {
         Set<EnumFacing> set = EnumSet.<EnumFacing>noneOf(EnumFacing.class);
         Queue<Integer> queue = Lists.<Integer>newLinkedList();
@@ -79,7 +85,27 @@ public class VisGraph
         {
             int i = ((Integer)queue.poll()).intValue();
             this.func_178610_a(i, set);
-
+            
+            /*  InsnList list = new InsnList();
+			    list.add((AbstractInsnNode)new VarInsnNode(25, 0));
+			    list.add((AbstractInsnNode)new FieldInsnNode(180, "net/minecraft/client/renderer/chunk/VisGraph", "patcherLimitScan", "Z"));
+			    LabelNode labelNode = new LabelNode();
+			    list.add((AbstractInsnNode)new JumpInsnNode(153, labelNode));
+			    list.add((AbstractInsnNode)new VarInsnNode(25, 2));
+			    list.add((AbstractInsnNode)new MethodInsnNode(185, "java/util/Set", "size", "()I", true));
+			    list.add((AbstractInsnNode)new InsnNode(4));
+			    list.add((AbstractInsnNode)new JumpInsnNode(164, labelNode));
+			    list.add((AbstractInsnNode)new VarInsnNode(25, 2));
+			    list.add((AbstractInsnNode)new InsnNode(176));
+			    list.add((AbstractInsnNode)labelNode);
+             */
+            //TODO: Falcun patcher
+            if(Wrapper.getInstance().isCullingFix()) {
+	            if(p_178604_1_ < set.size()) {
+	            	return set;
+	            }
+            }
+            
             for (EnumFacing enumfacing : EnumFacing.values())
             {
                 int j = this.func_178603_a(i, enumfacing);

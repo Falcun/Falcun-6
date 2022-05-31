@@ -459,8 +459,8 @@ public class GuiTextField extends Gui
         {
             if (this.getEnableBackgroundDrawing())
             {
-                drawRect(this.xPosition - 1, this.yPosition - 1, this.xPosition + this.width + 1, this.yPosition + this.height + 1, -6250336);
-                drawRect(this.xPosition, this.yPosition, this.xPosition + this.width, this.yPosition + this.height, -16777216);
+                drawRectangle(this.xPosition - 1, this.yPosition - 1, this.xPosition + this.width + 1, this.yPosition + this.height + 1, -6250336);
+                drawRectangle(this.xPosition, this.yPosition, this.xPosition + this.width, this.yPosition + this.height, -16777216);
             }
 
             int i = this.isEnabled ? this.enabledColor : this.disabledColor;
@@ -506,7 +506,7 @@ public class GuiTextField extends Gui
             {
                 if (flag2)
                 {
-                    Gui.drawRect(k1, i1 - 1, k1 + 1, i1 + 1 + this.fontRendererInstance.FONT_HEIGHT, -3092272);
+                    Gui.drawRectangle(k1, i1 - 1, k1 + 1, i1 + 1 + this.fontRendererInstance.FONT_HEIGHT, -3092272);
                 }
                 else
                 {

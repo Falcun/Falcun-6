@@ -1,5 +1,6 @@
 package net.minecraft.client.entity;
 
+import net.mattbenson.Wrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSoundMinecartRiding;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -48,6 +49,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.MovementInput;
+import net.minecraft.util.MovementInputFromOptions;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.IInteractionObject;
 import net.minecraft.world.World;
@@ -625,11 +627,12 @@ public class EntityPlayerSP extends AbstractClientPlayer
 
         if (this.inPortal)
         {
-            if (this.mc.currentScreen != null && !this.mc.currentScreen.doesGuiPauseGame())
-            {
-                this.mc.displayGuiScreen((GuiScreen)null);
-            }
-
+        	if (this.mc.currentScreen != null && !this.mc.currentScreen.doesGuiPauseGame())
+			{
+				if(!Wrapper.getInstance().isPortalFix()) {
+					this.mc.displayGuiScreen((GuiScreen)null);
+				}
+			}
             if (this.timeInPortal == 0.0F)
             {
                 this.mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("portal.trigger"), this.rand.nextFloat() * 0.4F + 0.8F));
@@ -675,7 +678,13 @@ public class EntityPlayerSP extends AbstractClientPlayer
         boolean flag1 = this.movementInput.sneak;
         float f = 0.8F;
         boolean flag2 = this.movementInput.moveForward >= f;
-        this.movementInput.updatePlayerMoveState();
+
+        
+		if(Wrapper.getInstance().isToggleSneak()) {
+			Wrapper.getInstance().updateMovement((MovementInputFromOptions)this.movementInput, this);
+		} else {
+			this.movementInput.updatePlayerMoveState();
+		}
 
         if (this.isUsingItem() && !this.isRiding())
         {
@@ -690,65 +699,206 @@ public class EntityPlayerSP extends AbstractClientPlayer
         this.pushOutOfBlocks(this.posX + (double)this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ + (double)this.width * 0.35D);
         boolean flag3 = (float)this.getFoodStats().getFoodLevel() > 6.0F || this.capabilities.allowFlying;
 
-        if (this.onGround && !flag1 && !flag2 && this.movementInput.moveForward >= f && !this.isSprinting() && flag3 && !this.isUsingItem() && !this.isPotionActive(Potion.blindness))
-        {
-            if (this.sprintToggleTimer <= 0 && !this.mc.gameSettings.keyBindSprint.isKeyDown())
-            {
-                this.sprintToggleTimer = 7;
-            }
-            else
-            {
-                this.setSprinting(true);
-            }
-        }
+    	/*
+		 * Toggle Sneak Changes
+		 */
+        if(Wrapper.getInstance().isToggleSneak()) {
+			boolean isSprintDisabled	= !Wrapper.getInstance().getOptionToggleSprint();
+			boolean canDoubleTap		= Wrapper.getInstance().getOptionDoubleTap();
 
-        if (!this.isSprinting() && this.movementInput.moveForward >= f && flag3 && !this.isUsingItem() && !this.isPotionActive(Potion.blindness) && this.mc.gameSettings.keyBindSprint.isKeyDown())
-        {
-            this.setSprinting(true);
-        }
+			// Detect when ToggleSprint was disabled in the in-game options menu
+			if(Wrapper.getInstance().wasSprintDisabled())
+			{
+				this.setSprinting(false);
+				Wrapper.getInstance().updateSprint(false, false);
+				Wrapper.getInstance().setSprintDisabled(false);
+			}
 
-        if (this.isSprinting() && (this.movementInput.moveForward < f || this.isCollidedHorizontally || !flag3))
-        {
-            this.setSprinting(false);
-        }
+			// Default Sprint routine converted to PlayerAPI, use if ToggleSprint is disabled
+			if(isSprintDisabled)
+			{
+				if(Wrapper.getInstance().getOptionDoubleTap() && this.onGround && !flag2 && this.movementInput.moveForward >= f && !this.isSprinting() && flag3 && !this.isUsingItem() && !this.isPotionActive(Potion.blindness))
+				{
+					if(this.sprintToggleTimer <= 0 && !this.mc.gameSettings.keyBindSprint.isKeyDown())
+					{
+						this.sprintToggleTimer = 7;
+					}
+					else
+					{
+						this.setSprinting(true);
+						Wrapper.getInstance().updateSprint(true, false);
+					}
+				}
 
-        if (this.capabilities.allowFlying)
-        {
-            if (this.mc.playerController.isSpectatorMode())
-            {
-                if (!this.capabilities.isFlying)
-                {
-                    this.capabilities.isFlying = true;
-                    this.sendPlayerAbilities();
-                }
-            }
-            else if (!flag && this.movementInput.jump)
-            {
-                if (this.flyToggleTimer == 0)
-                {
-                    this.flyToggleTimer = 7;
-                }
-                else
-                {
-                    this.capabilities.isFlying = !this.capabilities.isFlying;
-                    this.sendPlayerAbilities();
-                    this.flyToggleTimer = 0;
-                }
-            }
-        }
+				if(!this.isSprinting() && this.movementInput.moveForward >= f && flag3 && !this.isUsingItem() && !this.isPotionActive(Potion.blindness) && this.mc.gameSettings.keyBindSprint.isKeyDown())
+				{
+					this.setSprinting(true);
+					Wrapper.getInstance().updateSprint(true, false);
+				}
+			}
+			else
+			{
+				boolean state = Wrapper.getInstance().getSprintState();
+				
+				// Only handle changes in state under the following conditions:
+				// On ground, not hungry, not eating/using item, not blind, and not Vanilla
+				//
+				// 5/6/14 - onGround check removed to match vanilla's 'start sprint while jumping' behavior.
+				//if(this.player.onGround && enoughHunger && !this.player.isUsingItem() && !this.player.isPotionActive(Potion.blindness) && !this.customMovementInput.sprintHeldAndReleased)
 
-        if (this.capabilities.isFlying && this.isCurrentViewEntity())
-        {
-            if (this.movementInput.sneak)
-            {
-                this.motionY -= (double)(this.capabilities.getFlySpeed() * 3.0F);
-            }
+				if(flag3 && !this.isUsingItem() && !this.isPotionActive(Potion.blindness) && !Wrapper.getInstance().getSprintHeldAndReleased())
+				{
+					if(canDoubleTap && !this.isSprinting() || !canDoubleTap)
+					{
+						this.setSprinting(state);
+					}
+				}
 
-            if (this.movementInput.jump)
-            {
-                this.motionY += (double)(this.capabilities.getFlySpeed() * 3.0F);
-            }
-        }
+				if(canDoubleTap && !state && this.onGround && !flag2 && this.movementInput.moveForward >= f && !this.isSprinting() && flag3 && !this.isUsingItem() && !this.isPotionActive(Potion.blindness))
+				{
+					if(this.sprintToggleTimer == 0)
+					{
+						this.sprintToggleTimer = 7;
+					}
+					else
+					{
+						this.setSprinting(true);
+						Wrapper.getInstance().updateSprint(true, true);
+						this.sprintToggleTimer = 0;
+					}
+				}
+			}
+			
+			// If sprinting, break the sprint in appropriate circumstances:
+			// Player stops moving forward, runs into something, or gets too hungry
+			if (isSprinting() && (movementInput.moveForward < f || mc.thePlayer.isCollidedHorizontally || !flag3 || isUsingItem() || isPotionActive(Potion.blindness)))
+			{
+				this.setSprinting(false);
+				// Undo toggle if we resumed vanilla operation due to Hold&Release, DoubleTap, Fly, Ride
+				if (Wrapper.getInstance().getSprintHeldAndReleased() || isSprintDisabled || Wrapper.getInstance().getSprintDoubleTapped() || this.isRiding() || (!Wrapper.getInstance().getOptionToggleFlyboost() ? this.capabilities.isFlying : false) )
+				{
+					Wrapper.getInstance().updateSprint(false, false);
+				}
+			}
+			
+		} else {
+
+			if (this.onGround && !flag1 && !flag2 && this.movementInput.moveForward >= f && !this.isSprinting() && flag3 && !this.isUsingItem() && !this.isPotionActive(Potion.blindness))
+			{
+				if (this.sprintToggleTimer <= 0 && !this.mc.gameSettings.keyBindSprint.isKeyDown())
+				{
+					this.sprintToggleTimer = 7;
+				}
+				else
+				{
+					this.setSprinting(true);
+				}
+			}
+
+			if (!this.isSprinting() && this.movementInput.moveForward >= f && flag3 && !this.isUsingItem() && !this.isPotionActive(Potion.blindness) && this.mc.gameSettings.keyBindSprint.isKeyDown())
+			{
+				this.setSprinting(true);
+			}
+
+			if (this.isSprinting() && (this.movementInput.moveForward < f || !flag3))
+			{
+				this.setSprinting(false);
+			}
+		}
+		/*
+		 * Fly Boost Changes
+		 */
+        if(Wrapper.getInstance().isToggleSneak()) {
+
+			if(Wrapper.getInstance().getOptionFlyboost() && this.capabilities.isFlying && Wrapper.getInstance().getSprintState())
+			{
+				if(Wrapper.getInstance().getSprintState() && Wrapper.getInstance().getOptionToggleFlyboost()) {
+					this.capabilities.setFlySpeed(0.05F * (float)Wrapper.getInstance().getFlyBoostSpeedHorizontal());
+					if(this.movementInput.sneak)	this.motionY -= 0.15D * (double)Wrapper.getInstance().getFlyBoostSpeedVertical();
+					if(this.movementInput.jump)	this.motionY += 0.15D * (double)Wrapper.getInstance().getFlyBoostSpeedVertical();
+				} else if(!Wrapper.getInstance().getOptionToggleFlyboost() && this.mc.gameSettings.keyBindSprint.isKeyDown()) {
+					this.capabilities.setFlySpeed(0.05F * (float)Wrapper.getInstance().getFlyBoostSpeedHorizontal());
+					if(this.movementInput.sneak)	this.motionY -= 0.15D * (double)Wrapper.getInstance().getFlyBoostSpeedVertical();
+					if(this.movementInput.jump)	this.motionY += 0.15D * (double)Wrapper.getInstance().getFlyBoostSpeedVertical();	
+				}
+			}
+			else if(this.capabilities.getFlySpeed() != 0.05F)
+			{
+				this.capabilities.setFlySpeed(0.05F);
+			}
+			if(this.capabilities.allowFlying && !isJumping && this.movementInput.jump)
+			{
+				if(this.flyToggleTimer == 0)
+				{
+					this.flyToggleTimer = 7;
+				}
+				else
+				{
+					this.capabilities.isFlying = !this.capabilities.isFlying;
+					this.sendPlayerAbilities();
+					this.flyToggleTimer = 0;
+				}
+			}
+
+			if(this.capabilities.isFlying)
+			{
+				if(this.movementInput.sneak)
+				{
+					this.motionY -= 0.15D;
+				}
+				if(this.movementInput.jump)
+				{
+					this.motionY += 0.15D;
+				}
+			}
+		} else {
+			//DEFAULT MC
+			if (this.capabilities.allowFlying)
+			{
+				//Matt
+				if(this.capabilities.getFlySpeed() != 0.05F)
+				{
+					this.capabilities.setFlySpeed(0.05F);
+				}
+				
+				if (this.mc.playerController.isSpectatorMode())
+				{
+					if (!this.capabilities.isFlying)
+					{
+						this.capabilities.isFlying = true;
+						this.sendPlayerAbilities();
+					}
+				}
+				else if (!flag && this.movementInput.jump)
+				{
+					if (this.flyToggleTimer == 0)
+					{
+						this.flyToggleTimer = 7;
+					}
+					else
+					{
+						this.capabilities.isFlying = !this.capabilities.isFlying;
+						this.sendPlayerAbilities();
+						this.flyToggleTimer = 0;
+					}
+				}
+			}
+
+			if (this.capabilities.isFlying && this.isCurrentViewEntity())
+			{
+				if (this.movementInput.sneak)
+				{
+					this.motionY -= (double)(this.capabilities.getFlySpeed() * 3.0F);
+				}
+
+				if (this.movementInput.jump)
+				{
+					this.motionY += (double)(this.capabilities.getFlySpeed() * 3.0F);
+				}
+			}
+		}
+		//END
+
 
         if (this.isRidingHorse())
         {

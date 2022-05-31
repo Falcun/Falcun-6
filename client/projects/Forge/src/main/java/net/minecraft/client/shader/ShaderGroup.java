@@ -20,13 +20,10 @@ import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.util.JsonException;
 import net.minecraft.util.JsonUtils;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 
-@SideOnly(Side.CLIENT)
 public class ShaderGroup
 {
     private Framebuffer mainFramebuffer;
@@ -287,15 +284,19 @@ public class ShaderGroup
                 case 0:
                 default:
                     break;
+
                 case 1:
                     shaderuniform.set(afloat[0]);
                     break;
+
                 case 2:
                     shaderuniform.set(afloat[0], afloat[1]);
                     break;
+
                 case 3:
                     shaderuniform.set(afloat[0], afloat[1], afloat[2]);
                     break;
+
                 case 4:
                     shaderuniform.set(afloat[0], afloat[1], afloat[2], afloat[3]);
             }

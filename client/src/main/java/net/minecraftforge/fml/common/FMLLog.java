@@ -45,6 +45,21 @@ public class FMLLog
         log(Level.ERROR, format, data);
     }
 
+    public static void error(String format, Object... data)
+    {
+        log(Level.ERROR, format, data);
+    }
+    
+    public static void warn(String format, Object... data)
+    {
+        log(Level.WARN, format, data);
+    }
+    
+    public static void debug(String format, Object... data)
+    {
+        log(Level.DEBUG, format, data);
+    }
+    
     public static void bigWarning(String format, Object... data)
     {
         StackTraceElement[] trace = Thread.currentThread().getStackTrace();

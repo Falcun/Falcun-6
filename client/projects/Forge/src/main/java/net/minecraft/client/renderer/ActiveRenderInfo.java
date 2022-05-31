@@ -2,6 +2,8 @@ package net.minecraft.client.renderer;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+
+import net.mattbenson.Wrapper;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.state.IBlockState;
@@ -66,6 +68,10 @@ public class ActiveRenderInfo
         BlockPos blockpos = new BlockPos(vec3);
         IBlockState iblockstate = worldIn.getBlockState(blockpos);
         Block block = iblockstate.getBlock();
+        
+        if(Wrapper.getInstance().isClearWater()) {
+        	return block;
+        }
 
         if (block.getMaterial().isLiquid())
         {

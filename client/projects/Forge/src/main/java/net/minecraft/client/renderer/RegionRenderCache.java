@@ -1,8 +1,11 @@
 package net.minecraft.client.renderer;
 
 import java.util.Arrays;
+
+import net.mattbenson.Wrapper;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
+import net.minecraft.src.Config;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.Vec3i;
@@ -11,6 +14,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.optifine.DynamicLights;
 
 @SideOnly(Side.CLIENT)
 public class RegionRenderCache extends ChunkCache
@@ -39,12 +43,23 @@ public class RegionRenderCache extends ChunkCache
 
     public int getCombinedLight(BlockPos pos, int lightValue)
     {
+    	//TODO: Falcun patcher
+    	if(Wrapper.getInstance().isRemoveLightCalculations()) {
+    		return 1000;
+    	}
+    	
         int i = this.getPositionIndex(pos);
         int j = this.combinedLights[i];
 
         if (j == -1)
         {
             j = super.getCombinedLight(pos, lightValue);
+
+            if (Config.isDynamicLights() && !this.getBlockState(pos).getBlock().isOpaqueCube())
+            {
+                j = DynamicLights.getCombinedLight(pos, j);
+            }
+
             this.combinedLights[i] = j;
         }
 
@@ -53,16 +68,23 @@ public class RegionRenderCache extends ChunkCache
 
     public IBlockState getBlockState(BlockPos pos)
     {
-        int i = this.getPositionIndex(pos);
-        IBlockState iblockstate = this.blockStates[i];
+    	try {
+            int i = this.getPositionIndex(pos);
+            IBlockState iblockstate = this.blockStates[i];
 
-        if (iblockstate == null)
-        {
-            iblockstate = this.getBlockStateRaw(pos);
-            this.blockStates[i] = iblockstate;
-        }
+            if (iblockstate == null)
+            {
+                iblockstate = this.getBlockStateRaw(pos);
+                this.blockStates[i] = iblockstate;
+            }
 
-        return iblockstate;
+            return iblockstate;
+    		}
+    		catch(Exception e) {
+
+    	        return null;
+    		}
+
     }
 
     private IBlockState getBlockStateRaw(BlockPos pos)
