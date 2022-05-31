@@ -32,4 +32,13 @@ public class ArmorStatus extends FalcunModule {
 
     @FalcunSetting("Direction")
     FalcunValue<Direction> armourstatusdirection = new FalcunValue<>(Direction.VERTICAL);
+    enum Value_Display{
+        PERCENT, VALUE_DAMAGE_MAX, VALUE_DAMAGE
+    }
+
+    FalcunValue<Value_Display> armorstatusdisplay = new FalcunValue<>(Value_Display.VALUE_DAMAGE);
+    enum ValueLeftRight{
+        LEFT, RIGHT
+    }
+    FalcunValue<ValueLeftRight> leftRight = new FalcunValue<>(ValueLeftRight.LEFT);
 }
