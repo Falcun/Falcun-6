@@ -37,8 +37,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import javax.imageio.ImageIO;
 
-import falcun.net.gui.mainmenu.FalcunGuiMainMenu;
-import falcun.net.oldgui.mainmenu.FalcunMainMenu;
+import falcun.net.gui.mainmenu.FalcunMainMenu;
 import falcun.net.managers.FalcunGuiManager;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.audio.MusicTicker;

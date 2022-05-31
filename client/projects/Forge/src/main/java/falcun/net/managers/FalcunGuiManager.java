@@ -1,10 +1,9 @@
 package falcun.net.managers;
 
 import falcun.net.Falcun;
-import falcun.net.oldgui.container.playerinventory.FalcunGuiInventory;
-import falcun.net.oldgui.mainmenu.FalcunMainMenu;
-import falcun.net.oldgui.ingame.FalcunInGameMenu;
-import falcun.net.oldgui.test.DanFrame;
+import falcun.net.gui.container.playerinventory.FalcunGuiInventory;
+import falcun.net.gui.mainmenu.FalcunMainMenu;
+import falcun.net.gui.ingame.FalcunInGameMenu;
 import falcun.xyz.accswitcher.the_fireplace.ias.gui.GuiAccountSelector;
 import net.minecraft.client.gui.*;
 import net.minecraft.network.play.client.C16PacketClientStatus;
