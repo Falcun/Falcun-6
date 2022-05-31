@@ -66,7 +66,7 @@ public class Patchcrumbs extends FalcunModule implements FalcunEventBusModule {
     FalcunValue<FalcunColor> textColor = new FalcunValue<>(new FalcunColor(Color.WHITE.getRGB()));
 
     @FalcunSetting("Shout TNT Coordinates Key")
-    FalcunValue<FalcunKeyBind> keyBind2 = new FalcunValue<>(new FalcunKeyBind());
+    FalcunValue<FalcunKeyBind> keyBind2 = new FalcunValue<>(new FalcunKeyBind(0));
 
     @FalcunSetting("Font Color")
     FalcunValue<FalcunColor> fontColor = new FalcunValue<>(new FalcunColor(Color.WHITE.getRGB()));
