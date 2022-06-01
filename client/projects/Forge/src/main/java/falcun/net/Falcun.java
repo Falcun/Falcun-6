@@ -6,6 +6,7 @@ import falcun.net.api.modules.hud.FalcunHudModule;
 import falcun.net.api.textures.FalcunTexture;
 import falcun.net.managers.FalcunConfigManager;
 import falcun.net.managers.FalcunKeyBindManager;
+import falcun.net.modules.hypixel.skyblock.utils.SkyblockPlayer;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.util.FutureCallBack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -55,6 +56,7 @@ public final class Falcun {
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
+		new SkyblockPlayer();
 		try {
 			InputStream is = Falcun.minecraft.getResourceManager().getResource(new ResourceLocation("falcun:falcun16x16.png")).getInputStream();
 			InputStream is1 = Falcun.minecraft.getResourceManager().getResource(new ResourceLocation("falcun:falcun32x32.png")).getInputStream();
