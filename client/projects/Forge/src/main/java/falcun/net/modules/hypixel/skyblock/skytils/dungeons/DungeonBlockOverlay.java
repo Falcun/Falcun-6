@@ -12,6 +12,7 @@ import java.awt.*;
 
 @FalcunModuleInfo(fileName = "DungeonBlockOverlay", name = "Dungeon Block Overlay", description = "Color overlays for blocks", version = "1.0.0", category = ModuleCategory.SKYBLOCK)
 public class DungeonBlockOverlay extends FalcunModule implements FalcunEventBusModule {
+
     @FalcunSetting("Cracked Bricks")
     public static FalcunValue<FalcunColor> crackedBricks = new FalcunValue<FalcunColor>(new FalcunColor(Color.CYAN.getRGB()));
 
