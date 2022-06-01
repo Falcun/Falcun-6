@@ -31,7 +31,7 @@ public final class SkyblockPlayer {
 
             if (onHypixel) System.out.println("on GHHYPIXEL");
             if (onSkyblock) System.out.println("on skybllock!!!!");
-            if (!onHypixel || !onSkyblock) System.out.println("not on anything :((((");
+            if (!onHypixel && !onSkyblock) System.out.println("not on anything :((((");
         }
     }
 
@@ -40,6 +40,7 @@ public final class SkyblockPlayer {
         if (mc != null || mc.thePlayer != null) {
             if (mc.getCurrentServerData() != null && mc.getCurrentServerData().serverIP.toLowerCase().contains("hypixel")) {
                 onHypixel = true;
+                return;
             }
         }
         onHypixel = false;
@@ -53,6 +54,7 @@ public final class SkyblockPlayer {
                 for (String skyblock : Sets.newHashSet("SKYBLOCK")) {
                     if (objective.startsWith(skyblock)) {
                         onSkyblock = true;
+                        return;
                     }
                 }
             }
