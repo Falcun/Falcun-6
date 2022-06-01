@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
-import falcun.net.fps.LightManager;
+import net.mattbenson.Wrapper;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
@@ -572,7 +572,7 @@ public abstract class World implements IBlockAccess
 
     public int getLight(BlockPos pos)
     {
-    	if (LightManager.isRemoveLightCalculations()) {
+    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
     		return 1000;
     	}
         if (pos.getY() < 0)
@@ -597,7 +597,7 @@ public abstract class World implements IBlockAccess
 
     public int getLight(BlockPos pos, boolean checkNeighbors)
     {
-    	if (LightManager.isRemoveLightCalculations()) {
+    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
     		return 1000;
     	}
         if (pos.getX() >= -30000000 && pos.getZ() >= -30000000 && pos.getX() < 30000000 && pos.getZ() < 30000000)
@@ -695,10 +695,10 @@ public abstract class World implements IBlockAccess
             return this.getSeaLevel() + 1;
         }
     }
-// LightManager.isRemoveLightCalculations()
+
     public int getLightFor(EnumSkyBlock type, BlockPos pos)
     {
-    	if (LightManager.isRemoveLightCalculations()) {
+    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
     		return 1000;
     	}
         if (pos.getY() < 0)
@@ -724,7 +724,7 @@ public abstract class World implements IBlockAccess
     @SideOnly(Side.CLIENT)
     public int getLightFromNeighborsFor(EnumSkyBlock type, BlockPos pos)
     {
-    	if (LightManager.isRemoveLightCalculations()) {
+    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
     		return 1000;
     	}
         if (this.provider.getHasNoSky() && type == EnumSkyBlock.SKY)
@@ -786,7 +786,7 @@ public abstract class World implements IBlockAccess
 
     public void setLightFor(EnumSkyBlock type, BlockPos pos, int lightValue)
     {
-    	if (LightManager.isRemoveLightCalculations()) {
+    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
     		return;
     	}
         if (this.isValid(pos))
@@ -802,7 +802,7 @@ public abstract class World implements IBlockAccess
 
     public void notifyLightSet(BlockPos pos)
     {
-    	if (LightManager.isRemoveLightCalculations()) {
+    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
     		return;
     	}
         for (int i = 0; i < this.worldAccesses.size(); ++i)
@@ -814,7 +814,7 @@ public abstract class World implements IBlockAccess
     @SideOnly(Side.CLIENT)
     public int getCombinedLight(BlockPos pos, int lightValue)
     {
-    	if (LightManager.isRemoveLightCalculations()) {
+    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
     		return 1000;
     	}
     	
@@ -831,7 +831,7 @@ public abstract class World implements IBlockAccess
 
     public float getLightBrightness(BlockPos pos)
     {
-    	if (LightManager.isRemoveLightCalculations()) {
+    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
     		return 1F;
     	}
         return this.provider.getLightBrightnessTable()[this.getLightFromNeighbors(pos)];
@@ -1390,7 +1390,7 @@ public abstract class World implements IBlockAccess
     @SideOnly(Side.CLIENT)
     public float getSunBrightness(float p_72971_1_)
     {
-    	if (LightManager.isRemoveLightCalculations()) {
+    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
     		return 1F;
     	}
         return this.provider.getSunBrightness(p_72971_1_);
@@ -1576,7 +1576,7 @@ public abstract class World implements IBlockAccess
     @SideOnly(Side.CLIENT)
     public float getStarBrightness(float partialTicks)
     {
-    	if (LightManager.isRemoveLightCalculations()) {
+    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
     		return 0F;
     	}
         return this.provider.getStarBrightness(partialTicks);
@@ -1585,7 +1585,7 @@ public abstract class World implements IBlockAccess
     @SideOnly(Side.CLIENT)
     public float getStarBrightnessBody(float partialTicks)
     {
-    	if (LightManager.isRemoveLightCalculations()) {
+    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
     		return 0F;
     	}
         float f = this.getCelestialAngle(partialTicks);
@@ -1723,10 +1723,10 @@ public abstract class World implements IBlockAccess
         this.processingLoadedTiles = true;
         Iterator<TileEntity> iterator = this.tickableTileEntities.iterator();
 
-//        int dist = 	Wrapper.getInstance().getBlockDistance();
+        int dist = 	Wrapper.getInstance().getBlockDistance();
         
-//        boolean rdy = dist != 64;
-
+        boolean rdy = dist != 64;
+        
         while (iterator.hasNext())
         {
             TileEntity tileentity = (TileEntity)iterator.next();
@@ -1737,6 +1737,8 @@ public abstract class World implements IBlockAccess
 
                 if (this.isBlockLoaded(blockpos) && this.worldBorder.contains(blockpos))
                 {
+                	if (!rdy || (rdy && Minecraft.getMinecraft().thePlayer != null && Math.sqrt(tileentity.getDistanceSq(Minecraft.getMinecraft().thePlayer.posX, Minecraft.getMinecraft().thePlayer.posY, Minecraft.getMinecraft().thePlayer.posZ)) <= dist)) {
+
                     try
                     {
                         ((ITickable)tileentity).update();
@@ -1746,8 +1748,9 @@ public abstract class World implements IBlockAccess
                         CrashReport crashreport2 = CrashReport.makeCrashReport(throwable, "Ticking block entity");
                         CrashReportCategory crashreportcategory1 = crashreport2.makeCategory("Block entity being ticked");
                         tileentity.addInfoToCrashReport(crashreportcategory1);
-                        throw new ReportedException(crashreport2);
+                        //throw new ReportedException(crashreport2);
                     }
+                	}
                 }
             }
 
@@ -1784,7 +1787,13 @@ public abstract class World implements IBlockAccess
             for (int j1 = 0; j1 < this.addedTileEntityList.size(); ++j1)
             {
                 TileEntity tileentity1 = (TileEntity)this.addedTileEntityList.get(j1);
+                
+                boolean newRender2 = false;
+                if (dist != 64)
+                        newRender2 = true;
 
+                if (!newRender2 || (newRender2 && Minecraft.getMinecraft().thePlayer != null && Math.sqrt(tileentity1.getDistanceSq(Minecraft.getMinecraft().thePlayer.posX, Minecraft.getMinecraft().thePlayer.posY, Minecraft.getMinecraft().thePlayer.posZ)) <= dist)) {
+                
                 if (!tileentity1.isInvalid())
                 {
                     if (!this.loadedTileEntityList.contains(tileentity1))
@@ -1800,41 +1809,10 @@ public abstract class World implements IBlockAccess
                     this.markBlockForUpdate(tileentity1.getPos());
                 }
             }
+            }
 
             this.addedTileEntityList.clear();
         }
-
-//        if (!this.addedTileEntityList.isEmpty())
-//        {
-//            for (int j1 = 0; j1 < this.addedTileEntityList.size(); ++j1)
-//            {
-//                TileEntity tileentity1 = (TileEntity)this.addedTileEntityList.get(j1);
-//
-//                boolean newRender2 = false;
-//                if (dist != 64)
-//                        newRender2 = true;
-//
-//                if (!newRender2 || (newRender2 && Minecraft.getMinecraft().thePlayer != null && Math.sqrt(tileentity1.getDistanceSq(Minecraft.getMinecraft().thePlayer.posX, Minecraft.getMinecraft().thePlayer.posY, Minecraft.getMinecraft().thePlayer.posZ)) <= dist)) {
-//
-//                if (!tileentity1.isInvalid())
-//                {
-//                    if (!this.loadedTileEntityList.contains(tileentity1))
-//                    {
-//                        this.addTileEntity(tileentity1);
-//                    }
-//
-//                    if (this.isBlockLoaded(tileentity1.getPos()))
-//                    {
-//                        this.getChunkFromBlockCoords(tileentity1.getPos()).addTileEntity(tileentity1.getPos(), tileentity1);
-//                    }
-//
-//                    this.markBlockForUpdate(tileentity1.getPos());
-//                }
-//            }
-//            }
-//
-//            this.addedTileEntityList.clear();
-//        }
 
         this.theProfiler.endSection();
         this.theProfiler.endSection();
@@ -2464,7 +2442,7 @@ public abstract class World implements IBlockAccess
 
     public void calculateInitialSkylight()
     {
-    	if (LightManager.isRemoveLightCalculations()) {
+    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
     		return;
     	}
         int i = this.calculateSkylightSubtracted(1.0F);
@@ -2852,7 +2830,7 @@ public abstract class World implements IBlockAccess
 
     public boolean checkLightFor(EnumSkyBlock lightType, BlockPos pos)
     {
-    	if (LightManager.isRemoveLightCalculations()) {
+    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
     		return true;
     	}
         if (!this.isAreaLoaded(pos, 17, false))
@@ -3658,9 +3636,9 @@ public abstract class World implements IBlockAccess
     @SideOnly(Side.CLIENT)
     public double getHorizon()
     {
-//    	if(Wrapper.getInstance().isVoidFlicker()) {
-//    		return 0;
-//    	}
+    	if(Wrapper.getInstance().isVoidFlicker()) {
+    		return 0;
+    	}
         return provider.getHorizon();
     }
 

@@ -1,5 +1,6 @@
 package net.minecraft.client.multiplayer;
 
+import net.mattbenson.Wrapper;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -167,7 +168,13 @@ public class PlayerControllerMP
 
     public boolean clickBlock(BlockPos loc, EnumFacing face)
     {
-
+    	if(Wrapper.getInstance().isCaneHelper()) {
+            Block block = this.mc.theWorld.getBlockState(loc).getBlock();
+            Block blockUnder = this.mc.theWorld.getBlockState(loc.add(0,-1,0)).getBlock();
+            if(Block.getIdFromBlock(block) == 83 && Block.getIdFromBlock(blockUnder) != 83) {
+            	return false;
+            }
+    	}
         if (this.currentGameType.isAdventure())
         {
             if (this.currentGameType == WorldSettings.GameType.SPECTATOR)

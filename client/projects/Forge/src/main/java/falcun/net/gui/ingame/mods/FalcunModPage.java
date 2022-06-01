@@ -9,6 +9,7 @@ import falcun.net.api.gui.animations.FalcunSaberSnake;
 import falcun.net.api.gui.components.Component;
 
 import falcun.net.api.gui.components.OutlinedComponent;
+import falcun.net.api.gui.components.modules.ModuleComponent;
 import falcun.net.api.gui.components.rect.ColorSquare;
 import falcun.net.api.gui.components.rect.ColorSquareOutline;
 import falcun.net.api.gui.components.scroll.VerticalScroll;
@@ -22,10 +23,12 @@ import falcun.net.api.gui.menu.FalcunPage;
 import falcun.net.api.gui.region.GuiRegion;
 import falcun.net.api.modules.FalcunModule;
 import falcun.net.api.modules.inheritance.FalcunSettingsModule;
+import falcun.net.api.textures.FalcunTexture;
 import falcun.net.managers.FalcunConfigManager;
 import falcun.net.gui.ingame.FalcunInGameMenu;
 import falcun.net.modules.ModuleCategory;
 import falcun.net.gui.ingame.hud.FalcunHudEditor;
+import net.mattbenson.gui.menu.components.mods.ModuleBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ResourceLocation;
@@ -45,7 +48,7 @@ public class FalcunModPage implements FalcunPage {
 
 	public static FalcunModule selectedModule = null;
 
-	private static FalcunModSettingsPage settingsPage;
+	public static FalcunModSettingsPage settingsPage = null;
 
 	public FalcunModPage(int left, int top) {
 		settingsPage = new FalcunModSettingsPage(left, top);
@@ -182,52 +185,73 @@ public class FalcunModPage implements FalcunPage {
 		VerticalScroll scroll = new VerticalScroll(scrollRegion, () -> 0x80646464, () -> 0xff333333, boxRegion);
 
 		scroll.pinTo(pin);
+		GuiRegion wastegr = new GuiRegion(x, y, 1, 1);
+		ColorSquare wastecs = new ColorSquare(wastegr, () -> 0x00000000);
+		TextureSquare textureSquare = new TextureSquare(wastegr, FalcunTexture.moduleBoxToggle[3]);
+		scroll.addComponent(textureSquare);
+		scroll.addComponent(wastecs);
 		for (final FalcunModule falcunModule : modules) {
-			GuiRegion gr = new GuiRegion(x, y, 170, 150);
-			Paragraph label = new Paragraph(gr.offSet(0, 50), () -> 0xffffffff, falcunModule.getName(), Fonts.RobotoMiniHeader);
-			ColorSquare square = new ColorSquare(gr, () -> 0x80111111);
-			square.effects.add(new EnterExitEffect((comp, over) -> square.color = over ? () -> 0xff111111 : () -> 0x80111111));
-			ColorSquareOutline csoutline = new ColorSquareOutline(gr, () -> 0xff646464, 1);
-			GuiRegion cogRegion = csoutline.region.offSet(0, 0);
-			cogRegion.x = cogRegion.getRight();
-			cogRegion.x -= 30;
-			cogRegion.y += 5;
-			cogRegion.width = 25;
-			cogRegion.height = 25;
-			TextureSquare sq = new TextureSquare(cogRegion, settingsIcon);
-			ColorSquare sqHover = new ColorSquare(cogRegion, () -> 0x00000000);
-			sqHover.effects.add(new EnterExitEffect((comp, over) -> sqHover.color = over ? () -> 0xff282828 : () -> 0x00000000));
-			sq.effects.add(new OnClickEffect(comp -> {
-				selectedModule = falcunModule;
-				settingsPage.update();
-			}));
-			ColorSquareOutline sqoutline = new ColorSquareOutline(cogRegion, () -> 0xff646464, 1);
-			List<Component> gradients = GuiUtils.makeBoxShadows(gr, 7);
+			int modw = 170;
+			int modh = (int) (modw / 2.38378378d);
+			GuiRegion gr = new GuiRegion(x, y, modw, modh);
+			ModuleComponent box = new ModuleComponent(gr, falcunModule);
+			scroll.addComponent(box);
 
-			scroll.addComponent(square);
-			scroll.addComponent(sqHover);
-			scroll.addComponent(sq);
-			scroll.addComponent(sqoutline);
-			gradients.forEach(scroll::addComponent);
-			scroll.addComponent(csoutline);
-			scroll.addComponent(label);
-			if (!(falcunModule instanceof FalcunSettingsModule)) {
-				GuiRegion bottomGr = new GuiRegion(gr.x + 15, gr.getBottom() - 50, gr.width - 30, 30);
-				ColorSquare enabledArea = new ColorSquare(bottomGr, () -> 0x00000000);
-				enabledArea.effects.add(new EnterExitEffect((comp, over) -> enabledArea.color = () -> over ? 0xff282828 : 0x00000000));
-				ColorSquareOutline enabledOutline = new ColorSquareOutline(bottomGr, () -> getEnabledColor(falcunModule), 1.6f);
-				Label enabledLabel = new Label(bottomGr.offSet(0, -2), () -> getEnabledText(falcunModule), 1, () -> 0xffffffff, Fonts.Roboto);
-				enabledOutline.effects.add(new EnterExitEffect((comp, over) -> enabledLabel.underline = over));
-				enabledOutline.effects.add(new OnClickEffect(comp -> {
-					if (falcunModule.serverDisabled) {
-						Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new ChatComponentText("This mod is disabled on this server."));
-					} else {
-						falcunModule.toggle();
-					}
-				}));
-				scroll.addComponent(enabledOutline);
-				scroll.addComponent(enabledLabel);
+			x += 20;
+			x += gr.width;
+			if (x + gr.width > right) {
+				x = startX;
+				y += 20;
+				y += gr.height;
 			}
+//			if (x + 170 + 16 > right) {
+
+
+//			GuiRegion gr = new GuiRegion(x, y, 170, 150);
+//			Paragraph label = new Paragraph(gr.offSet(0, 50), () -> 0xffffffff, falcunModule.getName(), Fonts.RobotoMiniHeader);
+//			ColorSquare square = new ColorSquare(gr, () -> 0x80111111);
+//			square.effects.add(new EnterExitEffect((comp, over) -> square.color = over ? () -> 0xff111111 : () -> 0x80111111));
+//			ColorSquareOutline csoutline = new ColorSquareOutline(gr, () -> 0xff646464, 1);
+//			GuiRegion cogRegion = csoutline.region.offSet(0, 0);
+//			cogRegion.x = cogRegion.getRight();
+//			cogRegion.x -= 30;
+//			cogRegion.y += 5;
+//			cogRegion.width = 25;
+//			cogRegion.height = 25;
+//			TextureSquare sq = new TextureSquare(cogRegion, settingsIcon);
+//			ColorSquare sqHover = new ColorSquare(cogRegion, () -> 0x00000000);
+//			sqHover.effects.add(new EnterExitEffect((comp, over) -> sqHover.color = over ? () -> 0xff282828 : () -> 0x00000000));
+//			sq.effects.add(new OnClickEffect(comp -> {
+//				selectedModule = falcunModule;
+//				settingsPage.update();
+//			}));
+//			ColorSquareOutline sqoutline = new ColorSquareOutline(cogRegion, () -> 0xff646464, 1);
+//			List<Component> gradients = GuiUtils.makeBoxShadows(gr, 7);
+//
+//			scroll.addComponent(square);
+//			scroll.addComponent(sqHover);
+//			scroll.addComponent(sq);
+//			scroll.addComponent(sqoutline);
+//			gradients.forEach(scroll::addComponent);
+//			scroll.addComponent(csoutline);
+//			scroll.addComponent(label);
+//			if (!(falcunModule instanceof FalcunSettingsModule)) {
+//				GuiRegion bottomGr = new GuiRegion(gr.x + 15, gr.getBottom() - 50, gr.width - 30, 30);
+//				ColorSquare enabledArea = new ColorSquare(bottomGr, () -> 0x00000000);
+//				enabledArea.effects.add(new EnterExitEffect((comp, over) -> enabledArea.color = () -> over ? 0xff282828 : 0x00000000));
+//				ColorSquareOutline enabledOutline = new ColorSquareOutline(bottomGr, () -> getEnabledColor(falcunModule), 1.6f);
+//				Label enabledLabel = new Label(bottomGr.offSet(0, -2), () -> getEnabledText(falcunModule), 1, () -> 0xffffffff, Fonts.Roboto);
+//				enabledOutline.effects.add(new EnterExitEffect((comp, over) -> enabledLabel.underline = over));
+//				enabledOutline.effects.add(new OnClickEffect(comp -> {
+//					if (falcunModule.serverDisabled) {
+//						Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new ChatComponentText("This mod is disabled on this server."));
+//					} else {
+//						falcunModule.toggle();
+//					}
+//				}));
+//				scroll.addComponent(enabledOutline);
+//				scroll.addComponent(enabledLabel);
+//			}
 
 
 //			GuiRegion gr = new GuiRegion(x, y, 170, 50);
@@ -241,15 +265,15 @@ public class FalcunModPage implements FalcunPage {
 //			scroll.addComponent(box);
 
 
-			x += 16;
-//			x += 170;
-			x += gr.width;
-			if (x + 170 + 16 > right) {
-				x = startX;
-//				y += 150;
-				y += gr.height;
-				y += 16;
-			}
+//			x += 16;
+////			x += 170;
+//			x += gr.width;
+//			if (x + 170 + 16 > right) {
+//				x = startX;
+////				y += 150;
+//				y += gr.height;
+//				y += 16;
+//			}
 		}
 		modulesComponents.add(scroll);
 	}

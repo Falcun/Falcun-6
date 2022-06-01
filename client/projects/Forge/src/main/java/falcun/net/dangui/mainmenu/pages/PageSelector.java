@@ -3,57 +3,73 @@ package falcun.net.dangui.mainmenu.pages;
 import falcun.net.api.fonts.Fonts;
 import falcun.net.api.dangui.elements.FalcunLabel;
 import falcun.net.api.dangui.pages.FalcunFullScreenMenuPage;
-import falcun.net.dangui.mainmenu.FalcunGuiMainMenu;
 import falcun.net.dangui.mainmenu.MainMenuPage;
-import falcun.xyz.dev.boredhuman.dancore.falcunfork.gui.elements.BasicElement;
-import falcun.xyz.dev.boredhuman.dancore.falcunfork.gui.elements.ContainerElement;
-import falcun.xyz.dev.boredhuman.dancore.falcunfork.gui.elements.OutlineElement;
-import falcun.xyz.dev.boredhuman.dancore.falcunfork.gui.elements.Row;
+import falcun.xyz.dev.boredhuman.dancore.falcunfork.gui.elements.*;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.gui.listener.ClickListener;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.gui.util.ColorHover;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.gui.util.Colors;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public class PageSelector implements FalcunFullScreenMenuPage {
+@SideOnly(Side.CLIENT)
+public final class PageSelector implements FalcunFullScreenMenuPage {
+
 
 	private final List<BasicElement<?>> elements;
 
 	public PageSelector() {
 		elements = new LinkedList<>();
-		elements.add(new ContainerElement().setColor(0xff000000).setDimensions(0, 0, getWidth(), getHeight()));
+
 		int halfw = getWidth() >> 1;
 		int halfh = getHeight() >> 1;
-		ContainerElement left = new ContainerElement(), right = new ContainerElement();
-		left.setDimensions(halfw - (halfw >> 1), halfh, halfw, halfh).setWidthPercent(0.5f).setPadding(2);
-		right.setDimensions(halfw, halfh, halfw, halfh).setWidthPercent(0.5f).setPadding(2);
-		left.width >>= 1;
-		right.width >>= 1;
-		for (int i = 1; i < 4; ++i) {
-			final int j = i;
-			left.addChildren(makeButton(left, MainMenuPage.values()[i].name, () -> FalcunGuiMainMenu.selectedPage = MainMenuPage.values()[j], 3));
-		}
-		for (int i = 4; i < 7; ++i) {
-			final int j = i;
-			right.addChildren(makeButton(right, MainMenuPage.values()[i].name, () -> FalcunGuiMainMenu.selectedPage = MainMenuPage.values()[j], 3));
-		}
-		elements.add(left);
-		elements.add(right);
+		elements.add(new ContainerElement().setColor(0xff000000).setDimensions(0, 0, getWidth(), getHeight()));
+		Row row = new Row();
+		Column left = (Column) new Column().setPadding(15).setPaddingTB(67, 45),
+			center = (Column) new Column().setPadding(15).setPaddingTB(45, 45),
+			right = (Column) new Column().setPadding(15).setPaddingTB(67, 45);
+		elements.add(row);
+
+		int rowwid = (int) (halfw * 0.8);
+		int x = halfw - rowwid;
+		row.setDimensions(x, halfh, halfw + rowwid - x, halfh);
+		addButtons(left, 0, 2);
+		addButtons(center, 2, 5);
+		addButtons(right, 5, 7);
+		row.addChildren(left, center, right);
+		elements.add(row);
 	}
 
-	private static BasicElement<?> makeButton(final BasicElement<?> parent, final String text, final Runnable r, final int buttonAmount) {
-		Row row = (Row) new Row().setHeightPercent((1f / buttonAmount) * 0.3f).setPaddingTB(2, 2).setColor(0x00000000);
-		ContainerElement buttonBg = new ContainerElement()
-			.setColor(0)
-			.addListener(new ColorHover(0, 0xFF454545));
-		buttonBg.setRounding((int) Math.min(((double) parent.width / buttonAmount) * row.heightPercent, ((double) parent.height / buttonAmount) * row.heightPercent));
-		OutlineElement outline = (OutlineElement) new OutlineElement().setColor(0xff2b2b30);
-		FalcunLabel label = new FalcunLabel(text, Fonts.RobotoTitle).setColor(Colors.WHITE).setVert(1).setHoriz(1).addListener((ClickListener) element -> {
-			r.run();
-			return true;
-		});
-		return row.addChildren(buttonBg.addChildren(label).addChildren(outline));
+	private static void addButtons(Column column, int start, int end) {
+		for (int i = start; i < end; ++i) {
+			MainMenuPage p = MainMenuPage.values()[i + 1];
+			column.addChildren(makeButton(p.name, p.buttonClick));
+		}
+	}
+
+	private static BasicElement<?> makeButton(final String text, final Runnable r) {
+		ContainerElement row = new Row().
+			setPaddingTB(5, 5)
+			.setHeightPx(45);
+		ContainerElement button = new ContainerElement()
+			.setColor(0xff454545)
+			.addListener(new ColorHover(0xff454545, 0xff545454))
+			.setHeightPx(45)
+			.setRounding(6).setOutline(new OutlineElement<>()
+				.setColor(0)
+				.addListener(new ColorHover(0, 0xEEffffff))
+			);
+		FalcunLabel label = new FalcunLabel(text, Fonts.Roboto)
+			.setColor(Colors.WHITE)
+			.setVert(1)
+			.setHoriz(1)
+			.addListener((ClickListener) element -> {
+				r.run();
+				return true;
+			});
+		return row.addChildren(button.addChildren(label));
 	}
 
 	@Override

@@ -12,13 +12,14 @@ import java.util.function.Supplier;
 
 public class Paragraph extends ColoredComponent {
 
-	List<String> lines;
 	public FalcunFont font = Fonts.MC;
+	public boolean underline = false;
+
+	String txt;
 
 	public Paragraph(GuiRegion region, Supplier<Integer> color, String text) {
 		super(region, color);
-		lines = trimSentenceToWidth(text);
-		region.height = lines.size() * 13;
+		this.txt = text;
 	}
 
 	public Paragraph(GuiRegion region, Supplier<Integer> color, String text, FalcunFont font) {
@@ -26,39 +27,26 @@ public class Paragraph extends ColoredComponent {
 		this.font = font;
 	}
 
+	public int getY() {
+		return 2 + region.y + (region.height - (int) font.stringHeight()) / 2;
+	}
+
 	@Override
 	public void draw(int mX, int mY) {
-		int y = region.y;
+		int y = getY() - 2;
+		int yOffset = -font.size();
+		int maxwid = (int) (region.width * 0.8);
+
+		List<String> lines = font.getLinesWrapped(txt, maxwid);
+		if (lines.size() > 1) {
+			y += (yOffset * lines.size()) >> 2;
+		}
 		for (String line : lines) {
-			font.drawString(line, region.getMidX() - (int)font.getStringWidth(line) / 2, y, color.get(), false);
-//			font.drawString(line, region.x, y, color.get(), false);
-			y += (int) font.stringHeight(line);
+			yOffset += font.size();
+			font.drawString(line, 2 + (region.getMidX() - (int) font.getStringWidth(line) / 2), y + yOffset, color.get(), underline);
 		}
+
 	}
 
-	public List<String> trimSentenceToWidth(String text) {
-		final List<String> trimmedSentence = new ArrayList<>();
-		String[] args = text.split(" ");
-
-		StringBuilder stringBuilder = new StringBuilder();
-
-		for (String arg : args) {
-			final int currentWidth = (int) font.getStringWidth(stringBuilder.toString());
-			int argLength = (int) font.getStringWidth(arg + " ");
-			if (currentWidth + argLength >= this.region.width) {
-				trimmedSentence.add(stringBuilder.toString());
-				stringBuilder.delete(0, stringBuilder.length());
-				stringBuilder.append(" ").append(arg);
-				continue;
-			}
-
-			stringBuilder.append(" ").append(arg);
-		}
-		trimmedSentence.add(stringBuilder.toString());
-
-
-		return trimmedSentence;
-
-	}
 
 }

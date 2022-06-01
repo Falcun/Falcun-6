@@ -12,6 +12,8 @@ public class Shaders {
 	private static Shader roundedQuadOutlineShader = null;
 	private static Shader circleOutlineShader = null;
 
+	private static Shader neonStreamShader = null;
+
 	public static void createAll() {
 		Shaders.getRoundedQuadShader();
 		Shaders.getSmoothCircleShader();
@@ -61,6 +63,16 @@ public class Shaders {
 			Shaders.circleOutlineShader = new Shader(
 				ShaderCreator.createShader(null, new ResourceLocation("falcun:shaders/circleoutlinefs.glsl")),
 				"center", "radius", "feather", "color", "lineWidth"
+			);
+		}
+		return Shaders.circleOutlineShader;
+	}
+
+	public static Shader getNeonStreamShader() {
+		if (Shaders.neonStreamShader == null) {
+			Shaders.neonStreamShader = new Shader(
+				ShaderCreator.createShader(null, new ResourceLocation("falcun:shaders/neonstream.glsl")),
+				"resolution"
 			);
 		}
 		return Shaders.circleOutlineShader;

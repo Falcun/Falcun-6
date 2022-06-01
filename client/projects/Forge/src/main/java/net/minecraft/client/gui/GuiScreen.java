@@ -16,6 +16,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import net.mattbenson.Wrapper;
+import net.mattbenson.modules.types.mods.Schematica;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.stream.GuiTwitchUserMode;
 import net.minecraft.client.renderer.GlStateManager;
@@ -401,14 +403,18 @@ public abstract class GuiScreen extends Gui implements GuiYesNoCallback
                     this.openWebLink(uri1);
                 } else if(clickevent.getAction() == ClickEvent.Action.COPY_URL) {
                 	setClipboardString(clickevent.getValue());
+                	Wrapper.getInstance().addChat("Copied to clipboard!");
                 }
                 else if(clickevent.getAction() == ClickEvent.Action.LOAD_SCHEM) {
+                	Wrapper.getInstance().addChat("Updating Schematic...");
+                	Schematica.updateSchematic(clickevent.getValue());
                 }
                 else if (clickevent.getAction() == ClickEvent.Action.DELETE_FILE)
                 {
                     File file = new File(clickevent.getValue());
                    	if(file.exists()) {
                    		file.delete();
+                   		Wrapper.getInstance().addChat("Deleted screenshot!");
                    	}
                 }
                 else if (clickevent.getAction() == ClickEvent.Action.LINK)
@@ -485,6 +491,7 @@ public abstract class GuiScreen extends Gui implements GuiYesNoCallback
                     guibutton = event.button;
                     this.selectedButton = guibutton;
                     guibutton.playPressSound(this.mc.getSoundHandler());
+                    Wrapper.getInstance().GuiActionPerformedEvent(this, guibutton);
                     this.actionPerformed(guibutton);
                     if (this.equals(this.mc.currentScreen))
                         net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent.Post(this, event.button, this.buttonList));

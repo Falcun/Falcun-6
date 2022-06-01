@@ -67,6 +67,32 @@ public final class GuiUtil {
 		GuiUtil.finish();
 	}
 
+//	public static void drawNeomStream(int left, int top, int width, int height) {
+//		Shader quadShader = Shaders.getRoundedQuadShader();
+//		GL20.glUseProgram(quadShader.getProgramID());
+//		ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
+//		GL20.glUniform1f(quadShader.getUniformID("curve"), curve);
+//		GL20.glUniform4f(quadShader.getUniformID("area"), left,
+//			(left + width),
+//			Display.getHeight() - ((top + height)),
+//			Display.getHeight() - top);
+//		GuiUtil.setFeather(quadShader, 0.8f);
+//		GuiUtil.setShaderColor(quadShader, color);
+//
+//		GuiUtil.start();
+//
+//		Tessellator tess = Tessellator.getInstance();
+//		WorldRenderer wr = tess.getWorldRenderer();
+//		wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
+//		wr.pos(left, top, 0).endVertex();
+//		wr.pos(left, top + height, 0).endVertex();
+//		wr.pos(left + width, top + height, 0).endVertex();
+//		wr.pos(left + width, top, 0).endVertex();
+//		tess.draw();
+//
+//		GuiUtil.finish();
+//	}
+
 	public static void drawRoundedQuad(int left, int top, int width, int height, int curve, int color) {
 		Shader quadShader = Shaders.getRoundedQuadShader();
 		GL20.glUseProgram(quadShader.getProgramID());

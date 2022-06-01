@@ -4,7 +4,7 @@ import net.optifine.SmartAnimations;
 
 public class Tessellator
 {
-    private WorldRenderer worldRenderer;
+    public WorldRenderer worldRenderer;
     private WorldVertexBufferUploader vboUploader = new WorldVertexBufferUploader();
 
     /** The static instance of the Tessellator. */

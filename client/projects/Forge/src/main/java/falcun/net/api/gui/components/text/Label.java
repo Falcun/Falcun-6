@@ -75,7 +75,7 @@ public class Label extends Component {
 					break;
 			}
 
-return;
+			return;
 		}
 
 		int maxwid = (int) (region.width * 0.8);

@@ -4,8 +4,10 @@ import falcun.net.api.dangui.FalcunGui;
 import falcun.net.api.dangui.pages.FalcunGuiPage;
 import falcun.net.dangui.mainmenu.pages.PageSelector;
 import falcun.net.dangui.mainmenu.pages.accounts.AccountsPage;
+import falcun.xyz.dev.boredhuman.dancore.falcunfork.gui.ElementRenderer;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.gui.elements.BasicElement;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class FalcunGuiMainMenu extends FalcunGui {
@@ -18,6 +20,12 @@ public class FalcunGuiMainMenu extends FalcunGui {
 	public void init() {
 		pageSelector = new PageSelector();
 		accountsPage = new AccountsPage();
+	}
+
+	@Override
+	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+		super.drawScreen(mouseX, mouseY, partialTicks);
+
 	}
 
 	@Override

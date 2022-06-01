@@ -7,7 +7,7 @@ public final class FalcunTexture {
 	public static final ResourceLocation[] loadingAnimation = new ResourceLocation[112];
 	public static final ResourceLocation[] logoAnimation = new ResourceLocation[60];
 
-	public static final ResourceLocation[] moduleBoxToggle = new ResourceLocation[2];
+	public static final ResourceLocation[] moduleBoxToggle = new ResourceLocation[4];
 
 	public static void setupArrays(){
 		for (int i = 0; i < 112; i++) {
@@ -16,7 +16,9 @@ public final class FalcunTexture {
 		for (int i = 0; i < 60; i++) {
 			logoAnimation[i] = new ResourceLocation("falcun:animated/logo/falcun-logo-" + (i + 1) + ".png");
 		}
-		moduleBoxToggle[0]= new ResourceLocation("falcun:gui/modules/afalcun1.png");
-		moduleBoxToggle[1]= new ResourceLocation("falcun:gui/modules/afalcun2.png");
+		moduleBoxToggle[0]= new ResourceLocation("falcun:gui/modules/disabled 1.png");
+		moduleBoxToggle[1]= new ResourceLocation("falcun:gui/modules/disabled hovered 1.png");
+		moduleBoxToggle[2]= new ResourceLocation("falcun:gui/modules/enabled 1.png");
+		moduleBoxToggle[3]= new ResourceLocation("falcun:gui/modules/enabled hovered 1.png");
 	}
 }

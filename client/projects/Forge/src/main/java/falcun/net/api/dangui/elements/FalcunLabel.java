@@ -37,14 +37,12 @@ public class FalcunLabel extends BasicElement<FalcunLabel> {
 
 		List<String> lines = this.font.getLinesWrapped(this.text, this.width);
 
-
-		int right = this.x + this.width;
 		switch (horizontal.alignment) {
 			case 0:
 				yOffset = this.y;
 				break;
 			case 1:
-				yOffset = this.y + this.height / 2 - (this.font.size() / 2 * lines.size());
+				yOffset = this.y + (this.height >> 1) - (this.font.size() / 2 * lines.size());
 				break;
 			case 2:
 				yOffset = this.y + this.height - this.font.size();
@@ -52,6 +50,7 @@ public class FalcunLabel extends BasicElement<FalcunLabel> {
 			default:
 				break;
 		}
+		int midx = this.x + (this.width >> 1);
 		for (String line : lines) {
 			switch (this.horizontal.alignment) {
 				case 0:
@@ -60,11 +59,12 @@ public class FalcunLabel extends BasicElement<FalcunLabel> {
 				case 2:
 					this.font.drawString(line, this.x + this.width - (int) this.font.getStringWidth(this.text), yOffset, this.color, this.underline);
 					break;
-				case 1:
+				case 1: //	font.drawString(text.get(), 2 + (region.getMidX() - (int) font.getStringWidth(text.get()) / 2), y, color.get(), underline);
 					if (this.font instanceof DanFont) {
 						((DanFont) this.font).drawCenteredString(line, this.x + this.width / 2, yOffset, this.color, false);
 					} else
-						this.font.drawString(line, (this.x + this.width) - (int) font.getStringWidth(line), y, this.color, this.underline);
+//						this.font.drawString(line, (this.x + this.width) - (int) font.getStringWidth(line), y, this.color, this.underline);
+						this.font.drawString(line, 2 + midx - ((int) font.getStringWidth(line) >> 1), y, this.color, this.underline);
 					break;
 			}
 			yOffset += this.font.size();

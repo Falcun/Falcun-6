@@ -1,12 +1,41 @@
 package falcun.net.dangui.mainmenu;
 
 public enum MainMenuPage {
-	MAIN("Main Menu"), SINGLE("SINGLE PLAYER"), MULTI("MULTI-PLAYER"), OPTIONS("OPTIONS"),  ACCOUNTS("ACCOUNTS"), REPLAY ("REPLAY RECORDINGS"), MODS("MOD LIST");
+	MAIN("MAIN MENU", () -> {
+
+	}),
+	// MAIN BUTTON IS NEVER GOING TO EXIST.
+	// LEFT
+	OPTIONS("OPTIONS", () -> {
+
+	}),
+	MODS("MODS", () -> {
+
+	}),
+	// CENTER
+	SINGLE("SINGLE PLAYER", () -> {
+
+	}),
+	MULTI("MULTI-PLAYER", () -> {
+
+	}),
+	QUIT("QUIT-GAME", () -> {
+
+	}),
+	// RIGHT
+	ACCOUNTS("ACCOUNTS", () -> {
+
+	}),
+	REPLAY("REPLAY RECORDINGS", () -> {
+
+	});
 
 	public final String name;
+	public final Runnable buttonClick;
 
-	MainMenuPage(String s) {
+	MainMenuPage(String s, Runnable r) {
 		name = s;
+		buttonClick = r;
 	}
 
 	public static MainMenuPage getByName(String s) {

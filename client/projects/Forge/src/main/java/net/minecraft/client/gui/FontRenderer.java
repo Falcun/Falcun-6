@@ -12,6 +12,7 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.Random;
 
+import net.mattbenson.Wrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
@@ -396,8 +397,15 @@ public class FontRenderer implements IResourceManagerReloadListener
 
         this.resetStyles();
         int i;
-
-        if (dropShadow)
+        
+        
+        boolean override = false;
+        
+        if(Wrapper.getInstance().getModuleManager() != null && Wrapper.getInstance().isRemoveTextShadows()) {
+        	override = true;
+        }
+        
+        if (dropShadow && !override)
         {
             i = this.renderString(text, x + 1.0F, y + 1.0F, color, true);
             i = Math.max(i, this.renderString(text, x, y, color, false));
@@ -414,7 +422,6 @@ public class FontRenderer implements IResourceManagerReloadListener
 
         return i;
     }
-
 
     /**
      * Apply Unicode Bidirectional Algorithm to string and return a new possibly reordered string for visual rendering.
