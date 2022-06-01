@@ -24,6 +24,10 @@ import java.util.Map;
 
 @Credits("https://github.com/boredhuman/Dancore/blob/master/src/main/java/dev/boredhuman/util/LineRenderer.java")
 public final class LineRenderer {
+	private LineRenderer(){}
+	public static void init(){
+		MinecraftForge.EVENT_BUS.register(new LineRenderer());
+	}
 
 	private ByteBuffer byteBuffer = BufferUtils.createByteBuffer(2000000 * 4);
 	private int vertexCount = 0;

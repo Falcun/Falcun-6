@@ -4,9 +4,11 @@ import falcun.net.api.fonts.Fonts;
 import falcun.net.api.modules.FalcunModule;
 import falcun.net.api.modules.hud.FalcunHudModule;
 import falcun.net.api.textures.FalcunTexture;
+import falcun.net.gui.ingame.hud.FalcunHudEditor;
 import falcun.net.managers.FalcunConfigManager;
 import falcun.net.managers.FalcunKeyBindManager;
 import falcun.net.modules.hypixel.skyblock.utils.SkyblockPlayer;
+import falcun.xyz.dev.boredhuman.dancore.falcunfork.compute.LineRenderer;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.util.FutureCallBack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -74,13 +76,14 @@ public final class Falcun {
 	public void postInit(FMLPostInitializationEvent e) {
 		System.out.println(Fonts.Roboto.getStringWidth("Falcun Client Loading..."));
 		FalcunConfigManager.init();
+		LineRenderer.init();
 		new SkyblockPlayer();
 	}
 
 	@SubscribeEvent
 	public void renderOverlay(RenderGameOverlayEvent e) {
 
-		if (e.type == RenderGameOverlayEvent.ElementType.HOTBAR) {
+		if (e.type == RenderGameOverlayEvent.ElementType.HOTBAR && !(Falcun.minecraft.currentScreen instanceof FalcunHudEditor)) {
 			int old = minecraft.gameSettings.guiScale;
 			minecraft.gameSettings.guiScale = 1;
 			minecraft.entityRenderer.setupOverlayRendering();
