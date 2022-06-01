@@ -34,38 +34,27 @@ public final class Fonts {
 	public static FalcunFont panton;
 	public static FalcunFont exo2;
 
-	public static FalcunFont TIMES = new DanFont("falcun:fonts/times.ttf", 32);
-	public static FalcunFont OXYGEN = new DanFont("falcun:fonts/Oxygen.ttf", 32);
-	public static FalcunFont SANSATION = new DanFont("falcun:fonts/Sansation.ttf", 32);
-	public static FalcunFont NUNITO = new DanFont("falcun:fonts/nunito/Nunito-Regular.ttf", 32);
-	public static FalcunFont NUNITO_BOLD = new DanFont("falcun:fonts/nunito/Nunito-Bold.ttf", 32);
-	public static FalcunFont NUNITO_ITALIC = new DanFont("falcun:fonts/nunito/Nunito-Italic.ttf", 32);
-	public static FalcunFont NUNITO_LIGHT = new DanFont("falcun:fonts/nunito/Nunito-Light.ttf", 32);
-	public static FalcunFont MONTSERRAT_SMALL = new DanFont("falcun:fonts/monR.ttf", 24);
-	public static FalcunFont MONTSERRAT_MEDIUM = new DanFont("falcun:fonts/monR.ttf", 28);
-	public static FalcunFont MONTSERRAT = new DanFont("falcun:fonts/monR.ttf", 32);
-	public static FalcunFont MONTSERRAT_LARGE = new DanFont("falcun:fonts/monR.ttf", 38);
 
 
 	static {
-		RalewayExtraBoldExtraSmall = setupFont("Raleway-ExtraBold", 12, false);
-		RalewayExtraBoldSmall = setupFont("Raleway-ExtraBold", 13, false);
-		RalewayExtraBold = setupFont("Raleway-ExtraBold", 14, false);
-		RalewayExtraBoldLarge = setupFont("Raleway-ExtraBold", 18, false);
+		RalewayExtraBoldExtraSmall = setupFont("Raleway-ExtraBold", 12, true);
+		RalewayExtraBoldSmall = setupFont("Raleway-ExtraBold", 13, true);
+		RalewayExtraBold = setupFont("Raleway-ExtraBold", 14, true);
+		RalewayExtraBoldLarge = setupFont("Raleway-ExtraBold", 18, true);
 
-		largeBoldFontRenderer = setupFont("Roboto-Bold", 32, false);
-		RobotoVeryLarge = setupFont("Ubuntu-L", 26, false);
+		largeBoldFontRenderer = setupFont("Roboto-Bold", 32, true);
+		RobotoVeryLarge = setupFont("Ubuntu-L", 26, true);
 
-		KardinalB = setupFont("KardinalB", 20, false);
-		KardinalBSmall = setupFont("KardinalB", 14, false);
-		KardinalBMed = setupFont("KardinalB", 20, false);
+		KardinalB = setupFont("KardinalB", 20, true);
+		KardinalBSmall = setupFont("KardinalB", 14, true);
+		KardinalBMed = setupFont("KardinalB", 20, true);
 
-		KardinalBLarge = setupFont("KardinalB", 26, false);
+		KardinalBLarge = setupFont("KardinalB", 26, true);
 
-		ubuntuMedium = setupFont("ubuntu", 14, false);
-		ubuntuFont = setupFont("ubuntu", 22, false);
+		ubuntuMedium = setupFont("ubuntu", 14, true);
+		ubuntuFont = setupFont("ubuntu", 22, true);
 
-		RobotoHUD = setupFont("Roboto-Bold", 24, false);
+		RobotoHUD = setupFont("Roboto-Bold", 24, true);
 
 		Roboto = setupFont("Roboto-Bold", 11, true);
 //		Roboto = new DanFont("falcun:fonts/Roboto-Bold.ttf", 11);
@@ -82,8 +71,8 @@ public final class Fonts {
 
 		MC = setupFont("Minecraft", 14, true);
 
-		panton = setupFont("Panton-LightitalicCaps", 16, false);
-		exo2 = setupFont("Exo2-Regular", 16, false);
+		panton = setupFont("Panton-LightitalicCaps", 16, true);
+		exo2 = setupFont("Exo2-Regular", 16, true);
 	}
 
 	private static DanFont setupFont(String name, int size) {
