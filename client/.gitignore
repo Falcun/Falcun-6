@@ -44,6 +44,10 @@
 /projects/Forge/*.hprof
 /projects/Forge/crash-reports/
 /projects/Forge/build.gradle
+/projects/Forge/Falcun/
+/projects/Forge/falcunmods/
+/projects/Forge/hud
+
 *.hprof
 
 #Patch rejects
