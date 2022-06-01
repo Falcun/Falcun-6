@@ -12,4 +12,5 @@ public class Reparty extends FalcunModule implements FalcunEventBusModule {
 
     @FalcunSetting("Auto Reparty")
     FalcunValue<Boolean> autoReparty = new FalcunValue<Boolean>(true);
+
 }

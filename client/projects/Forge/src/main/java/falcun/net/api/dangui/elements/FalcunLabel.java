@@ -28,6 +28,10 @@ public class FalcunLabel extends BasicElement<FalcunLabel> {
 		this.text = text;
 	}
 
+//	public int getY() {
+//		return 2 + region.y + (region.height - (int) font.stringHeight()) / 2;
+//	}
+
 	@Override
 	public void render() {
 		if (text == null || text.isEmpty()) {
@@ -42,7 +46,8 @@ public class FalcunLabel extends BasicElement<FalcunLabel> {
 				yOffset = this.y;
 				break;
 			case 1:
-				yOffset = this.y + (this.height >> 1) - (this.font.size() / 2 * lines.size());
+//				yOffset = this.y + (this.height >> 1) - (this.font.size() / 2 * lines.size());
+				yOffset = 2 + this.y + ((this.height - (int)font.stringHeight()) >> 1);
 				break;
 			case 2:
 				yOffset = this.y + this.height - this.font.size();
