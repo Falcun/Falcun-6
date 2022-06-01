@@ -1,9 +1,6 @@
 package falcun.net.managers;
 
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import falcun.net.api.modules.FalcunModule;
 import falcun.net.api.modules.config.FalcunConfigValue;
 import falcun.net.api.modules.config.FalcunFPSModule;
@@ -61,89 +58,72 @@ public final class FalcunConfigManager {
 		}
 	}
 
+
+	private static boolean loadModule(Class<?> moduleClass) {
+		try {
+			FalcunModuleInfo falcunModuleInfo = moduleClass.getAnnotation(FalcunModuleInfo.class);
+			Map<Class<?>, FalcunModule> map = moduleClass.isAnnotationPresent(FalcunFPSModule.class) ? fps : modules;
+			File file = new File(dataFolder, FalcunDevEnvironment.isDevEnvironment ? falcunModuleInfo.fileName() + ".falcun" : encodeBase32(falcunModuleInfo.fileName()) + ".falcun");
+			FalcunModule module = null;
+			if (!file.exists()) {
+				module = (FalcunModule) moduleClass.newInstance();
+				file.createNewFile();
+			} else {
+				byte[] bytes = Files.readAllBytes(file.toPath());
+				String jsonString = new String(bytes);
+				if (isValidJson(jsonString)) {
+					try {
+						module = (FalcunModule) gson.fromJson(jsonString, moduleClass);
+					} catch (Throwable err) {
+						module = (FalcunModule) moduleClass.newInstance();
+						file.delete();
+						err.printStackTrace();
+					}
+				} else {
+					file.delete();
+					module = (FalcunModule) moduleClass.newInstance();
+				}
+			}
+			if (module == null) return false;
+			if (FalcunDevEnvironment.isDevEnvironment) {
+				System.out.println(module + " " + moduleClass);
+			}
+			saveModule(module);
+			map.put(moduleClass, module);
+			module.update();
+			if (module.isEnabled()) {
+				module.onEnable();
+			}
+			return true;
+		} catch (Throwable err) {
+			err.printStackTrace();
+			return false;
+		}
+	}
+
+	private static boolean isValidJson(String str) {
+		try {
+			JsonObject jsonObject = gson.fromJson(str, JsonObject.class);
+			return true;
+		} catch (JsonSyntaxException ignored) {
+			return false;
+		} catch (Throwable err) {
+			err.printStackTrace();
+			return false;
+		}
+	}
+
 	public static void init() {
 		if (!dataFolder.exists()) {
 			dataFolder.mkdirs();
 		}
 		for (Class<?> moduleClass : moduleClasses) {
-			FalcunModuleInfo falcunModuleInfo = moduleClass.getAnnotation(FalcunModuleInfo.class);
-			Map<Class<?>, FalcunModule> map = moduleClass.isAnnotationPresent(FalcunFPSModule.class) ? fps : modules;
-			File file = new File(dataFolder, FalcunDevEnvironment.isDevEnvironment ? falcunModuleInfo.fileName() + ".falcun" : encodeBase32(falcunModuleInfo.fileName()) + ".falcun");
-			FalcunModule falcunModule = null;
-			boolean init = false;
-			try {
-				block1:
-				{
-					if (!file.exists()) {
-						file.createNewFile();
-						falcunModule = (FalcunModule) moduleClass.newInstance();
-						init =  true;
-					} else {
-						byte[] bytes = Files.readAllBytes(file.toPath());
-						String jsonString = new String(bytes);
-//					if (!FalcunDevEnvironment.isDevEnvironment) {
-//						jsonString = changeBytes(jsonString);
-//					}
-//						jsonString = decodeBase32(jsonString);
-						try {
-							falcunModule = (FalcunModule) gson.fromJson(jsonString, moduleClass);
-							init =true;
-						} catch (Throwable err) {
-							System.out.println("--------------------------------");
-							System.out.println(moduleClass);
-							System.out.println("--------------------------------");
-							err.printStackTrace();
-							falcunModule = (FalcunModule) moduleClass.newInstance();
-							init = true;
-							file.delete();
-							file.createNewFile();
-							break block1;
-						}
-						if (falcunModule.isEnabled()) falcunModule.onEnable();
-					}
+			if (!loadModule(moduleClass)) {
+				System.out.println("--------");
+				for (int i = 0; i < 5; ++i) {
+					System.out.println("FAILED TO LOAD: " + moduleClass);
 				}
-				if (FalcunDevEnvironment.isDevEnvironment) {
-					System.out.println(falcunModule + " " + moduleClass);
-				}
-				saveModule(falcunModule);
-				map.put(moduleClass, falcunModule);
-			} catch (Throwable err) {
-				err.printStackTrace();
-			}
-			if (file.exists()) {
-				try {
-					try {
-						saveModule(falcunModule);
-					} catch (Throwable ignored){
-
-					}
-					byte[] bytes = Files.readAllBytes(file.toPath());
-					if (bytes.length < 1) {
-						file.delete();
-					} else {
-						String s = new String(bytes);
-						if (s.length() < 14) {
-							file.delete();
-						}
-					}
-				} catch (Throwable err) {
-					err.printStackTrace();
-				}
-			}
-			int ignore;
-			if (!file.exists()) {
-				try {
-					if (init) {
-						try {
-							saveModule(falcunModule);
-						} catch (Throwable ignored){
-							file.createNewFile();
-							saveModule(falcunModule);
-						}
-					}
-				} catch (Throwable err) {
-					err.printStackTrace();
-				}
+				System.out.println("--------");
 			}
 		}
 		modules.values().forEach(FalcunConfigManager::checkForFinal);
