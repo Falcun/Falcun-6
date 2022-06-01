@@ -56,7 +56,6 @@ public final class Falcun {
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
-		new SkyblockPlayer();
 		try {
 			InputStream is = Falcun.minecraft.getResourceManager().getResource(new ResourceLocation("falcun:falcun16x16.png")).getInputStream();
 			InputStream is1 = Falcun.minecraft.getResourceManager().getResource(new ResourceLocation("falcun:falcun32x32.png")).getInputStream();
@@ -75,6 +74,7 @@ public final class Falcun {
 	public void postInit(FMLPostInitializationEvent e) {
 		System.out.println(Fonts.Roboto.getStringWidth("Falcun Client Loading..."));
 		FalcunConfigManager.init();
+		new SkyblockPlayer();
 	}
 
 	@SubscribeEvent
