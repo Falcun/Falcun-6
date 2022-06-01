@@ -9,6 +9,9 @@ import falcun.net.managers.FalcunConfigManager;
 import falcun.net.managers.FalcunKeyBindManager;
 import falcun.net.modules.hypixel.skyblock.utils.SkyblockPlayer;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.compute.LineRenderer;
+import falcun.xyz.dev.boredhuman.dancore.falcunfork.events.DanLineRenderEvent;
+import falcun.xyz.dev.boredhuman.dancore.falcunfork.events.RenderHook;
+import falcun.xyz.dev.boredhuman.dancore.falcunfork.shapes.Box;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.util.FutureCallBack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -27,6 +30,8 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -121,6 +126,23 @@ public final class Falcun {
 	}
 
 	private static final ExecutorService workerPool = Executors.newFixedThreadPool(4);
+
+	private transient final RenderHook renderHook = phase -> {
+		if (phase == RenderHook.Phase.SETUP) {
+			GlStateManager.disableDepth();
+		} else {
+			GlStateManager.enableDepth();
+		}
+	};
+
+	@SubscribeEvent
+	public void lines(DanLineRenderEvent e) {
+		double x = minecraft.thePlayer.posX, y = minecraft.thePlayer.posY, z = minecraft.thePlayer.posZ;
+		Box box = new Box(x - 5, y - 5, z - 5, x + 5, y + 5, z + 5);
+		List<Box> boxes = new LinkedList<>();
+		boxes.add(box);
+		e.addBoxOutlines(1.4f, this.renderHook, boxes, 0xFFFFFFFF);
+	}
 
 
 	public static void saveConfig() {
