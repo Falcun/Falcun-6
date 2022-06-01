@@ -8,6 +8,7 @@ import falcun.net.gui.ingame.FalcunInGameMenu;
 import net.minecraft.client.gui.*;
 import net.minecraft.network.play.client.C16PacketClientStatus;
 import net.minecraftforge.fml.common.ModContainer;
+import the_fireplace.ias.gui.GuiAccountSelector;
 
 public final class FalcunGuiManager {
 
@@ -39,6 +40,7 @@ public final class FalcunGuiManager {
 	}
 
 	public static void openAccountSwitchMenu(GuiScreen guiScreen) {
+		Falcun.minecraft.displayGuiScreen(new GuiAccountSelector(guiScreen));
 	}
 
 	public static void openModConfigMenu(ModContainer modContainer) {
