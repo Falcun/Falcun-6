@@ -25,12 +25,10 @@ public class BlockCoordinates extends FalcunModule {
     public FalcunValue<Boolean> shadedCoords = new FalcunValue<>(true);
 
     @FalcunSetting("Shout Coords Key")
-    public FalcunValue<FalcunKeyBind> keyBind = new FalcunValue<>(new FalcunKeyBind());
-
+    public FalcunValue<FalcunKeyBind> keyBind = new FalcunValue<>(new FalcunKeyBind(0));
 
     @FalcunSetting("Chat Format")
     public FalcunValue<String> chatFormat = new FalcunValue<>("X: {x}, Y: {y}, Z: {z} Blocks: {block}");
-
 
     @FalcunSetting("Background Color")
     public FalcunValue<FalcunColor> background = new FalcunValue<>(new FalcunColorCreator().setRed(0).setBlue(0).setGreen(0).setAlpha(150).getColor());

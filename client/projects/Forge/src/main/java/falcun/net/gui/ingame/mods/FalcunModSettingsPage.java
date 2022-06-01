@@ -69,12 +69,14 @@ public class FalcunModSettingsPage implements FalcunPage {
 			final String name = setting.value().toUpperCase();
 			final FalcunFont font = Fonts.Roboto12;
 			final int wid = (int) font.getStringWidth(name);
-			if (Number.class.isAssignableFrom(type)) {
+			FalcunKey falcunKey = field.getKey();
+
+			if (Number.class.isAssignableFrom(type) && falcunKey == null) {
 				final FalcunBounds bounds = field.getBounds();
 				final double min = bounds.min();
 				final double max = bounds.max();
 				final GuiRegion gr = new GuiRegion(x, y, boxWidth, 10);
-				final Supplier<String> txt = () -> name + " | " + Math.round(100 * ((FalcunValue<Number>) field.getValue()).getValue().doubleValue() ) / 100d;
+				final Supplier<String> txt = () -> name + " | " + Math.round(100 * ((FalcunValue<Number>) field.getValue()).getValue().doubleValue()) / 100d;
 				final Label label = new Label(gr, txt, 0, () -> 0xffffffff, font);
 				scroll.addComponent(label);
 
@@ -84,6 +86,7 @@ public class FalcunModSettingsPage implements FalcunPage {
 				y += 18;
 				y += 17;
 				y += 17;
+
 			} else if (type == Boolean.class || type == boolean.class) {
 				final GuiRegion gr = new GuiRegion(x, y, boxWidth, 10);
 				final Label label = new Label(gr, name, 0, 0xffffffff, font);

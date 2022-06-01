@@ -12,6 +12,7 @@ public class FalcunField<T> {
 	private final FalcunModule module;
 	private FalcunBounds bounds;
 	private final FalcunSetting value;
+	private FalcunKey key;
 	private Class<?> parameterizedFieldType = Object.class;
 	private final Class<?> fieldType;
 
@@ -32,6 +33,11 @@ public class FalcunField<T> {
 		}
 		if (field.isAnnotationPresent(FalcunBounds.class)) {
 			this.bounds = field.getAnnotation(FalcunBounds.class);
+		}
+		if (field.isAnnotationPresent(FalcunKey.class)) {
+			this.key = field.getAnnotation(FalcunKey.class);
+		} else {
+			this.key = null;
 		}
 		this.value = configProperty;
 	}
@@ -56,6 +62,10 @@ public class FalcunField<T> {
 
 	public FalcunBounds getBounds() {
 		return this.bounds;
+	}
+
+	public FalcunKey getKey() {
+		return this.key;
 	}
 
 	public FalcunSetting getSetting() {

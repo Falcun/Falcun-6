@@ -1,14 +1,8 @@
 package falcun.net.api.colors;
 
-import java.io.Serializable;
-
 public final class FalcunColor  {
 
-	public int color;
-
-	public FalcunColor() {
-		color = 0xFFFFFFFF;
-	}
+	public int color ;
 
 	public FalcunColor(int color) {
 		this.color = color;

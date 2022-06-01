@@ -64,7 +64,7 @@ public final class FalcunConfigManager {
 			FalcunModuleInfo falcunModuleInfo = moduleClass.getAnnotation(FalcunModuleInfo.class);
 			Map<Class<?>, FalcunModule> map = moduleClass.isAnnotationPresent(FalcunFPSModule.class) ? fps : modules;
 			File file = new File(dataFolder, FalcunDevEnvironment.isDevEnvironment ? falcunModuleInfo.fileName() + ".falcun" : encodeBase32(falcunModuleInfo.fileName()) + ".falcun");
-			FalcunModule module = null;
+			FalcunModule module;
 			if (!file.exists()) {
 				module = (FalcunModule) moduleClass.newInstance();
 				file.createNewFile();
@@ -75,6 +75,9 @@ public final class FalcunConfigManager {
 					try {
 						module = (FalcunModule) gson.fromJson(jsonString, moduleClass);
 					} catch (Throwable err) {
+						System.out.println("--------------------------------------------------------");
+						System.out.println("valid json but could not initiate " + moduleClass);
+						System.out.println("--------------------------------------------------------");
 						module = (FalcunModule) moduleClass.newInstance();
 						file.delete();
 						err.printStackTrace();
@@ -102,6 +105,7 @@ public final class FalcunConfigManager {
 	}
 
 	private static boolean isValidJson(String str) {
+		if (str.length() < 10) return false;
 		try {
 			JsonObject jsonObject = gson.fromJson(str, JsonObject.class);
 			return true;
@@ -113,12 +117,31 @@ public final class FalcunConfigManager {
 		}
 	}
 
+	private static void deleteConfigFileOf(Class<?> modClass) {
+		try {
+			FalcunModuleInfo falcunModuleInfo = modClass.getAnnotation(FalcunModuleInfo.class);
+			if (falcunModuleInfo == null) {
+				for (int i = 0; i < 40; ++i) {
+					System.out.println("INVALID FALCUN MODULE DUMBASS " + modClass);
+				}
+				return;
+			}
+			File file = new File(dataFolder, FalcunDevEnvironment.isDevEnvironment ? falcunModuleInfo.fileName() + ".falcun" : encodeBase32(falcunModuleInfo.fileName()) + ".falcun");
+			if (file.exists()) {
+				file.delete();
+			}
+		} catch (Throwable ignored) {
+
+		}
+	}
+
 	public static void init() {
 		if (!dataFolder.exists()) {
 			dataFolder.mkdirs();
 		}
 		for (Class<?> moduleClass : moduleClasses) {
 			if (!loadModule(moduleClass)) {
+				deleteConfigFileOf(moduleClass);
 				System.out.println("--------");
 				for (int i = 0; i < 5; ++i) {
 					System.out.println("FAILED TO LOAD: " + moduleClass);
