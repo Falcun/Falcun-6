@@ -13,3 +13,7 @@
 *.pyd binary
 *.cfg text eol=lf
 *.py text eol=lf
+*.eot binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
