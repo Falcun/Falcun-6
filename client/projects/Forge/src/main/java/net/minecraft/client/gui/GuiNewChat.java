@@ -3,6 +3,8 @@ package net.minecraft.client.gui;
 import com.google.common.collect.Lists;
 import java.util.Iterator;
 import java.util.List;
+
+import net.mattbenson.Wrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
@@ -11,6 +13,7 @@ import net.minecraft.util.IChatComponent;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -82,10 +85,8 @@ public class GuiNewChat extends Gui
                             {
                                 int i2 = 0;
                                 int j2 = -i1 * 9;
-                                drawRect(i2, j2 - 9, i2 + l + 4, j2, l1 / 2 << 24);
                                 String s = chatline.getChatComponent().getFormattedText();
-                                GlStateManager.enableBlend();
-                                this.mc.fontRendererObj.drawStringWithShadow(s, (float)i2, (float)(j2 - 8), 16777215 + (l1 << 24));
+                                Wrapper.getInstance().handleCustomFont(s, i2, j2, l, l1);
                                 GlStateManager.disableAlpha();
                                 GlStateManager.disableBlend();
                             }
@@ -106,11 +107,10 @@ public class GuiNewChat extends Gui
                     {
                         int k3 = j3 > 0 ? 170 : 96;
                         int l3 = this.isScrolled ? 13382451 : 3355562;
-                        drawRect(0, -j3, 2, -j3 - k1, l3 + (k3 << 24));
-                        drawRect(2, -j3, 1, -j3 - k1, 13421772 + (k3 << 24));
+                        drawRectangle(0, -j3, 2, -j3 - k1, l3 + (k3 << 24));
+                        drawRectangle(2, -j3, 1, -j3 - k1, 13421772 + (k3 << 24));
                     }
                 }
-
                 GlStateManager.popMatrix();
             }
         }
@@ -124,7 +124,7 @@ public class GuiNewChat extends Gui
     }
 
     public void printChatMessage(IChatComponent p_146227_1_)
-    {
+    {	
         this.printChatMessageWithOptionalDeletion(p_146227_1_, 0);
     }
 
@@ -156,7 +156,7 @@ public class GuiNewChat extends Gui
             this.field_146253_i.add(0, new ChatLine(p_146237_3_, ichatcomponent, chatLineId));
         }
 
-        while (this.field_146253_i.size() > 100)
+        while (this.field_146253_i.size() > 100 && !Wrapper.getInstance().isInfiniteChat())
         {
             this.field_146253_i.remove(this.field_146253_i.size() - 1);
         }
@@ -165,7 +165,7 @@ public class GuiNewChat extends Gui
         {
             this.chatLines.add(0, new ChatLine(p_146237_3_, chatComponent, chatLineId));
 
-            while (this.chatLines.size() > 100)
+            while (this.chatLines.size() > 100 && !Wrapper.getInstance().isInfiniteChat())
             {
                 this.chatLines.remove(this.chatLines.size() - 1);
             }

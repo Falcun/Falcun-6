@@ -1,5 +1,12 @@
 package net.minecraft.client.renderer.entity;
 
+import java.awt.Color;
+
+import org.lwjgl.opengl.GL11;
+
+import net.mattbenson.Wrapper;
+import net.mattbenson.cosmetics.bandana.LayerBandana;
+import net.mattbenson.events.types.render.RenderPlayerEvent;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.model.ModelPlayer;
@@ -40,6 +47,7 @@ public class RenderPlayer extends RendererLivingEntity<AbstractClientPlayer>
         this.addLayer(new LayerDeadmau5Head(this));
         this.addLayer(new LayerCape(this));
         this.addLayer(new LayerCustomHead(this.getMainModel().bipedHead));
+        this.addLayer(new LayerBandana(this));
     }
 
     public ModelPlayer getMainModel()
@@ -49,6 +57,10 @@ public class RenderPlayer extends RendererLivingEntity<AbstractClientPlayer>
 
     public void doRender(AbstractClientPlayer entity, double x, double y, double z, float entityYaw, float partialTicks)
     {
+    	if (!Wrapper.getInstance().post(new RenderPlayerEvent(entity, x, y, z, partialTicks))) {
+    		return;
+    	}
+    	
         if (net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.RenderPlayerEvent.Pre(entity, this, partialTicks, x, y, z))) return;
         if (!entity.isUser() || this.renderManager.livingPlayer == entity)
         {
@@ -60,6 +72,13 @@ public class RenderPlayer extends RendererLivingEntity<AbstractClientPlayer>
             }
 
             this.setModelVisibilities(entity);
+            
+            Color color = Wrapper.getInstance().getHighlightColor(entity.getUniqueID());
+            
+        	if(color != null) {
+        		GL11.glColor4f((float)color.getRed() / 255, (float)color.getGreen() / 255, (float)color.getBlue() / 255, (float)color.getAlpha() / 255);
+        	}
+            
             super.doRender(entity, x, d0, z, entityYaw, partialTicks);
         }
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.RenderPlayerEvent.Post(entity, this, partialTicks, x, y, z));

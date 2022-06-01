@@ -19,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreenWorking;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -60,7 +61,7 @@ public class ResourcePackRepository
     private final ReentrantLock lock = new ReentrantLock();
     private ListenableFuture<Object> field_177322_i;
     private List<ResourcePackRepository.Entry> repositoryEntriesAll = Lists.<ResourcePackRepository.Entry>newArrayList();
-    private List<ResourcePackRepository.Entry> repositoryEntries = Lists.<ResourcePackRepository.Entry>newArrayList();
+    public List<ResourcePackRepository.Entry> repositoryEntries = Lists.<ResourcePackRepository.Entry>newArrayList();
 
     public ResourcePackRepository(File dirResourcepacksIn, File dirServerResourcepacksIn, IResourcePack rprDefaultResourcePackIn, IMetadataSerializer rprMetadataSerializerIn, GameSettings settings)
     {
@@ -312,7 +313,7 @@ public class ResourcePackRepository
         private BufferedImage texturePackIcon;
         private ResourceLocation locationTexturePackIcon;
 
-        private Entry(File resourcePackFileIn)
+        public Entry(File resourcePackFileIn)
         {
             this.resourcePackFile = resourcePackFileIn;
         }

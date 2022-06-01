@@ -19,13 +19,10 @@ import net.minecraft.client.util.JsonBlendingMode;
 import net.minecraft.client.util.JsonException;
 import net.minecraft.util.JsonUtils;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@SideOnly(Side.CLIENT)
 public class ShaderManager
 {
     private static final Logger logger = LogManager.getLogger();
@@ -253,16 +250,25 @@ public class ShaderManager
         this.isDirty = true;
     }
 
+    /**
+     * gets a shader uniform for the name given. null if not found.
+     */
     public ShaderUniform getShaderUniform(String p_147991_1_)
     {
         return this.mappedShaderUniforms.containsKey(p_147991_1_) ? (ShaderUniform)this.mappedShaderUniforms.get(p_147991_1_) : null;
     }
 
+    /**
+     * gets a shader uniform for the name given. if not found, returns a default not-null value
+     */
     public ShaderUniform getShaderUniformOrDefault(String p_147984_1_)
     {
         return (ShaderUniform)(this.mappedShaderUniforms.containsKey(p_147984_1_) ? (ShaderUniform)this.mappedShaderUniforms.get(p_147984_1_) : defaultShaderUniform);
     }
 
+    /**
+     * goes through the parsed uniforms and samplers and connects them to their GL counterparts.
+     */
     private void setupUniforms()
     {
         int i = 0;
@@ -274,7 +280,6 @@ public class ShaderManager
 
             if (k == -1)
             {
-                logger.warn("Shader " + this.programFilename + "could not find sampler named " + s + " in the specified shader program.");
                 this.shaderSamplers.remove(s);
                 this.samplerNames.remove(j);
                 --j;
@@ -294,7 +299,6 @@ public class ShaderManager
 
             if (l == -1)
             {
-                logger.warn("Could not find uniform named " + s1 + " in the specified" + " shader program.");
             }
             else
             {
@@ -321,6 +325,9 @@ public class ShaderManager
         }
     }
 
+    /**
+     * adds a shader sampler texture. if it already exists, replaces it.
+     */
     public void addSamplerTexture(String p_147992_1_, Object p_147992_2_)
     {
         if (this.shaderSamplers.containsKey(p_147992_1_))

@@ -1,5 +1,8 @@
 package net.minecraft.client.gui;
 
+import java.awt.Color;
+
+import net.mattbenson.Wrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
@@ -70,16 +73,19 @@ public class GuiButton extends Gui
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
             GlStateManager.blendFunc(770, 771);
-            this.drawTexturedModalRect(this.xPosition, this.yPosition, 0, 46 + i * 20, this.width / 2, this.height);
-            this.drawTexturedModalRect(this.xPosition + this.width / 2, this.yPosition, 200 - this.width / 2, 46 + i * 20, this.width / 2, this.height);
+            
+            //this.drawTexturedModalRect(this.xPosition, this.yPosition, 0, 46 + i * 20, this.width / 2, this.height);
+            //this.drawTexturedModalRect(this.xPosition + this.width / 2, this.yPosition, 200 - this.width / 2, 46 + i * 20, this.width / 2, this.height);
             this.mouseDragged(mc, mouseX, mouseY);
             int j = 14737632;
+            
+            
+            Wrapper.getInstance().drawRoundedRect(this.xPosition, this.yPosition, this.xPosition +  this.width, this.yPosition + this.height, 4, hovered ? new Color(200,200,200,100).getRGB() : new Color(100,100,100,100).getRGB());
+    		
+            
+            Wrapper.getInstance().drawRoundedRect(this.xPosition + 1, this.yPosition + 1, (this.xPosition +  this.width) - 1, (this.yPosition + this.height) - 1, 3, new Color(22, 24, 27,100).getRGB());
 
-            if (packedFGColour != 0)
-            {
-                j = packedFGColour;
-            }
-            else
+            
             if (!this.enabled)
             {
                 j = 10526880;
@@ -89,7 +95,8 @@ public class GuiButton extends Gui
                 j = 16777120;
             }
 
-            this.drawCenteredString(fontrenderer, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, j);
+            Wrapper.getInstance().drawCenteredString(this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 10) / 2, Color.WHITE.getRGB());
+            //this.drawCenteredString(fontrenderer, this.displayString, this.xPosition + this.width / 2, this.yPosition + (this.height - 8) / 2, j);
         }
     }
 

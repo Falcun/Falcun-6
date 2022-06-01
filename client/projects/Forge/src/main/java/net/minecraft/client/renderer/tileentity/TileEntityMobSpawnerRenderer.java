@@ -1,14 +1,12 @@
 package net.minecraft.client.renderer.tileentity;
 
+import net.mattbenson.Wrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.MobSpawnerBaseLogic;
 import net.minecraft.tileentity.TileEntityMobSpawner;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-@SideOnly(Side.CLIENT)
 public class TileEntityMobSpawnerRenderer extends TileEntitySpecialRenderer<TileEntityMobSpawner>
 {
     public void renderTileEntityAt(TileEntityMobSpawner te, double x, double y, double z, float partialTicks, int destroyStage)
@@ -19,8 +17,15 @@ public class TileEntityMobSpawnerRenderer extends TileEntitySpecialRenderer<Tile
         GlStateManager.popMatrix();
     }
 
+    /**
+     * Render the mob inside the mob spawner.
+     */
     public static void renderMob(MobSpawnerBaseLogic mobSpawnerLogic, double posX, double posY, double posZ, float partialTicks)
     {
+    	if(Wrapper.getInstance().isRemoveSpawner()) {
+    		return;
+    	}
+    	
         Entity entity = mobSpawnerLogic.func_180612_a(mobSpawnerLogic.getSpawnerWorld());
 
         if (entity != null)

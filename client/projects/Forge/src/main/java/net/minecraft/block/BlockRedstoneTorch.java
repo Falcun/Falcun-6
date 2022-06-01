@@ -1,10 +1,14 @@
 package net.minecraft.block;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.WeakHashMap;
+
+import com.google.common.collect.Lists;
+
+import net.mattbenson.Wrapper;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Blocks;
@@ -19,9 +23,16 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class BlockRedstoneTorch extends BlockTorch
 {
-    private static Map<World, List<BlockRedstoneTorch.Toggle>> toggles = Maps.<World, List<BlockRedstoneTorch.Toggle>>newHashMap();
+	 //TODO: Falcun patcher
+    private static Map<World, List<BlockRedstoneTorch.Toggle>> toggles = BlockRedstoneTorch.<World, List<BlockRedstoneTorch.Toggle>>newMap();
+    //private static Map<World, List<BlockRedstoneTorch.Toggle>> toggles = Maps.<World, List<BlockRedstoneTorch.Toggle>>newHashMap();
     private final boolean isOn;
 
+    //TODO: Falcun patcher
+    public static <K, V> Map<K, V> newMap() {
+            return new WeakHashMap<K, V>();
+    }
+    
     private boolean isBurnedOut(World worldIn, BlockPos pos, boolean turnOff)
     {
         if (!toggles.containsKey(worldIn))

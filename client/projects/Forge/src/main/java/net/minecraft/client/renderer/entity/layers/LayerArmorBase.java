@@ -1,16 +1,25 @@
 package net.minecraft.client.renderer.entity.layers;
 
 import com.google.common.collect.Maps;
+
 import java.util.Map;
+
+import net.mattbenson.Wrapper;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RendererLivingEntity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
+import net.minecraft.src.Config;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.optifine.CustomItems;
+import net.optifine.reflect.Reflector;
+import net.optifine.reflect.ReflectorForge;
+import net.optifine.shaders.Shaders;
+import net.optifine.shaders.ShadersRender;
 
 @SideOnly(Side.CLIENT)
 public abstract class LayerArmorBase<T extends ModelBase> implements LayerRenderer<EntityLivingBase>
@@ -42,7 +51,7 @@ public abstract class LayerArmorBase<T extends ModelBase> implements LayerRender
 
     public boolean shouldCombineTextures()
     {
-        return false;
+        return true;
     }
 
     private void renderLayer(EntityLivingBase entitylivingbaseIn, float p_177182_2_, float p_177182_3_, float p_177182_4_, float p_177182_5_, float p_177182_6_, float p_177182_7_, float p_177182_8_, int armorSlot)
@@ -55,31 +64,81 @@ public abstract class LayerArmorBase<T extends ModelBase> implements LayerRender
             T t = this.func_177175_a(armorSlot);
             t.setModelAttributes(this.renderer.getMainModel());
             t.setLivingAnimations(entitylivingbaseIn, p_177182_2_, p_177182_3_, p_177182_4_);
-            t = getArmorModelHook(entitylivingbaseIn, itemstack, armorSlot, t);
+
+            if (Reflector.ForgeHooksClient.exists())
+            {
+                t = this.getArmorModelHook(entitylivingbaseIn, itemstack, armorSlot, t);
+            }
+
             this.func_177179_a(t, armorSlot);
             boolean flag = this.isSlotForLeggings(armorSlot);
-            this.renderer.bindTexture(this.getArmorResource(entitylivingbaseIn, itemstack, flag ? 2 : 1, null));
 
-                    int i = itemarmor.getColor(itemstack);
+            if (!Config.isCustomItems() || !CustomItems.bindCustomArmorTexture(itemstack, flag ? 2 : 1, (String)null))
             {
-                if (i != -1) // Allow this for anything, not only cloth.
+                if (Reflector.ForgeHooksClient_getArmorTexture.exists())
                 {
+                    this.renderer.bindTexture(this.getArmorResource(entitylivingbaseIn, itemstack, flag ? 2 : 1, (String)null));
+                }
+                else
+                {
+                    this.renderer.bindTexture(this.getArmorResource(itemarmor, flag));
+                }
+            }
+
+            if (Reflector.ForgeHooksClient_getArmorTexture.exists())
+            {
+                if (ReflectorForge.armorHasOverlay(itemarmor, itemstack))
+                {
+                    int j = itemarmor.getColor(itemstack);
+                    float f3 = (float)(j >> 16 & 255) / 255.0F;
+                    float f4 = (float)(j >> 8 & 255) / 255.0F;
+                    float f5 = (float)(j & 255) / 255.0F;
+                    GlStateManager.color(this.colorR * f3, this.colorG * f4, this.colorB * f5, this.alpha);
+                    t.render(entitylivingbaseIn, p_177182_2_, p_177182_3_, p_177182_5_, p_177182_6_, p_177182_7_, p_177182_8_);
+
+                    if (!Config.isCustomItems() || !CustomItems.bindCustomArmorTexture(itemstack, flag ? 2 : 1, "overlay"))
+                    {
+                        this.renderer.bindTexture(this.getArmorResource(entitylivingbaseIn, itemstack, flag ? 2 : 1, "overlay"));
+                    }
+                }
+
+                GlStateManager.color(this.colorR, this.colorG, this.colorB, this.alpha);
+                t.render(entitylivingbaseIn, p_177182_2_, p_177182_3_, p_177182_5_, p_177182_6_, p_177182_7_, p_177182_8_);
+
+                if (!this.field_177193_i && itemstack.hasEffect() && (!Config.isCustomItems() || !CustomItems.renderCustomArmorEffect(entitylivingbaseIn, itemstack, t, p_177182_2_, p_177182_3_, p_177182_4_, p_177182_5_, p_177182_6_, p_177182_7_, p_177182_8_)))
+                {
+                    this.func_177183_a(entitylivingbaseIn, t, p_177182_2_, p_177182_3_, p_177182_4_, p_177182_5_, p_177182_6_, p_177182_7_, p_177182_8_);
+                }
+
+                return;
+            }
+
+            switch (itemarmor.getArmorMaterial())
+            {
+                case LEATHER:
+                    int i = itemarmor.getColor(itemstack);
                     float f = (float)(i >> 16 & 255) / 255.0F;
                     float f1 = (float)(i >> 8 & 255) / 255.0F;
                     float f2 = (float)(i & 255) / 255.0F;
                     GlStateManager.color(this.colorR * f, this.colorG * f1, this.colorB * f2, this.alpha);
                     t.render(entitylivingbaseIn, p_177182_2_, p_177182_3_, p_177182_5_, p_177182_6_, p_177182_7_, p_177182_8_);
-                    this.renderer.bindTexture(this.getArmorResource(entitylivingbaseIn, itemstack, flag ? 2 : 1, "overlay"));
-                }
-                { // Non-colored
+
+                    if (!Config.isCustomItems() || !CustomItems.bindCustomArmorTexture(itemstack, flag ? 2 : 1, "overlay"))
+                    {
+                        this.renderer.bindTexture(this.getArmorResource(itemarmor, flag, "overlay"));
+                    }
+
+                case CHAIN:
+                case IRON:
+                case GOLD:
+                case DIAMOND:
                     GlStateManager.color(this.colorR, this.colorG, this.colorB, this.alpha);
                     t.render(entitylivingbaseIn, p_177182_2_, p_177182_3_, p_177182_5_, p_177182_6_, p_177182_7_, p_177182_8_);
-                }
-                // Default
-                    if (!this.field_177193_i && itemstack.hasEffect())
-                    {
-                        this.func_177183_a(entitylivingbaseIn, t, p_177182_2_, p_177182_3_, p_177182_4_, p_177182_5_, p_177182_6_, p_177182_7_, p_177182_8_);
-                    }
+            }
+
+            if (!this.field_177193_i && itemstack.isItemEnchanted() && (!Config.isCustomItems() || !CustomItems.renderCustomArmorEffect(entitylivingbaseIn, itemstack, t, p_177182_2_, p_177182_3_, p_177182_4_, p_177182_5_, p_177182_6_, p_177182_7_, p_177182_8_)))
+            {
+                this.func_177183_a(entitylivingbaseIn, t, p_177182_2_, p_177182_3_, p_177182_4_, p_177182_5_, p_177182_6_, p_177182_7_, p_177182_8_);
             }
         }
     }
@@ -101,37 +160,54 @@ public abstract class LayerArmorBase<T extends ModelBase> implements LayerRender
 
     private void func_177183_a(EntityLivingBase entitylivingbaseIn, T modelbaseIn, float p_177183_3_, float p_177183_4_, float p_177183_5_, float p_177183_6_, float p_177183_7_, float p_177183_8_, float p_177183_9_)
     {
-        float f = (float)entitylivingbaseIn.ticksExisted + p_177183_5_;
-        this.renderer.bindTexture(ENCHANTED_ITEM_GLINT_RES);
-        GlStateManager.enableBlend();
-        GlStateManager.depthFunc(514);
-        GlStateManager.depthMask(false);
-        float f1 = 0.5F;
-        GlStateManager.color(f1, f1, f1, 1.0F);
-
-        for (int i = 0; i < 2; ++i)
+    	if(Wrapper.getInstance().isRemoveTint()) {
+        	return;
+        }
+        if (!Config.isShaders() || !Shaders.isShadowPass)
         {
-            GlStateManager.disableLighting();
-            GlStateManager.blendFunc(768, 1);
-            float f2 = 0.76F;
-            GlStateManager.color(0.5F * f2, 0.25F * f2, 0.8F * f2, 1.0F);
+            float f = (float)entitylivingbaseIn.ticksExisted + p_177183_5_;
+            this.renderer.bindTexture(ENCHANTED_ITEM_GLINT_RES);
+
+            if (Config.isShaders())
+            {
+                ShadersRender.renderEnchantedGlintBegin();
+            }
+
+            GlStateManager.enableBlend();
+            GlStateManager.depthFunc(514);
+            GlStateManager.depthMask(false);
+            float f1 = 0.5F;
+            GlStateManager.color(f1, f1, f1, 1.0F);
+
+            for (int i = 0; i < 2; ++i)
+            {
+                GlStateManager.disableLighting();
+                GlStateManager.blendFunc(768, 1);
+                float f2 = 0.76F;
+                GlStateManager.color(0.5F * f2, 0.25F * f2, 0.8F * f2, 1.0F);
+                GlStateManager.matrixMode(5890);
+                GlStateManager.loadIdentity();
+                float f3 = 0.33333334F;
+                GlStateManager.scale(f3, f3, f3);
+                GlStateManager.rotate(30.0F - (float)i * 60.0F, 0.0F, 0.0F, 1.0F);
+                GlStateManager.translate(0.0F, f * (0.001F + (float)i * 0.003F) * 20.0F, 0.0F);
+                GlStateManager.matrixMode(5888);
+                modelbaseIn.render(entitylivingbaseIn, p_177183_3_, p_177183_4_, p_177183_6_, p_177183_7_, p_177183_8_, p_177183_9_);
+            }
+
             GlStateManager.matrixMode(5890);
             GlStateManager.loadIdentity();
-            float f3 = 0.33333334F;
-            GlStateManager.scale(f3, f3, f3);
-            GlStateManager.rotate(30.0F - (float)i * 60.0F, 0.0F, 0.0F, 1.0F);
-            GlStateManager.translate(0.0F, f * (0.001F + (float)i * 0.003F) * 20.0F, 0.0F);
             GlStateManager.matrixMode(5888);
-            modelbaseIn.render(entitylivingbaseIn, p_177183_3_, p_177183_4_, p_177183_6_, p_177183_7_, p_177183_8_, p_177183_9_);
-        }
+            GlStateManager.enableLighting();
+            GlStateManager.depthMask(true);
+            GlStateManager.depthFunc(515);
+            GlStateManager.disableBlend();
 
-        GlStateManager.matrixMode(5890);
-        GlStateManager.loadIdentity();
-        GlStateManager.matrixMode(5888);
-        GlStateManager.enableLighting();
-        GlStateManager.depthMask(true);
-        GlStateManager.depthFunc(515);
-        GlStateManager.disableBlend();
+            if (Config.isShaders())
+            {
+                ShadersRender.renderEnchantedGlintEnd();
+            }
+        }
     }
 
     @Deprecated //Use the more sensitive version getArmorResource below

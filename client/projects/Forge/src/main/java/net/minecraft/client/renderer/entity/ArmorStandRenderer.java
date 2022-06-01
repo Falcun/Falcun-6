@@ -1,5 +1,6 @@
 package net.minecraft.client.renderer.entity;
 
+import net.mattbenson.Wrapper;
 import net.minecraft.client.model.ModelArmorStand;
 import net.minecraft.client.model.ModelArmorStandArmor;
 import net.minecraft.client.renderer.GlStateManager;
@@ -49,6 +50,9 @@ public class ArmorStandRenderer extends RendererLivingEntity<EntityArmorStand>
 
     protected boolean canRenderName(EntityArmorStand entity)
     {
+    	if(Wrapper.getInstance().isNoHolograms()) {
+    		return false;
+    	}
         return entity.getAlwaysRenderNameTag();
     }
 }

@@ -1,5 +1,6 @@
 package net.minecraft.client.renderer.tileentity;
 
+import net.mattbenson.Wrapper;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockPistonBase;
 import net.minecraft.block.BlockPistonExtension;
@@ -17,17 +18,16 @@ import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntityPiston;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-@SideOnly(Side.CLIENT)
 public class TileEntityPistonRenderer extends TileEntitySpecialRenderer<TileEntityPiston>
 {
-    private BlockRendererDispatcher blockRenderer;
+    private final BlockRendererDispatcher blockRenderer = Minecraft.getMinecraft().getBlockRendererDispatcher();
 
     public void renderTileEntityAt(TileEntityPiston te, double x, double y, double z, float partialTicks, int destroyStage)
     {
-        if(blockRenderer == null) blockRenderer = Minecraft.getMinecraft().getBlockRendererDispatcher();
+    	if(Wrapper.getInstance().isPistonExtention()) {
+    		return;
+    	}
         BlockPos blockpos = te.getPos();
         IBlockState iblockstate = te.getPistonState();
         Block block = iblockstate.getBlock();

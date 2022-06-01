@@ -52,4 +52,10 @@ public class BuiltInModel implements IBakedModel
     {
         return this.cameraTransforms;
     }
+
+	@Override
+	public TextureAtlasSprite getTexture() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

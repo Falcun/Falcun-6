@@ -161,34 +161,6 @@ public class PersistentRegistryManager
             loadPersistentDataToStagingRegistry(injectFrozenData, remaps, missing, snapshotEntry, PersistentRegistry.ACTIVE.registrySuperTypes.inverse().get(snapshotEntry.getKey()));
         }
 
-        // Handle dummied blocks
-        for (ResourceLocation dummy : snapshot.entries.get(BLOCKS).dummied)
-        {
-            // Currently missing locally, we just inject and carry on
-            if (missing.get(BLOCKS).containsKey(dummy))
-            {
-                Integer id = missing.get(BLOCKS).remove(dummy);
-                // Mark this entry as a dummy
-                PersistentRegistry.STAGING.getRegistry(BLOCKS, Block.class).markDummy(dummy, id, new BlockDummyAir());
-            }
-            else if (isLocalWorld)
-            {
-                // Carry on, we resuscitated the block
-                if (FMLControlledNamespacedRegistry.DEBUG)
-                {
-                    FMLLog.log(Level.DEBUG, "Registry: Resuscitating dummy block %s", dummy);
-                }
-            }
-            else
-            {
-                Integer id = PersistentRegistry.STAGING.getRegistry(BLOCKS, Block.class).getId(dummy);
-                // The server believes this is a dummy block identity, but we seem to have one locally. This is likely a conflict
-                // in mod setup - Mark this entry as a dummy
-                FMLLog.log(Level.WARN, "The ID %d is currently locally mapped - it will be replaced with air for this session", id);
-                PersistentRegistry.STAGING.getRegistry(BLOCKS, Block.class).markDummy(dummy, id, new BlockDummyAir());
-            }
-        }
-
         // If we have missed data, fire the missing mapping event
         List<String> missedMappings = Loader.instance().fireMissingMappingEvent(missing.get(BLOCKS), missing.get(ITEMS), isLocalWorld, remaps.get(BLOCKS), remaps.get(ITEMS));
         // If there's still missed mappings, we return, because that's an error

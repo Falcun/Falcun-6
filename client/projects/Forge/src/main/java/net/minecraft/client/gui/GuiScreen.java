@@ -15,6 +15,9 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+
+import net.mattbenson.Wrapper;
+import net.mattbenson.modules.types.mods.Schematica;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.stream.GuiTwitchUserMode;
 import net.minecraft.client.renderer.GlStateManager;
@@ -398,6 +401,30 @@ public abstract class GuiScreen extends Gui implements GuiYesNoCallback
                 {
                     URI uri1 = (new File(clickevent.getValue())).toURI();
                     this.openWebLink(uri1);
+                } else if(clickevent.getAction() == ClickEvent.Action.COPY_URL) {
+                	setClipboardString(clickevent.getValue());
+                	Wrapper.getInstance().addChat("Copied to clipboard!");
+                }
+                else if(clickevent.getAction() == ClickEvent.Action.LOAD_SCHEM) {
+                	Wrapper.getInstance().addChat("Updating Schematic...");
+                	Schematica.updateSchematic(clickevent.getValue());
+                }
+                else if (clickevent.getAction() == ClickEvent.Action.DELETE_FILE)
+                {
+                    File file = new File(clickevent.getValue());
+                   	if(file.exists()) {
+                   		file.delete();
+                   		Wrapper.getInstance().addChat("Deleted screenshot!");
+                   	}
+                }
+                else if (clickevent.getAction() == ClickEvent.Action.LINK)
+                {
+					try {
+					   	URI uri = new URI(clickevent.getValue());
+					    this.openWebLink(uri);
+					} catch (URISyntaxException e) {
+						e.printStackTrace();
+					}
                 }
                 else if (clickevent.getAction() == ClickEvent.Action.SUGGEST_COMMAND)
                 {
@@ -464,6 +491,7 @@ public abstract class GuiScreen extends Gui implements GuiYesNoCallback
                     guibutton = event.button;
                     this.selectedButton = guibutton;
                     guibutton.playPressSound(this.mc.getSoundHandler());
+                    Wrapper.getInstance().GuiActionPerformedEvent(this, guibutton);
                     this.actionPerformed(guibutton);
                     if (this.equals(this.mc.currentScreen))
                         net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent.Post(this, event.button, this.buttonList));

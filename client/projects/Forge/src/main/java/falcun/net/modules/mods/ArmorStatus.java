@@ -2,7 +2,6 @@ package falcun.net.modules.mods;
 
 import falcun.net.api.colors.FalcunColor;
 import falcun.net.api.fonts.Fonts;
-import falcun.net.api.modules.FalcunModule;
 import falcun.net.api.modules.config.FalcunModuleInfo;
 import falcun.net.api.modules.config.FalcunSetting;
 import falcun.net.api.modules.config.FalcunValue;

@@ -1,7 +1,11 @@
 package net.minecraft.client.multiplayer;
 
 import com.google.common.collect.Lists;
+
 import java.util.List;
+
+import net.mattbenson.Wrapper;
+import net.mattbenson.events.types.world.ChunkLoadEvent;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.IProgressUpdate;
@@ -55,6 +59,7 @@ public class ChunkProviderClient implements IChunkProvider
         Chunk chunk = new Chunk(this.worldObj, p_73158_1_, p_73158_2_);
         this.chunkMapping.add(ChunkCoordIntPair.chunkXZ2Int(p_73158_1_, p_73158_2_), chunk);
         this.chunkListing.add(chunk);
+        Wrapper.getInstance().post(new ChunkLoadEvent(worldObj, chunk));
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(chunk));
         chunk.setChunkLoaded(true);
         return chunk;

@@ -1,5 +1,6 @@
 package net.minecraft.client.renderer;
 
+import net.mattbenson.Wrapper;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -19,27 +20,37 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemMap;
 import net.minecraft.item.ItemStack;
+import net.minecraft.src.Config;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumWorldBlockLayer;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.storage.MapData;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.optifine.DynamicLights;
+import net.optifine.reflect.Reflector;
+import net.optifine.shaders.Shaders;
 import org.lwjgl.opengl.GL11;
 
-@SideOnly(Side.CLIENT)
 public class ItemRenderer
 {
     private static final ResourceLocation RES_MAP_BACKGROUND = new ResourceLocation("textures/map/map_background.png");
     private static final ResourceLocation RES_UNDERWATER_OVERLAY = new ResourceLocation("textures/misc/underwater.png");
+
+    /** A reference to the Minecraft object. */
     private final Minecraft mc;
     private ItemStack itemToRender;
+
+    /**
+     * How far the current item has been equipped (0 disequipped and 1 fully up)
+     */
     private float equippedProgress;
     private float prevEquippedProgress;
     private final RenderManager renderManager;
     private final RenderItem itemRenderer;
+
+    /** The index of the currently held item (0-8, or -1 if not yet updated) */
     private int equippedItemSlot = -1;
 
     public ItemRenderer(Minecraft mcIn)
@@ -61,7 +72,7 @@ public class ItemRenderer
             {
                 GlStateManager.scale(2.0F, 2.0F, 2.0F);
 
-                if (this.isBlockTranslucent(block))
+                if (this.isBlockTranslucent(block) && (!Config.isShaders() || !Shaders.renderItemKeepDepthMask))
                 {
                     GlStateManager.depthMask(false);
                 }
@@ -78,6 +89,9 @@ public class ItemRenderer
         }
     }
 
+    /**
+     * Returns true if given block is translucent
+     */
     private boolean isBlockTranslucent(Block blockIn)
     {
         return blockIn != null && blockIn.getBlockLayer() == EnumWorldBlockLayer.TRANSLUCENT;
@@ -95,6 +109,12 @@ public class ItemRenderer
     private void func_178109_a(AbstractClientPlayer clientPlayer)
     {
         int i = this.mc.theWorld.getCombinedLight(new BlockPos(clientPlayer.posX, clientPlayer.posY + (double)clientPlayer.getEyeHeight(), clientPlayer.posZ), 0);
+
+        if (Config.isDynamicLights())
+        {
+            i = DynamicLights.getCombinedLight(this.mc.getRenderViewEntity(), i);
+        }
+
         float f = (float)(i & 65535);
         float f1 = (float)(i >> 16);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, f, f1);
@@ -250,6 +270,12 @@ public class ItemRenderer
         GlStateManager.rotate(f3 * 30.0F, 0.0F, 0.0F, 1.0F);
     }
 
+    /**
+     * Performs transformations prior to the rendering of a held item in first person.
+     *  
+     * @param equipProgress The progress of the animation to equip (raise from out of frame) while switching held items.
+     * @param swingProgress The progress of the arm swing animation.
+     */
     private void transformFirstPersonItem(float equipProgress, float swingProgress)
     {
         GlStateManager.translate(0.56F, -0.52F, -0.71999997F);
@@ -298,66 +324,99 @@ public class ItemRenderer
         GlStateManager.rotate(60.0F, 0.0F, 1.0F, 0.0F);
     }
 
+    /**
+     * Renders the active item in the player's hand when in first person mode. Args: partialTickTime
+     *  
+     * @param partialTicks The amount of time passed during the current tick, ranging from 0 to 1.
+     */
     public void renderItemInFirstPerson(float partialTicks)
     {
-        float f = 1.0F - (this.prevEquippedProgress + (this.equippedProgress - this.prevEquippedProgress) * partialTicks);
-        AbstractClientPlayer abstractclientplayer = this.mc.thePlayer;
-        float f1 = abstractclientplayer.getSwingProgress(partialTicks);
-        float f2 = abstractclientplayer.prevRotationPitch + (abstractclientplayer.rotationPitch - abstractclientplayer.prevRotationPitch) * partialTicks;
-        float f3 = abstractclientplayer.prevRotationYaw + (abstractclientplayer.rotationYaw - abstractclientplayer.prevRotationYaw) * partialTicks;
-        this.func_178101_a(f2, f3);
-        this.func_178109_a(abstractclientplayer);
-        this.func_178110_a((EntityPlayerSP)abstractclientplayer, partialTicks);
-        GlStateManager.enableRescaleNormal();
-        GlStateManager.pushMatrix();
-
-        if (this.itemToRender != null)
+        if (!Config.isShaders() || !Shaders.isSkipRenderHand())
         {
-            if (this.itemToRender.getItem() instanceof net.minecraft.item.ItemMap)
-            {
-                this.renderItemMap(abstractclientplayer, f2, f, f1);
-            }
-            else if (abstractclientplayer.getItemInUseCount() > 0)
-            {
-                EnumAction enumaction = this.itemToRender.getItemUseAction();
+            float f = 1.0F - (this.prevEquippedProgress + (this.equippedProgress - this.prevEquippedProgress) * partialTicks);
+            AbstractClientPlayer abstractclientplayer = this.mc.thePlayer;
+            float f1 = abstractclientplayer.getSwingProgress(partialTicks);
+            float f2 = abstractclientplayer.prevRotationPitch + (abstractclientplayer.rotationPitch - abstractclientplayer.prevRotationPitch) * partialTicks;
+            float f3 = abstractclientplayer.prevRotationYaw + (abstractclientplayer.rotationYaw - abstractclientplayer.prevRotationYaw) * partialTicks;
+            this.func_178101_a(f2, f3);
+            this.func_178109_a(abstractclientplayer);
+            this.func_178110_a((EntityPlayerSP)abstractclientplayer, partialTicks);
+            GlStateManager.enableRescaleNormal();
+            GlStateManager.pushMatrix();
 
-                switch (enumaction)
+            if (this.itemToRender != null)
+            {
+                if (this.itemToRender.getItem() instanceof ItemMap)
                 {
-                    case NONE:
-                        this.transformFirstPersonItem(f, 0.0F);
-                        break;
-                    case EAT:
-                    case DRINK:
-                        this.func_178104_a(abstractclientplayer, partialTicks);
-                        this.transformFirstPersonItem(f, 0.0F);
-                        break;
-                    case BLOCK:
-                        this.transformFirstPersonItem(f, 0.0F);
-                        this.func_178103_d();
-                        break;
-                    case BOW:
-                        this.transformFirstPersonItem(f, 0.0F);
-                        this.func_178098_a(partialTicks, abstractclientplayer);
+                    this.renderItemMap(abstractclientplayer, f2, f, f1);
                 }
+                else if (abstractclientplayer.getItemInUseCount() > 0)
+                {
+                    EnumAction enumaction = this.itemToRender.getItemUseAction();
+
+                    switch (enumaction)
+                    {
+                        case NONE:
+                            this.transformFirstPersonItem(f, 0.0F);
+                            break;
+
+                        case EAT:
+                        case DRINK:
+                        	if(Wrapper.getInstance().isOldAnimations()) {
+        						this.func_178104_a(abstractclientplayer, partialTicks);
+        						this.transformFirstPersonItem(f,f1);
+        					} else {
+        						this.func_178104_a(abstractclientplayer, partialTicks);
+        						this.transformFirstPersonItem(f, 0.0F);
+        					}
+                            break;
+
+                        case BLOCK:
+                        	if(Wrapper.getInstance().isOldAnimations() && Wrapper.getInstance().isOldAnimationsOldBlockHitting()) {
+        						transformFirstPersonItem(f, f1);
+        						this.func_178103_d();
+        						GlStateManager.scale(0.83f, 0.88f, 0.85f);
+        						GlStateManager.translate(-0.3f, 0.1f, 0.0f);
+        					} else {
+        						this.transformFirstPersonItem(f, 0.0F);
+        						this.func_178103_d();
+        					}
+                            break;
+
+                        case BOW:
+                        	if(Wrapper.getInstance().isOldAnimations() && Wrapper.getInstance().isOldAnimationsOldBow()) {
+        						this.transformFirstPersonItem(f, f1);
+        						this.func_178098_a(partialTicks, abstractclientplayer);
+        						GlStateManager.translate(0.0F, 0.1F, -0.15F);
+        					} else {
+        						this.transformFirstPersonItem(f, 0.0F);
+        						this.func_178098_a(partialTicks, abstractclientplayer);
+        					}
+                    }
+                }
+                else
+                {
+                    this.func_178105_d(f1);
+                    this.transformFirstPersonItem(f, f1);
+                }
+
+
+                this.renderItem(abstractclientplayer, this.itemToRender, ItemCameraTransforms.TransformType.FIRST_PERSON);
             }
-            else
+            else if (!abstractclientplayer.isInvisible())
             {
-                this.func_178105_d(f1);
-                this.transformFirstPersonItem(f, f1);
+                this.func_178095_a(abstractclientplayer, f, f1);
             }
 
-            this.renderItem(abstractclientplayer, this.itemToRender, ItemCameraTransforms.TransformType.FIRST_PERSON);
+            GlStateManager.popMatrix();
+            GlStateManager.disableRescaleNormal();
+            RenderHelper.disableStandardItemLighting();
         }
-        else if (!abstractclientplayer.isInvisible())
-        {
-            this.func_178095_a(abstractclientplayer, f, f1);
-        }
-
-        GlStateManager.popMatrix();
-        GlStateManager.disableRescaleNormal();
-        RenderHelper.disableStandardItemLighting();
     }
 
+    /**
+     * Renders all the overlays that are in first person mode. Args: partialTickTime
+     */
     public void renderOverlays(float partialTicks)
     {
         GlStateManager.disableAlpha();
@@ -365,7 +424,7 @@ public class ItemRenderer
         if (this.mc.thePlayer.isEntityInsideOpaqueBlock())
         {
             IBlockState iblockstate = this.mc.theWorld.getBlockState(new BlockPos(this.mc.thePlayer));
-            BlockPos overlayPos = new BlockPos(this.mc.thePlayer);
+            BlockPos blockpos = new BlockPos(this.mc.thePlayer);
             EntityPlayer entityplayer = this.mc.thePlayer;
 
             for (int i = 0; i < 8; ++i)
@@ -373,34 +432,36 @@ public class ItemRenderer
                 double d0 = entityplayer.posX + (double)(((float)((i >> 0) % 2) - 0.5F) * entityplayer.width * 0.8F);
                 double d1 = entityplayer.posY + (double)(((float)((i >> 1) % 2) - 0.5F) * 0.1F);
                 double d2 = entityplayer.posZ + (double)(((float)((i >> 2) % 2) - 0.5F) * entityplayer.width * 0.8F);
-                BlockPos blockpos = new BlockPos(d0, d1 + (double)entityplayer.getEyeHeight(), d2);
-                IBlockState iblockstate1 = this.mc.theWorld.getBlockState(blockpos);
+                BlockPos blockpos1 = new BlockPos(d0, d1 + (double)entityplayer.getEyeHeight(), d2);
+                IBlockState iblockstate1 = this.mc.theWorld.getBlockState(blockpos1);
 
                 if (iblockstate1.getBlock().isVisuallyOpaque())
                 {
                     iblockstate = iblockstate1;
-                    overlayPos = blockpos;
+                    blockpos = blockpos1;
                 }
             }
 
             if (iblockstate.getBlock().getRenderType() != -1)
             {
-                if (!net.minecraftforge.event.ForgeEventFactory.renderBlockOverlay(mc.thePlayer, partialTicks, net.minecraftforge.client.event.RenderBlockOverlayEvent.OverlayType.BLOCK, iblockstate, overlayPos))
-                this.func_178108_a(partialTicks, this.mc.getBlockRendererDispatcher().getBlockModelShapes().getTexture(iblockstate));
+                Object object = Reflector.getFieldValue(Reflector.RenderBlockOverlayEvent_OverlayType_BLOCK);
+
+                if (!Reflector.callBoolean(Reflector.ForgeEventFactory_renderBlockOverlay, new Object[] {this.mc.thePlayer, Float.valueOf(partialTicks), object, iblockstate, blockpos}))
+                {
+                    this.func_178108_a(partialTicks, this.mc.getBlockRendererDispatcher().getBlockModelShapes().getTexture(iblockstate));
+                }
             }
         }
 
         if (!this.mc.thePlayer.isSpectator())
         {
-            if (this.mc.thePlayer.isInsideOfMaterial(Material.water))
+            if (this.mc.thePlayer.isInsideOfMaterial(Material.water) && !Reflector.callBoolean(Reflector.ForgeEventFactory_renderWaterOverlay, new Object[] {this.mc.thePlayer, Float.valueOf(partialTicks)}))
             {
-                if (!net.minecraftforge.event.ForgeEventFactory.renderWaterOverlay(mc.thePlayer, partialTicks))
                 this.renderWaterOverlayTexture(partialTicks);
             }
 
-            if (this.mc.thePlayer.isBurning())
+            if (this.mc.thePlayer.isBurning() && !Reflector.callBoolean(Reflector.ForgeEventFactory_renderFireOverlay, new Object[] {this.mc.thePlayer, Float.valueOf(partialTicks)}))
             {
-                if (!net.minecraftforge.event.ForgeEventFactory.renderFireOverlay(mc.thePlayer, partialTicks))
                 this.renderFireInFirstPerson(partialTicks);
             }
         }
@@ -435,35 +496,48 @@ public class ItemRenderer
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
+    /**
+     * Renders a texture that warps around based on the direction the player is looking. Texture needs to be bound
+     * before being called. Used for the water overlay. Args: parialTickTime
+     */
     private void renderWaterOverlayTexture(float p_78448_1_)
     {
-        this.mc.getTextureManager().bindTexture(RES_UNDERWATER_OVERLAY);
-        Tessellator tessellator = Tessellator.getInstance();
-        WorldRenderer worldrenderer = tessellator.getWorldRenderer();
-        float f = this.mc.thePlayer.getBrightness(p_78448_1_);
-        GlStateManager.color(f, f, f, 0.5F);
-        GlStateManager.enableBlend();
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-        GlStateManager.pushMatrix();
-        float f1 = 4.0F;
-        float f2 = -1.0F;
-        float f3 = 1.0F;
-        float f4 = -1.0F;
-        float f5 = 1.0F;
-        float f6 = -0.5F;
-        float f7 = -this.mc.thePlayer.rotationYaw / 64.0F;
-        float f8 = this.mc.thePlayer.rotationPitch / 64.0F;
-        worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX);
-        worldrenderer.pos(-1.0D, -1.0D, -0.5D).tex((double)(4.0F + f7), (double)(4.0F + f8)).endVertex();
-        worldrenderer.pos(1.0D, -1.0D, -0.5D).tex((double)(0.0F + f7), (double)(4.0F + f8)).endVertex();
-        worldrenderer.pos(1.0D, 1.0D, -0.5D).tex((double)(0.0F + f7), (double)(0.0F + f8)).endVertex();
-        worldrenderer.pos(-1.0D, 1.0D, -0.5D).tex((double)(4.0F + f7), (double)(0.0F + f8)).endVertex();
-        tessellator.draw();
-        GlStateManager.popMatrix();
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        GlStateManager.disableBlend();
+    	if (Wrapper.getInstance().isLiquidVision()) {
+    		return;
+    	}
+        if (!Config.isShaders() || Shaders.isUnderwaterOverlay())
+        {
+            this.mc.getTextureManager().bindTexture(RES_UNDERWATER_OVERLAY);
+            Tessellator tessellator = Tessellator.getInstance();
+            WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+            float f = this.mc.thePlayer.getBrightness(p_78448_1_);
+            GlStateManager.color(f, f, f, 0.5F);
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+            GlStateManager.pushMatrix();
+            float f1 = 4.0F;
+            float f2 = -1.0F;
+            float f3 = 1.0F;
+            float f4 = -1.0F;
+            float f5 = 1.0F;
+            float f6 = -0.5F;
+            float f7 = -this.mc.thePlayer.rotationYaw / 64.0F;
+            float f8 = this.mc.thePlayer.rotationPitch / 64.0F;
+            worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX);
+            worldrenderer.pos(-1.0D, -1.0D, -0.5D).tex((double)(4.0F + f7), (double)(4.0F + f8)).endVertex();
+            worldrenderer.pos(1.0D, -1.0D, -0.5D).tex((double)(0.0F + f7), (double)(4.0F + f8)).endVertex();
+            worldrenderer.pos(1.0D, 1.0D, -0.5D).tex((double)(0.0F + f7), (double)(0.0F + f8)).endVertex();
+            worldrenderer.pos(-1.0D, 1.0D, -0.5D).tex((double)(4.0F + f7), (double)(0.0F + f8)).endVertex();
+            tessellator.draw();
+            GlStateManager.popMatrix();
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.disableBlend();
+        }
     }
 
+    /**
+     * Renders the fire on the screen for first person mode. Arg: partialTickTime
+     */
     private void renderFireInFirstPerson(float p_78442_1_)
     {
         Tessellator tessellator = Tessellator.getInstance();
@@ -492,6 +566,7 @@ public class ItemRenderer
             GlStateManager.translate((float)(-(i * 2 - 1)) * 0.24F, -0.3F, 0.0F);
             GlStateManager.rotate((float)(i * 2 - 1) * 10.0F, 0.0F, 1.0F, 0.0F);
             worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX);
+            worldrenderer.setSprite(textureatlassprite);
             worldrenderer.pos((double)f5, (double)f7, (double)f9).tex((double)f2, (double)f4).endVertex();
             worldrenderer.pos((double)f6, (double)f7, (double)f9).tex((double)f1, (double)f4).endVertex();
             worldrenderer.pos((double)f6, (double)f8, (double)f9).tex((double)f1, (double)f3).endVertex();
@@ -517,12 +592,18 @@ public class ItemRenderer
         {
             if (!this.itemToRender.getIsItemStackEqual(itemstack))
             {
-                if (!this.itemToRender.getItem().shouldCauseReequipAnimation(this.itemToRender, itemstack, equippedItemSlot != entityplayer.inventory.currentItem))
+                if (Reflector.ForgeItem_shouldCauseReequipAnimation.exists())
                 {
-                    this.itemToRender = itemstack;
-                    this.equippedItemSlot = entityplayer.inventory.currentItem;
-                    return;
+                    boolean flag1 = Reflector.callBoolean(this.itemToRender.getItem(), Reflector.ForgeItem_shouldCauseReequipAnimation, new Object[] {this.itemToRender, itemstack, Boolean.valueOf(this.equippedItemSlot != entityplayer.inventory.currentItem)});
+
+                    if (!flag1)
+                    {
+                        this.itemToRender = itemstack;
+                        this.equippedItemSlot = entityplayer.inventory.currentItem;
+                        return;
+                    }
                 }
+
                 flag = true;
             }
         }
@@ -535,23 +616,34 @@ public class ItemRenderer
             flag = true;
         }
 
-        float f = 0.4F;
-        float f1 = flag ? 0.0F : 1.0F;
-        float f2 = MathHelper.clamp_float(f1 - this.equippedProgress, -f, f);
-        this.equippedProgress += f2;
+        float f2 = 0.4F;
+        float f = flag ? 0.0F : 1.0F;
+        float f1 = MathHelper.clamp_float(f - this.equippedProgress, -f2, f2);
+        this.equippedProgress += f1;
 
         if (this.equippedProgress < 0.1F)
         {
             this.itemToRender = itemstack;
             this.equippedItemSlot = entityplayer.inventory.currentItem;
+
+            if (Config.isShaders())
+            {
+                Shaders.setItemToRenderMain(itemstack);
+            }
         }
     }
 
+    /**
+     * Resets equippedProgress
+     */
     public void resetEquippedProgress()
     {
         this.equippedProgress = 0.0F;
     }
 
+    /**
+     * Resets equippedProgress
+     */
     public void resetEquippedProgress2()
     {
         this.equippedProgress = 0.0F;

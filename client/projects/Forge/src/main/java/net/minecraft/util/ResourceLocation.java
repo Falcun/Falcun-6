@@ -4,8 +4,8 @@ import org.apache.commons.lang3.Validate;
 
 public class ResourceLocation
 {
-    protected final String resourceDomain;
-    protected final String resourcePath;
+    protected String resourceDomain;
+    protected String resourcePath;
 
     protected ResourceLocation(int p_i45928_1_, String... resourceName)
     {
@@ -24,6 +24,12 @@ public class ResourceLocation
         this(0, new String[] {resourceDomainIn, resourcePathIn});
     }
 
+    /**
+     * Splits an object name (such as minecraft:apple) into the domain and path parts and returns these as an array of
+     * length 2. If no colon is present in the passed value the returned array will contain {null, toSplit}.
+     *  
+     * @param toSplit The object name to split into its domain and path Strings.
+     */
     protected static String[] splitObjectName(String toSplit)
     {
         String[] astring = new String[] {null, toSplit};

@@ -1,45 +1,8 @@
 package net.minecraft.client;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Queues;
-import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListenableFutureTask;
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.minecraft.MinecraftSessionService;
-import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.properties.PropertyMap;
-import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.Proxy;
-import java.net.SocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-import javax.imageio.ImageIO;
-
-import falcun.net.gui.mainmenu.FalcunGuiMainMenu;
-import falcun.net.oldgui.mainmenu.FalcunMainMenu;
-import falcun.net.managers.FalcunGuiManager;
+import falcun.net.gui.mainmenu.FalcunMainMenu;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.audio.MusicTicker;
 import net.minecraft.client.audio.SoundHandler;
@@ -130,7 +93,6 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.handshake.client.C00Handshake;
 import net.minecraft.network.login.client.C00PacketLoginStart;
 import net.minecraft.network.play.client.C16PacketClientStatus;
-import net.minecraft.profiler.IPlayerUsage;
 import net.minecraft.profiler.PlayerUsageSnooper;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
@@ -142,7 +104,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.FrameTimer;
-import net.minecraft.util.IThreadListener;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MinecraftError;
 import net.minecraft.util.MouseHelper;
@@ -162,8 +123,184 @@ import net.minecraft.world.chunk.storage.AnvilSaveConverter;
 import net.minecraft.world.storage.ISaveFormat;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
+
+import net.minecraft.block.material.Material;
+import net.minecraft.client.audio.MusicTicker;
+import net.minecraft.client.audio.SoundHandler;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiChat;
+import net.minecraft.client.gui.GuiControls;
+import net.minecraft.client.gui.GuiGameOver;
+import net.minecraft.client.gui.GuiIngame;
+import net.minecraft.client.gui.GuiIngameMenu;
+import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.client.gui.GuiMemoryErrorScreen;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiSleepMP;
+import net.minecraft.client.gui.GuiYesNo;
+import net.minecraft.client.gui.GuiYesNoCallback;
+import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.gui.achievement.GuiAchievement;
+import net.minecraft.client.gui.inventory.GuiInventory;
+import net.minecraft.client.gui.stream.GuiStreamUnavailable;
+import net.minecraft.client.main.GameConfiguration;
+import net.minecraft.client.multiplayer.PlayerControllerMP;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.network.NetHandlerLoginClient;
+import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.client.particle.EffectRenderer;
+import net.minecraft.client.renderer.BlockRendererDispatcher;
+import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.ItemRenderer;
+import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.RenderGlobal;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.chunk.RenderChunk;
+import net.minecraft.client.renderer.entity.RenderItem;
+import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.resources.DefaultResourcePack;
+import net.minecraft.client.resources.FoliageColorReloadListener;
+import net.minecraft.client.resources.GrassColorReloadListener;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.client.resources.IReloadableResourceManager;
+import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.client.resources.IResourcePack;
+import net.minecraft.client.resources.LanguageManager;
+import net.minecraft.client.resources.ResourceIndex;
+import net.minecraft.client.resources.ResourcePackRepository;
+import net.minecraft.client.resources.SimpleReloadableResourceManager;
+import net.minecraft.client.resources.SkinManager;
+import net.minecraft.client.resources.data.AnimationMetadataSection;
+import net.minecraft.client.resources.data.AnimationMetadataSectionSerializer;
+import net.minecraft.client.resources.data.FontMetadataSection;
+import net.minecraft.client.resources.data.FontMetadataSectionSerializer;
+import net.minecraft.client.resources.data.IMetadataSerializer;
+import net.minecraft.client.resources.data.LanguageMetadataSection;
+import net.minecraft.client.resources.data.LanguageMetadataSectionSerializer;
+import net.minecraft.client.resources.data.PackMetadataSection;
+import net.minecraft.client.resources.data.PackMetadataSectionSerializer;
+import net.minecraft.client.resources.data.TextureMetadataSection;
+import net.minecraft.client.resources.data.TextureMetadataSectionSerializer;
+import net.minecraft.client.resources.model.ModelManager;
+import net.minecraft.client.settings.GameSettings;
+import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.client.shader.Framebuffer;
+import net.minecraft.client.stream.IStream;
+import net.minecraft.client.stream.NullStream;
+import net.minecraft.client.stream.TwitchStream;
+import net.minecraft.crash.CrashReport;
+import net.minecraft.crash.CrashReportCategory;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.boss.BossStatus;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.init.Bootstrap;
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
+import net.minecraft.network.EnumConnectionState;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.handshake.client.C00Handshake;
+import net.minecraft.network.login.client.C00PacketLoginStart;
+import net.minecraft.network.play.client.C16PacketClientStatus;
+import net.minecraft.profiler.PlayerUsageSnooper;
+import net.minecraft.profiler.Profiler;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.integrated.IntegratedServer;
+import net.minecraft.stats.AchievementList;
+import net.minecraft.stats.IStatStringFormat;
+import net.minecraft.stats.StatFileWriter;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.FrameTimer;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.MinecraftError;
+import net.minecraft.util.MouseHelper;
+import net.minecraft.util.MovementInputFromOptions;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.ReportedException;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.ScreenShotHelper;
+import net.minecraft.util.Session;
+import net.minecraft.util.Timer;
+import net.minecraft.util.Util;
+import net.minecraft.world.EnumDifficulty;
+import net.minecraft.world.WorldProviderEnd;
+import net.minecraft.world.WorldProviderHell;
+import net.minecraft.world.WorldSettings;
+import net.minecraft.world.chunk.storage.AnvilSaveConverter;
+import net.minecraft.world.storage.ISaveFormat;
+import net.minecraft.world.storage.ISaveHandler;
+import net.minecraft.world.storage.WorldInfo;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Queues;
+import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.minecraft.MinecraftSessionService;
+import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.properties.PropertyMap;
+import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
+
+import mapwriter.Mw;
+
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.Proxy;
+import java.net.SocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import javax.imageio.ImageIO;
+
+import net.mattbenson.Wrapper;
+import net.mattbenson.events.Event;
+import net.mattbenson.events.types.entity.PlayerInteractEvent.Action;
+import net.mattbenson.events.types.entity.PlayerInteractEvent;
+import net.mattbenson.events.types.input.KeyDownEvent;
+import net.mattbenson.events.types.input.KeyUpEvent;
+import net.mattbenson.events.types.input.MouseDownEvent;
+import net.mattbenson.events.types.input.MouseMoveEvent;
+import net.mattbenson.events.types.render.gui.GuiInitEvent;
+import net.mattbenson.events.types.world.OnTickEvent;
+import net.mattbenson.events.types.world.WorldUnloadEvent;
+import net.mattbenson.web.FalcunAssetDownloader;
+import net.minecraft.profiler.IPlayerUsage;
+import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.optifine.CustomSky;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
@@ -187,7 +324,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 	private static final Logger logger = LogManager.getLogger();
 	private static final ResourceLocation locationMojangPng = new ResourceLocation("textures/gui/title/mojang.png");
 	public static final boolean isRunningOnMac = Util.getOSType() == Util.EnumOS.OSX;
-	public static byte[] memoryReserve = new byte[0];
+	public static byte[] memoryReserve = new byte[10485760];
 	private static final List<DisplayMode> macDisplayModes = Lists.newArrayList(new DisplayMode[]{new DisplayMode(2560, 1600), new DisplayMode(2880, 1800)});
 	private final File fileResourcepacks;
 	private final PropertyMap twitchDetails;
@@ -197,7 +334,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 	private static Minecraft theMinecraft;
 	public PlayerControllerMP playerController;
 	private boolean fullscreen;
-	private boolean enableGLErrorChecking = true;
+	public boolean enableGLErrorChecking = true;
 	private boolean hasCrashed;
 	private CrashReport crashReporter;
 	public int displayWidth;
@@ -252,7 +389,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 	public final Profiler mcProfiler = new Profiler();
 	private long debugCrashKeyPressTime = -1L;
 	private IReloadableResourceManager mcResourceManager;
-	private final IMetadataSerializer metadataSerializer_ = new IMetadataSerializer();
+	public final IMetadataSerializer metadataSerializer_ = new IMetadataSerializer();
 	private final List<IResourcePack> defaultResourcePacks = Lists.<IResourcePack>newArrayList();
 	public final DefaultResourcePack mcDefaultResourcePack;
 	private ResourcePackRepository mcResourcePackRepository;
@@ -284,6 +421,16 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 	public Minecraft(GameConfiguration gameConfig) {
 		theMinecraft = this;
 		this.mcDataDir = gameConfig.folderInfo.mcDataDir;
+
+		Thread thread = new FalcunAssetDownloader();
+		thread.start();
+
+		try {
+			thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
 		this.fileAssets = gameConfig.folderInfo.assetsDir;
 		this.fileResourcepacks = gameConfig.folderInfo.resourcePacksDir;
 		this.launchedVersion = gameConfig.gameInfo.version;
@@ -371,8 +518,9 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 			this.displayHeight = this.gameSettings.overrideHeight;
 		}
 
-		logger.info("LWJGL Version: " + Sys.getVersion());
+		Wrapper.getInstance().FalcunInit();
 
+		logger.info("LWJGL Version: " + Sys.getVersion());
 		this.setWindowIcon();
 		this.setInitialDisplayMode();
 		this.createDisplay();
@@ -458,7 +606,9 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 		net.minecraftforge.fml.common.ProgressManager.pop(bar);
 		net.minecraftforge.fml.client.FMLClientHandler.instance().finishMinecraftLoading();
 
-		// init evnet here
+		if (!Wrapper.getInstance().MinecraftInitEvent(this)) {
+			System.exit(0);
+		}
 
 		this.checkGLError("Post startup");
 		this.ingameGUI = new net.minecraftforge.client.GuiIngameForge(this);
@@ -466,8 +616,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 		if (this.serverName != null) {
 			net.minecraftforge.fml.client.FMLClientHandler.instance().connectToServerAtStartup(this.serverName, this.serverPort);
 		} else {
-//			this.displayGuiScreen(new GuiMainMenu());
-			FalcunGuiManager.openMainMenu();
+			this.displayGuiScreen(new GuiMainMenu());
 		}
 
 		net.minecraftforge.fml.client.SplashProgress.clearVanillaResources(renderEngine, mojangLogo);
@@ -508,8 +657,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 
 	private void createDisplay() throws LWJGLException {
 		Display.setResizable(true);
-//		Display.setTitle("Minecraft 1.8.9");
-		Display.setTitle("Falcun Client");
+		Display.setTitle("Minecraft 1.8.9");
 
 		try {
 			Display.create((new PixelFormat()).withDepthBits(24));
@@ -551,17 +699,11 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 			try {
 				inputstream = this.mcDefaultResourcePack.getInputStreamAssets(new ResourceLocation("icons/icon_16x16.png"));
 				inputstream1 = this.mcDefaultResourcePack.getInputStreamAssets(new ResourceLocation("icons/icon_32x32.png"));
-//				inputstream = this.mcDefaultResourcePack.getInputStreamAssets(new ResourceLocation("falcun:falcun16x16.png"));
-//				inputstream1 = this.mcDefaultResourcePack.getInputStreamAssets(new ResourceLocation("falcun:falcun16x16.png"));
-//				inputstream = getClass().getResourceAsStream("assets/falcun/falcun16x16.png");
-//				inputstream1 = getClass().getResourceAsStream("assets/falcun/falcun32x32.png");
-
 
 				if (inputstream != null && inputstream1 != null) {
 					Display.setIcon(new ByteBuffer[]{this.readImageToBuffer(inputstream), this.readImageToBuffer(inputstream1)});
 				}
 			} catch (IOException ioexception) {
-				ioexception.printStackTrace();
 				logger.error((String) "Couldn\'t set icon", (Throwable) ioexception);
 			} finally {
 				IOUtils.closeQuietly(inputstream);
@@ -789,22 +931,22 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 	}
 
 	public void displayGuiScreen(GuiScreen guiScreenIn) {
-		if (guiScreenIn != null) {
-			if (guiScreenIn instanceof GuiMainMenu) {
-				FalcunGuiManager.openMainMenu();
-			}
+		GuiInitEvent event1 = new GuiInitEvent(guiScreenIn);
+
+		Wrapper.getInstance().post(event1);
+
+		if (event1.isCancelled()) {
+			return;
+		}
+
+		if (event1.getTarget() != guiScreenIn) {
+			guiScreenIn = event1.getTarget();
 		}
 
 		if (guiScreenIn == null && this.theWorld == null) {
-//            guiScreenIn = new GuiMainMenu();
-//			guiScreenIn = new FalcunGuiMainMenu();
-			guiScreenIn = new FalcunMainMenu();
+			guiScreenIn = new GuiMainMenu();
 		} else if (guiScreenIn == null && this.thePlayer.getHealth() <= 0.0F) {
 			guiScreenIn = new GuiGameOver();
-		}
-
-		if (guiScreenIn instanceof GuiMainMenu) {
-			FalcunGuiManager.openMainMenu();
 		}
 
 		GuiScreen old = this.currentScreen;
@@ -813,25 +955,30 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 		if (net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(event)) return;
 
 		guiScreenIn = event.gui;
+		if (guiScreenIn instanceof GuiMainMenu) {
+			guiScreenIn = new FalcunMainMenu();
+		}
 		if (old != null && guiScreenIn != old) {
 			old.onGuiClosed();
 		}
 
-//        if (guiScreenIn instanceof GuiMainMenu)
-		if (guiScreenIn instanceof FalcunMainMenu) {
+		if (guiScreenIn instanceof GuiMainMenu) {
 			this.gameSettings.showDebugInfo = false;
-//			this.ingameGUI.getChatGUI().clearChatMessages();
+			this.ingameGUI.getChatGUI().clearChatMessages();
 		}
 
-		this.currentScreen = guiScreenIn;
+		this.currentScreen = (GuiScreen) guiScreenIn;
 
 		if (guiScreenIn != null) {
 			this.setIngameNotInFocus();
 			ScaledResolution scaledresolution = new ScaledResolution(this);
 			int i = scaledresolution.getScaledWidth();
 			int j = scaledresolution.getScaledHeight();
-			((GuiScreen) guiScreenIn).setWorldAndResolution(this, i, j);
+			guiScreenIn.setWorldAndResolution(this, i, j);
 			this.skipRenderWorld = false;
+
+			Wrapper.getInstance().post(new GuiInitEvent.Post(guiScreenIn));
+
 		} else {
 			this.mcSoundHandler.resumeSounds();
 			this.setIngameFocus();
@@ -853,6 +1000,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 
 	public void shutdownMinecraftApplet() {
 		try {
+			Mw.getInstance().close();
 			this.stream.shutdownStream();
 			logger.info("Stopping!");
 
@@ -879,6 +1027,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 		this.mcProfiler.startSection("root");
 
 		if (Display.isCreated() && Display.isCloseRequested()) {
+			Mw.getInstance().close();
 			this.shutdown();
 		}
 
@@ -1041,7 +1190,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 
 		try {
 			System.gc();
-			this.loadWorld(null);
+			this.loadWorld((WorldClient) null);
 		} catch (Throwable var2) {
 			;
 		}
@@ -1053,7 +1202,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 		List<Profiler.Result> list = this.mcProfiler.getProfilingData(this.debugProfilerName);
 
 		if (list != null && !list.isEmpty()) {
-			Profiler.Result profiler$result = list.remove(0);
+			Profiler.Result profiler$result = (Profiler.Result) list.remove(0);
 
 			if (keyCount == 0) {
 				if (profiler$result.field_76331_c.length() > 0) {
@@ -1071,7 +1220,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 						this.debugProfilerName = this.debugProfilerName + ".";
 					}
 
-					this.debugProfilerName = this.debugProfilerName + list.get(keyCount).field_76331_c;
+					this.debugProfilerName = this.debugProfilerName + ((Profiler.Result) list.get(keyCount)).field_76331_c;
 				}
 			}
 		}
@@ -1213,6 +1362,10 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 		}
 
 		if (this.leftClickCounter <= 0 && !this.thePlayer.isUsingItem()) {
+			if (!(Wrapper.getInstance().isOldAnimations() && Wrapper.getInstance().isOldAnimationsOldEat())) {
+				if (this.thePlayer.isUsingItem()) return;
+			}
+
 			if (leftClick && this.objectMouseOver != null && this.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
 				BlockPos blockpos = this.objectMouseOver.getBlockPos();
 
@@ -1234,7 +1387,9 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 				logger.error("Null returned as \'hitResult\', this shouldn\'t happen!");
 
 				if (this.playerController.isNotCreative()) {
-					this.leftClickCounter = 10;
+					if (!Wrapper.getInstance().is18Hits()) {
+						this.leftClickCounter = 10;
+					}
 				}
 			} else {
 				switch (this.objectMouseOver.typeOfHit) {
@@ -1286,6 +1441,9 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 						if (!this.theWorld.isAirBlock(blockpos)) {
 							int i = itemstack != null ? itemstack.stackSize : 0;
 
+							if (!Wrapper.getInstance().post(new PlayerInteractEvent(Action.RIGHT_CLICK_BLOCK, blockpos, this.theWorld))) {
+								return;
+							}
 
 							boolean result = !net.minecraftforge.event.ForgeEventFactory.onPlayerInteract(thePlayer, net.minecraftforge.event.entity.player.PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK, this.theWorld, blockpos, this.objectMouseOver.sideHit, this.objectMouseOver.hitVec).isCanceled();
 							if (result) { //Forge: Kept separate to simplify patch
@@ -1314,6 +1472,65 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 				boolean result = !net.minecraftforge.event.ForgeEventFactory.onPlayerInteract(thePlayer, net.minecraftforge.event.entity.player.PlayerInteractEvent.Action.RIGHT_CLICK_AIR, theWorld, null, null, null).isCanceled();
 				if (result && itemstack1 != null && this.playerController.sendUseItem(this.thePlayer, this.theWorld, itemstack1)) {
 					this.entityRenderer.itemRenderer.resetEquippedProgress2();
+				}
+			}
+		} else {
+			if (Wrapper.getInstance().isOldAnimations() && Wrapper.getInstance().isOldAnimationsOldEat()) {
+				this.rightClickDelayTimer = 4;
+				boolean flag = true;
+				ItemStack itemstack = this.thePlayer.inventory.getCurrentItem();
+
+				if (this.objectMouseOver == null) {
+					logger.warn("Null returned as \'hitResult\', this shouldn\'t happen!");
+				} else {
+					switch (this.objectMouseOver.typeOfHit) {
+						case ENTITY:
+
+							if (this.playerController.func_178894_a(this.thePlayer, this.objectMouseOver.entityHit, this.objectMouseOver)) {
+								flag = false;
+							} else if (this.playerController.interactWithEntitySendPacket(this.thePlayer, this.objectMouseOver.entityHit)) {
+								flag = false;
+							}
+
+							break;
+						case BLOCK:
+							BlockPos blockpos = this.objectMouseOver.getBlockPos();
+
+							if (!this.theWorld.isAirBlock(blockpos)) {
+								int i = itemstack != null ? itemstack.stackSize : 0;
+
+								if (!Wrapper.getInstance().post(new PlayerInteractEvent(Action.RIGHT_CLICK_BLOCK, blockpos, this.theWorld))) {
+									return;
+								}
+
+								boolean result = !net.minecraftforge.event.ForgeEventFactory.onPlayerInteract(thePlayer, net.minecraftforge.event.entity.player.PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK, this.theWorld, blockpos, this.objectMouseOver.sideHit, this.objectMouseOver.hitVec).isCanceled();
+								if (result) { //Forge: Kept separate to simplify patch
+									if (this.playerController.onPlayerRightClick(this.thePlayer, this.theWorld, itemstack, blockpos, this.objectMouseOver.sideHit, this.objectMouseOver.hitVec)) {
+										flag = false;
+										this.thePlayer.swingItem();
+									}
+								}
+
+								if (itemstack == null) {
+									return;
+								}
+
+								if (itemstack.stackSize == 0) {
+									this.thePlayer.inventory.mainInventory[this.thePlayer.inventory.currentItem] = null;
+								} else if (itemstack.stackSize != i || this.playerController.isInCreativeMode()) {
+									this.entityRenderer.itemRenderer.resetEquippedProgress();
+								}
+							}
+					}
+				}
+
+				if (flag) {
+					ItemStack itemstack1 = this.thePlayer.inventory.getCurrentItem();
+
+					boolean result = !net.minecraftforge.event.ForgeEventFactory.onPlayerInteract(thePlayer, net.minecraftforge.event.entity.player.PlayerInteractEvent.Action.RIGHT_CLICK_AIR, theWorld, null, null, null).isCanceled();
+					if (result && itemstack1 != null && this.playerController.sendUseItem(this.thePlayer, this.theWorld, itemstack1)) {
+						this.entityRenderer.itemRenderer.resetEquippedProgress2();
+					}
 				}
 			}
 		}
@@ -1356,6 +1573,8 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 				this.updateFramebufferSize();
 			}
 
+			Display.setResizable(false);
+			Display.setResizable(true);
 			Display.setFullscreen(this.fullscreen);
 			Display.setVSyncEnabled(this.gameSettings.enableVsync);
 			this.updateDisplay();
@@ -1390,6 +1609,13 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 	}
 
 	public void runTick() throws IOException {
+		if (Minecraft.getMinecraft().thePlayer != null && Minecraft.getMinecraft().theWorld != null) {
+
+			if (!Wrapper.getInstance().post(new OnTickEvent())) {
+				return;
+			}
+		}
+
 		if (this.rightClickDelayTimer > 0) {
 			--this.rightClickDelayTimer;
 		}
@@ -1466,10 +1692,18 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 			while (Mouse.next()) {
 				if (net.minecraftforge.client.ForgeHooksClient.postMouseEvent()) continue;
 
+				if (!Wrapper.getInstance().post(new MouseMoveEvent())) {
+					continue;
+				}
+
 				int i = Mouse.getEventButton();
 				KeyBinding.setKeyBindState(i - 100, Mouse.getEventButtonState());
 
 				if (Mouse.getEventButtonState()) {
+					if (!Wrapper.getInstance().post(new MouseDownEvent(i))) {
+						continue;
+					}
+
 					if (this.thePlayer.isSpectator() && i == 2) {
 						this.ingameGUI.getSpectatorGui().func_175261_b();
 					} else {
@@ -1612,7 +1846,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 							this.gameSettings.showLagometer = GuiScreen.isAltKeyDown();
 						}
 
-						if (this.gameSettings.keyBindTogglePerspective.isPressed()) {
+						if (this.gameSettings.keyBindTogglePerspective.isPressed() && !Wrapper.getInstance().isInPerspectiveMode()) {
 							++this.gameSettings.thirdPersonView;
 
 							if (this.gameSettings.thirdPersonView > 2) {
@@ -1805,7 +2039,11 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 	public void launchIntegratedServer(String folderName, String worldName, WorldSettings worldSettingsIn) {
 		net.minecraftforge.fml.client.FMLClientHandler.instance().startIntegratedServer(folderName, worldName, worldSettingsIn);
 		this.loadWorld((WorldClient) null);
-		System.gc();
+
+		if (!Wrapper.getInstance().isFastWorldLoading()) {
+			System.gc();
+		}
+
 		ISaveHandler isavehandler = this.saveLoader.getSaveLoader(folderName, false);
 		WorldInfo worldinfo = isavehandler.loadWorldInfo();
 
@@ -1830,7 +2068,9 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 			throw new ReportedException(crashreport);
 		}
 
-		this.loadingScreen.displaySavingString(I18n.format("menu.loadingLevel", new Object[0]));
+		if (!Wrapper.getInstance().isFastWorldLoading()) {
+			this.loadingScreen.displaySavingString(I18n.format("menu.loadingLevel", new Object[0]));
+		}
 
 		while (!this.theIntegratedServer.serverIsInRunLoop()) {
 			if (!net.minecraftforge.fml.common.StartupQuery.check()) {
@@ -1840,10 +2080,12 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 			}
 			String s = this.theIntegratedServer.getUserMessage();
 
-			if (s != null) {
-				this.loadingScreen.displayLoadingString(I18n.format(s, new Object[0]));
-			} else {
-				this.loadingScreen.displayLoadingString("");
+			if (!Wrapper.getInstance().isFastWorldLoading()) {
+				if (s != null) {
+					this.loadingScreen.displayLoadingString(I18n.format(s, new Object[0]));
+				} else {
+					this.loadingScreen.displayLoadingString("");
+				}
 			}
 
 			try {
@@ -1872,6 +2114,16 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 	}
 
 	public void loadWorld(WorldClient worldClientIn, String loadingMessage) {
+
+		if (theWorld != null) {
+			if (worldClientIn != this.theWorld) {
+				this.entityRenderer.getMapItemRenderer().clearLoadedMaps();
+			}
+			//
+			Wrapper.getInstance().post(new WorldUnloadEvent(theWorld));
+			CustomSky.update();
+		}
+
 		if (theWorld != null)
 			net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.WorldEvent.Unload(theWorld));
 
@@ -1944,7 +2196,10 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 			this.thePlayer = null;
 		}
 
-		System.gc();
+		if (!Wrapper.getInstance().isFastWorldLoading()) {
+			System.gc();
+		}
+
 		this.systemTime = 0L;
 	}
 
@@ -2382,6 +2637,20 @@ public class Minecraft implements IThreadListener, IPlayerUsage {
 
 		if (i != 0 && !Keyboard.isRepeatEvent()) {
 			if (!(this.currentScreen instanceof GuiControls) || ((GuiControls) this.currentScreen).time <= getSystemTime() - 20L) {
+
+				boolean down = Keyboard.getEventKeyState();
+				Event event = null;
+
+				if (down) {
+					event = new KeyDownEvent(i);
+				} else {
+					event = new KeyUpEvent(i);
+				}
+
+				if (!Wrapper.getInstance().post(event)) {
+					return;
+				}
+
 				if (Keyboard.getEventKeyState()) {
 					if (i == this.gameSettings.keyBindStreamStartStop.getKeyCode()) {
 						if (this.getTwitchStream().isBroadcasting()) {

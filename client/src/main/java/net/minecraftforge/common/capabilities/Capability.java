@@ -97,7 +97,7 @@ public class Capability<T>
     private final IStorage<T> storage;
     private final Callable<? extends T> factory;
 
-    Capability(String name, IStorage<T> storage, Callable<? extends T> factory)
+    public Capability(String name, IStorage<T> storage, Callable<? extends T> factory)
     {
         this.name = name;
         this.storage = storage;

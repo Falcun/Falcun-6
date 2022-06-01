@@ -66,16 +66,18 @@ public final class FalcunConfigManager {
 			dataFolder.mkdirs();
 		}
 		for (Class<?> moduleClass : moduleClasses) {
+			FalcunModuleInfo falcunModuleInfo = moduleClass.getAnnotation(FalcunModuleInfo.class);
+			Map<Class<?>, FalcunModule> map = moduleClass.isAnnotationPresent(FalcunFPSModule.class) ? fps : modules;
+			File file = new File(dataFolder, FalcunDevEnvironment.isDevEnvironment ? falcunModuleInfo.fileName() + ".falcun" : encodeBase32(falcunModuleInfo.fileName()) + ".falcun");
+			FalcunModule falcunModule = null;
+			boolean init = false;
 			try {
-				FalcunModuleInfo falcunModuleInfo = moduleClass.getAnnotation(FalcunModuleInfo.class);
-				Map<Class<?>, FalcunModule> map = moduleClass.isAnnotationPresent(FalcunFPSModule.class) ? fps : modules;
-				File file = new File(dataFolder, FalcunDevEnvironment.isDevEnvironment ? falcunModuleInfo.fileName() + ".falcun" : encodeBase32(falcunModuleInfo.fileName()) + ".falcun");
-				FalcunModule falcunModule;
 				block1:
 				{
 					if (!file.exists()) {
 						file.createNewFile();
 						falcunModule = (FalcunModule) moduleClass.newInstance();
+						init =  true;
 					} else {
 						byte[] bytes = Files.readAllBytes(file.toPath());
 						String jsonString = new String(bytes);
@@ -85,9 +87,14 @@ public final class FalcunConfigManager {
 //						jsonString = decodeBase32(jsonString);
 						try {
 							falcunModule = (FalcunModule) gson.fromJson(jsonString, moduleClass);
+							init =true;
 						} catch (Throwable err) {
+							System.out.println("--------------------------------");
+							System.out.println(moduleClass);
+							System.out.println("--------------------------------");
 							err.printStackTrace();
 							falcunModule = (FalcunModule) moduleClass.newInstance();
+							init = true;
 							file.delete();
 							file.createNewFile();
 							break block1;
@@ -102,6 +109,41 @@ public final class FalcunConfigManager {
 				map.put(moduleClass, falcunModule);
 			} catch (Throwable err) {
 				err.printStackTrace();
+			}
+			if (file.exists()) {
+				try {
+					try {
+						saveModule(falcunModule);
+					} catch (Throwable ignored){
+
+					}
+					byte[] bytes = Files.readAllBytes(file.toPath());
+					if (bytes.length < 1) {
+						file.delete();
+					} else {
+						String s = new String(bytes);
+						if (s.length() < 14) {
+							file.delete();
+						}
+					}
+				} catch (Throwable err) {
+					err.printStackTrace();
+				}
+			}
+			int ignore;
+			if (!file.exists()) {
+				try {
+					if (init) {
+						try {
+							saveModule(falcunModule);
+						} catch (Throwable ignored){
+							file.createNewFile();
+							saveModule(falcunModule);
+						}
+					}
+				} catch (Throwable err) {
+					err.printStackTrace();
+				}
 			}
 		}
 		modules.values().forEach(FalcunConfigManager::checkForFinal);

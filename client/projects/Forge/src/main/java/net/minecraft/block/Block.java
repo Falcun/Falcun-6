@@ -2,6 +2,9 @@ package net.minecraft.block;
 
 import java.util.List;
 import java.util.Random;
+
+import net.mattbenson.Wrapper;
+import net.mattbenson.gui.menu.pages.FPSPage;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
@@ -191,11 +194,18 @@ public class Block
 
     public int getLightValue()
     {
+    	if(Wrapper.getInstance().isRemoveLightCalculations()) {
+    		return 1000;
+    	}
+    	
         return this.lightValue;
     }
 
     public boolean getUseNeighborBrightness()
     {
+    	if(Wrapper.getInstance().isRemoveLightCalculations()) {
+    		return false;
+    	}
         return this.useNeighborBrightness;
     }
 
@@ -364,6 +374,10 @@ public class Block
     @SideOnly(Side.CLIENT)
     public int getMixedBrightnessForBlock(IBlockAccess worldIn, BlockPos pos)
     {
+    	if(Wrapper.getInstance().isRemoveLightCalculations()) {
+    		return 1000;
+    	}
+    	
         Block block = worldIn.getBlockState(pos).getBlock();
         int i = worldIn.getCombinedLight(pos, block.getLightValue(worldIn, pos));
 
@@ -413,6 +427,10 @@ public class Block
 
     public boolean isOpaqueCube()
     {
+    	//TODO: Falcun patcher
+    	if(FPSPage.BLOCKS.contains(this.getClass())) {
+    		return false;
+    	}
         return true;
     }
 
@@ -907,6 +925,9 @@ public class Block
     @SideOnly(Side.CLIENT)
     public float getAmbientOcclusionLightValue()
     {
+    	if(Wrapper.getInstance().isRemoveLightCalculations()) {
+    		return 1;
+    	}
         return this.isBlockNormalCube() ? 0.2F : 1.0F;
     }
 
@@ -1081,7 +1102,11 @@ public class Block
      *
      * Faces which are fully opaque should return true, faces with transparency
      * or faces which do not span the full size of the block should return false.
-urn True if the block is opaque on the specified side.
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @param side The side to check
+     * @return True if the block is opaque on the specified side.
      */
     public boolean doesSideBlockRendering(IBlockAccess world, BlockPos pos, EnumFacing face)
     {
@@ -1177,6 +1202,7 @@ urn True if the block is opaque on the specified side.
      * Determines if the player can harvest this block, obtaining it's drops when the block is destroyed.
      *
      * @param player The player damaging the block, may be null
+     * @param meta The block's current metadata
      * @return True to spawn the drops
      */
     public boolean canHarvestBlock(IBlockAccess world, BlockPos pos, EntityPlayer player)
@@ -1256,6 +1282,7 @@ urn True if the block is opaque on the specified side.
      *
      * @param world The current world
      * @param pos Block position in world
+     * @param metadata The blocks current metadata
      * @param side The face that the fire is coming from
      * @return True if this block sustains fire, meaning it will never go out.
      */
@@ -1293,6 +1320,7 @@ urn True if the block is opaque on the specified side.
      * Return the same thing you would from that function.
      * This will fall back to ITileEntityProvider.createNewTileEntity(World) if this block is a ITileEntityProvider
      *
+     * @param metadata The Metadata of the current block
      * @return A instance of a class extending TileEntity
      */
     public TileEntity createTileEntity(World world, IBlockState state)
@@ -1550,6 +1578,7 @@ urn True if the block is opaque on the specified side.
      *
      * @param world The current world
      * @param pos Block position in world
+     * @param Explosion The explosion instance affecting the block
      */
     public void onBlockExploded(World world, BlockPos pos, Explosion explosion)
     {
@@ -1639,13 +1668,34 @@ urn True if the block is opaque on the specified side.
         return false;
     }
 
-
+    /**
+     * Allows a block to override the standard EntityLivingBase.updateFallState
+     * particles, this is a server side method that spawns particles with
+     * WorldServer.spawnParticle
+     *
+     * @param world The current Server world
+     * @param blockPosition of the block that the entity landed on.
+     * @param iblockstate State at the specific world/pos
+     * @param entity the entity that hit landed on the block.
+     * @param numberOfParticles that vanilla would have spawned.
+     * @return True to prevent vanilla landing particles form spawning.
+     */
     public boolean addLandingEffects(net.minecraft.world.WorldServer worldObj, BlockPos blockPosition, IBlockState iblockstate, EntityLivingBase entity, int numberOfParticles )
     {
         return false;
     }
 
-
+    /**
+     * Spawn a digging particle effect in the world, this is a wrapper
+     * around EffectRenderer.addBlockHitEffects to allow the block more
+     * control over the particles. Useful when you have entirely different
+     * texture sheets for different sides/locations in the world.
+     *
+     * @param world The current world
+     * @param target The target the player is looking at {x/y/z/side/sub}
+     * @param effectRenderer A reference to the current effect renderer.
+     * @return True to prevent vanilla digging particles form spawning.
+     */
     @SideOnly(Side.CLIENT)
     public boolean addHitEffects(World worldObj, MovingObjectPosition target, net.minecraft.client.particle.EffectRenderer effectRenderer)
     {
@@ -1801,7 +1851,14 @@ urn True if the block is opaque on the specified side.
         return true;
     }
 
-
+    /**
+     * Determines if this block can be used as the base of a beacon.
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @param beacon Beacon position in world
+     * @return True, to support the beacon, and make it active with this block.
+     */
     public boolean isBeaconBase(IBlockAccess worldObj, BlockPos pos, BlockPos beacon)
     {
         return this == net.minecraft.init.Blocks.emerald_block || this == net.minecraft.init.Blocks.gold_block || this == net.minecraft.init.Blocks.diamond_block || this == net.minecraft.init.Blocks.iron_block;
@@ -1923,6 +1980,16 @@ urn True if the block is opaque on the specified side.
         return isNormalCube();
     }
 
+    /**
+     * If this block should be notified of weak changes.
+     * Weak changes are changes 1 block away through a solid block.
+     * Similar to comparators.
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @param side The side to check
+     * @return true To be notified of changes
+     */
     public boolean getWeakChanges(IBlockAccess world, BlockPos pos)
     {
         return false;
@@ -1978,7 +2045,13 @@ urn True if the block is opaque on the specified side.
         return harvestTool[getMetaFromState(state)];
     }
 
-
+    /**
+     * Queries the harvest level of this item stack for the specified tool class,
+     * Returns -1 if this tool is not of the specified type
+     *
+     * @param stack This item stack instance
+     * @return Harvest level, or -1 if not the specified tool type.
+     */
     public int getHarvestLevel(IBlockState state)
     {
         return harvestLevel[getMetaFromState(state)];

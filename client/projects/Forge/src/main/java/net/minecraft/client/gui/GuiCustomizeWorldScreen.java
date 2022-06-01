@@ -851,7 +851,7 @@ public class GuiCustomizeWorldScreen extends GuiScreen implements GuiSlider.Form
 
         if (this.field_175339_B != 0)
         {
-            drawRect(0, 0, this.width, this.height, Integer.MIN_VALUE);
+        	drawRectangle(0, 0, this.width, this.height, Integer.MIN_VALUE);
             this.drawHorizontalLine(this.width / 2 - 91, this.width / 2 + 90, 99, -2039584);
             this.drawHorizontalLine(this.width / 2 - 91, this.width / 2 + 90, 185, -6250336);
             this.drawVerticalLine(this.width / 2 - 91, 99, 185, -2039584);

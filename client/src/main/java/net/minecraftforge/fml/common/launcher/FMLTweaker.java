@@ -7,18 +7,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import net.minecraft.launchwrapper.ITweaker;
-import net.minecraft.launchwrapper.Launch;
-import net.minecraft.launchwrapper.LaunchClassLoader;
-import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
-import net.minecraftforge.fml.relauncher.FMLSecurityManager;
-
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import net.minecraft.launchwrapper.ITweaker;
+import net.minecraft.launchwrapper.Launch;
+import net.minecraft.launchwrapper.LaunchClassLoader;
+import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 
 public class FMLTweaker implements ITweaker {
     private File gameDir;
@@ -29,14 +28,6 @@ public class FMLTweaker implements ITweaker {
     public FMLTweaker()
     {
         System.setProperty("java.net.preferIPv4Stack", "true"); //Lets do this as early as possible. Vanilla does it in Main.main
-        try
-        {
-            System.setSecurityManager(new FMLSecurityManager());
-        }
-        catch (SecurityException se)
-        {
-            throw new RuntimeException("FML was unable to install the security manager. The game will not start", se);
-        }
     }
     @SuppressWarnings("unchecked")
     @Override

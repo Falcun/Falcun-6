@@ -1,15 +1,21 @@
 package net.minecraft.client.gui.inventory;
 
 import com.google.common.collect.Sets;
+
+import java.awt.Color;
 import java.io.IOException;
 import java.util.Set;
+
+import net.mattbenson.Wrapper;
+import net.mattbenson.fonts.Fonts;
+import net.mattbenson.utils.DrawUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.inventory.GuiContainerCreative.ContainerCreative;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
@@ -52,6 +58,11 @@ public abstract class GuiContainer extends GuiScreen
     private int lastClickButton;
     private boolean doubleClick;
     private ItemStack shiftClickedSlot;
+    public static String searchtext = "";
+    public static boolean drawPointer;
+    public static boolean focused;
+	public static int lineRefreshTime = 1000;
+	public static long lineTime = 0;
 
     public GuiContainer(Container inventorySlotsIn)
     {
@@ -106,7 +117,30 @@ public abstract class GuiContainer extends GuiScreen
                 GlStateManager.colorMask(true, true, true, true);
                 GlStateManager.enableLighting();
                 GlStateManager.enableDepth();
-            }
+            } 
+            
+          
+              if (Wrapper.getInstance().isInventorySearch() && !(mc.thePlayer.openContainer instanceof ContainerCreative)) {
+                int j1 = slot.xDisplayPosition;
+                int k1 = slot.yDisplayPosition;
+                GlStateManager.colorMask(true, true, true, false);
+                GlStateManager.disableDepth();
+
+            
+                if (slot.getStack() != null)
+                {
+                	
+                if (slot.getStack().getDisplayName().toLowerCase().contains(searchtext.toLowerCase()) && !searchtext.isEmpty()) {
+                    DrawUtils.drawGradientRect(j1, k1, j1 + 16, k1 + 16, new Color(Wrapper.getInstance().getInventorySearchColor().getRed(), Wrapper.getInstance().getInventorySearchColor().getGreen(), Wrapper.getInstance().getInventorySearchColor().getBlue(), 100).getRGB(), new Color(Wrapper.getInstance().getInventorySearchColor().getRed(), Wrapper.getInstance().getInventorySearchColor().getGreen(), Wrapper.getInstance().getInventorySearchColor().getBlue(), 100).getRGB());
+                }
+                }
+
+
+                GlStateManager.colorMask(true, true, true, true);
+                GlStateManager.enableLighting();
+                GlStateManager.enableDepth();
+              }
+            
         }
 
         RenderHelper.disableStandardItemLighting();
@@ -168,6 +202,37 @@ public abstract class GuiContainer extends GuiScreen
         GlStateManager.enableLighting();
         GlStateManager.enableDepth();
         RenderHelper.enableStandardItemLighting();
+        
+        if (Wrapper.getInstance().isInventorySearch() && !(mc.thePlayer.openContainer instanceof ContainerCreative)) {
+        DrawUtils.drawRoundedRect(9,9, 121, 31, 2, new Color(255,255,255,255).getRGB());
+        
+        if (mouseX > 9 && mouseX < 121 && mouseY > 9 && mouseY < 31) {
+        	DrawUtils.drawRoundedRect(10,10, 120, 30, 2, -15132388);
+        } else {
+        	DrawUtils.drawRoundedRect(10,10, 120, 30, 2, -15593194);
+        }
+        
+        int labelWidth = 5;
+		if (searchtext.isEmpty()) {
+			labelWidth = 5;
+		} else {
+			labelWidth = (int)Fonts.ubuntuFont.getStringWidth(GuiContainer.searchtext + 1);
+		}
+
+		if (searchtext.isEmpty() && !focused) {
+			Fonts.ubuntuFont.drawString("Search", 50, 12, new Color(255, 255, 255, 255).getRGB());
+		} else {
+			Fonts.ubuntuFont.drawString(searchtext, 21, 12, new Color(255, 255, 255, 255).getRGB());
+		}
+
+	
+		if (focused) {
+			if((System.currentTimeMillis() - lineTime) % lineRefreshTime * 2 >= lineRefreshTime) {
+				DrawUtils.drawVerticalLine(16 + labelWidth, 15, 10, 1, 553648127);
+				drawPointer = true;
+			}
+		}
+        }
     }
 
     private void drawItemStack(ItemStack stack, int x, int y, String altText)
@@ -258,7 +323,7 @@ public abstract class GuiContainer extends GuiScreen
         {
             if (flag)
             {
-                drawRect(i, j, i + 16, j + 16, -2130706433);
+            	drawRectangle(i, j, i + 16, j + 16, -2130706433);
             }
 
             GlStateManager.enableDepth();
@@ -317,6 +382,11 @@ public abstract class GuiContainer extends GuiScreen
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException
     {
         super.mouseClicked(mouseX, mouseY, mouseButton);
+        
+        if(Wrapper.getInstance().isMouseBindFix()) {
+        	checkHotbarKeys(mouseButton - 100);
+        }
+        
         boolean flag = mouseButton == this.mc.gameSettings.keyBindPickBlock.getKeyCode() + 100;
         Slot slot = this.getSlotAtPosition(mouseX, mouseY);
         long i = Minecraft.getSystemTime();
@@ -416,6 +486,13 @@ public abstract class GuiContainer extends GuiScreen
         this.lastClickSlot = slot;
         this.lastClickTime = i;
         this.lastClickButton = mouseButton;
+        if (Wrapper.getInstance().isInventorySearch() && !(mc.thePlayer.openContainer instanceof ContainerCreative)) {
+        if (mouseX > 9 && mouseX < 121 && mouseY > 9 && mouseY < 31) {
+        	focused = true;
+        } else {
+        	focused = false;
+        }
+        }
     }
 
     protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick)
@@ -631,6 +708,20 @@ public abstract class GuiContainer extends GuiScreen
 
     protected void keyTyped(char typedChar, int keyCode) throws IOException
     {
+        if (focused && Wrapper.getInstance().isInventorySearch() && !(mc.thePlayer.openContainer instanceof ContainerCreative)) {
+	        if (keyCode == 1) {
+	        	focused = false;
+	        }
+	        	
+	        if((typedChar + "").matches("[A-Za-z0-9_ -]")) {
+	        	searchtext = searchtext + typedChar;
+	        } 
+	        
+	        if (keyCode == 14) {
+	        	if (!searchtext.isEmpty())
+	        		searchtext = removeLastChar(searchtext);
+	        }
+        } else {
         if (keyCode == 1 || keyCode == this.mc.gameSettings.keyBindInventory.getKeyCode())
         {
             this.mc.thePlayer.closeScreen();
@@ -648,6 +739,7 @@ public abstract class GuiContainer extends GuiScreen
             {
                 this.handleMouseClick(this.theSlot, this.theSlot.slotNumber, isCtrlKeyDown() ? 1 : 0, 4);
             }
+        }
         }
     }
 
@@ -702,4 +794,10 @@ public abstract class GuiContainer extends GuiScreen
     }
 
     /* ======================================== FORGE END   =====================================*/
+    
+    public static String removeLastChar(String s) {
+        return (s == null || s.length() == 0)
+          ? null 
+          : (s.substring(0, s.length() - 1));
+    }
 }

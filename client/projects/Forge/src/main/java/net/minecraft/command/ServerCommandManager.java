@@ -1,5 +1,7 @@
 package net.minecraft.command;
 
+import net.mattbenson.Wrapper;
+import net.mattbenson.events.types.commands.CommandRegisterEvent;
 import net.minecraft.command.server.CommandAchievement;
 import net.minecraft.command.server.CommandBanIp;
 import net.minecraft.command.server.CommandBanPlayer;
@@ -38,6 +40,8 @@ public class ServerCommandManager extends CommandHandler implements IAdminComman
 {
     public ServerCommandManager()
     {
+    	CommandRegisterEvent event = new CommandRegisterEvent();
+    	Wrapper.getInstance().post(event);
         this.registerCommand(new CommandTime());
         this.registerCommand(new CommandGameMode());
         this.registerCommand(new CommandDifficulty());

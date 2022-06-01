@@ -4,6 +4,7 @@ import java.io.IOException;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.optifine.shaders.MultiTexID;
 
 @SideOnly(Side.CLIENT)
 public interface ITextureObject
@@ -15,4 +16,6 @@ public interface ITextureObject
     void loadTexture(IResourceManager resourceManager) throws IOException;
 
     int getGlTextureId();
+
+	MultiTexID getMultiTexID();
 }

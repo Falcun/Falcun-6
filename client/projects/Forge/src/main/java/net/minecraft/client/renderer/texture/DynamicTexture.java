@@ -10,8 +10,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class DynamicTexture extends AbstractTexture
 {
     private final int[] dynamicTextureData;
-    private final int width;
-    private final int height;
+    protected final int width;
+    protected final int height;
 
     public DynamicTexture(BufferedImage bufferedImage)
     {

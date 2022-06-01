@@ -259,6 +259,12 @@ public class MultiLayerModel implements IModelCustomData<MultiLayerModel>
         {
             return IPerspectiveAwareModel.MapWrapper.handlePerspective(this, cameraTransforms, cameraTransformType);
         }
+
+		@Override
+		public TextureAtlasSprite getTexture() {
+			// TODO Auto-generated method stub
+			return null;
+		}
     }
 
     public static enum Loader implements ICustomModelLoader

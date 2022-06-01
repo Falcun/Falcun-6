@@ -1,125 +1,145 @@
 package net.minecraft.client.multiplayer;
 
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.List;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.json.JSONObject;
+
+import com.google.common.collect.Lists;
+
+import net.mattbenson.Falcun;
+import net.mattbenson.Wrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 @SideOnly(Side.CLIENT)
 public class ServerList
 {
-    private static final Logger logger = LogManager.getLogger();
-    private final Minecraft mc;
-    private final List<ServerData> servers = Lists.<ServerData>newArrayList();
+	private static final Logger logger = LogManager.getLogger();
+	private final Minecraft mc;
+	private final List<ServerData> servers = Lists.<ServerData>newArrayList();
 
-    public ServerList(Minecraft mcIn)
-    {
-        this.mc = mcIn;
-        this.loadServerList();
-    }
+	public ServerList(Minecraft mcIn)
+	{
+		this.mc = mcIn;
+		this.loadServerList();
+	}
 
-    public void loadServerList()
-    {
-        try
-        {
-            this.servers.clear();
-            NBTTagCompound nbttagcompound = CompressedStreamTools.read(new File(this.mc.mcDataDir, "servers.dat"));
+	public void loadServerList()
+	{
+		try
+		{
+			this.servers.clear();
 
-            if (nbttagcompound == null)
-            {
-                return;
-            }
+			try {
+				String partner = Wrapper.getInstance().getPartnerContent();
+				JSONObject array = new JSONObject(partner);
 
-            NBTTagList nbttaglist = nbttagcompound.getTagList("servers", 10);
+				for (String key : array.keySet()) {
+					JSONObject obj = array.getJSONObject(key);
+					servers.add(new ServerData(key, obj.getString("ip"), true, true));
+				}
+			} catch (Exception ex) {
 
-            for (int i = 0; i < nbttaglist.tagCount(); ++i)
-            {
-                this.servers.add(ServerData.getServerDataFromNBTCompound(nbttaglist.getCompoundTagAt(i)));
-            }
-        }
-        catch (Exception exception)
-        {
-            logger.error((String)"Couldn\'t load server list", (Throwable)exception);
-        }
-    }
+			}
+			NBTTagCompound nbttagcompound = CompressedStreamTools.read(new File(this.mc.mcDataDir, "servers.dat"));
 
-    public void saveServerList()
-    {
-        try
-        {
-            NBTTagList nbttaglist = new NBTTagList();
+			if (nbttagcompound == null)
+			{
+				return;
+			}
 
-            for (ServerData serverdata : this.servers)
-            {
-                nbttaglist.appendTag(serverdata.getNBTCompound());
-            }
+			NBTTagList nbttaglist = nbttagcompound.getTagList("servers", 10);
 
-            NBTTagCompound nbttagcompound = new NBTTagCompound();
-            nbttagcompound.setTag("servers", nbttaglist);
-            CompressedStreamTools.safeWrite(nbttagcompound, new File(this.mc.mcDataDir, "servers.dat"));
-        }
-        catch (Exception exception)
-        {
-            logger.error((String)"Couldn\'t save server list", (Throwable)exception);
-        }
-    }
+			for (int i = 0; i < nbttaglist.tagCount(); ++i)
+			{
+				ServerData toAdd = (ServerData)ServerData.getServerDataFromNBTCompound(nbttaglist.getCompoundTagAt(i));
+				if(toAdd.isPartner) continue;
+				this.servers.add(toAdd);
+			}
+		}
+		catch (Exception exception)
+		{
+			logger.error((String)"Couldn\'t load server list", (Throwable)exception);
+		}
+	}
 
-    public ServerData getServerData(int p_78850_1_)
-    {
-        return (ServerData)this.servers.get(p_78850_1_);
-    }
+	public void saveServerList()
+	{
+		try
+		{
+			NBTTagList nbttaglist = new NBTTagList();
 
-    public void removeServerData(int p_78851_1_)
-    {
-        this.servers.remove(p_78851_1_);
-    }
+			for (ServerData serverdata : this.servers)
+			{
+				nbttaglist.appendTag(serverdata.getNBTCompound());
+			}
 
-    public void addServerData(ServerData p_78849_1_)
-    {
-        this.servers.add(p_78849_1_);
-    }
+			NBTTagCompound nbttagcompound = new NBTTagCompound();
+			nbttagcompound.setTag("servers", nbttaglist);
+			CompressedStreamTools.safeWrite(nbttagcompound, new File(this.mc.mcDataDir, "servers.dat"));
+		}
+		catch (Exception exception)
+		{
+			logger.error((String)"Couldn\'t save server list", (Throwable)exception);
+		}
+	}
 
-    public int countServers()
-    {
-        return this.servers.size();
-    }
+	public ServerData getServerData(int p_78850_1_)
+	{
+		return (ServerData)this.servers.get(p_78850_1_);
+	}
 
-    public void swapServers(int p_78857_1_, int p_78857_2_)
-    {
-        ServerData serverdata = this.getServerData(p_78857_1_);
-        this.servers.set(p_78857_1_, this.getServerData(p_78857_2_));
-        this.servers.set(p_78857_2_, serverdata);
-        this.saveServerList();
-    }
+	public void removeServerData(int p_78851_1_)
+	{
+		this.servers.remove(p_78851_1_);
+	}
 
-    public void func_147413_a(int p_147413_1_, ServerData p_147413_2_)
-    {
-        this.servers.set(p_147413_1_, p_147413_2_);
-    }
+	public void addServerData(ServerData p_78849_1_)
+	{
+		this.servers.add(p_78849_1_);
+	}
 
-    public static void func_147414_b(ServerData p_147414_0_)
-    {
-        ServerList serverlist = new ServerList(Minecraft.getMinecraft());
-        serverlist.loadServerList();
+	public int countServers()
+	{
+		return this.servers.size();
+	}
 
-        for (int i = 0; i < serverlist.countServers(); ++i)
-        {
-            ServerData serverdata = serverlist.getServerData(i);
+	public void swapServers(int p_78857_1_, int p_78857_2_)
+	{
+		ServerData serverdata = this.getServerData(p_78857_1_);
+		this.servers.set(p_78857_1_, this.getServerData(p_78857_2_));
+		this.servers.set(p_78857_2_, serverdata);
+		this.saveServerList();
+	}
 
-            if (serverdata.serverName.equals(p_147414_0_.serverName) && serverdata.serverIP.equals(p_147414_0_.serverIP))
-            {
-                serverlist.func_147413_a(i, p_147414_0_);
-                break;
-            }
-        }
+	public void func_147413_a(int p_147413_1_, ServerData p_147413_2_)
+	{
+		this.servers.set(p_147413_1_, p_147413_2_);
+	}
 
-        serverlist.saveServerList();
-    }
+	public static void func_147414_b(ServerData p_147414_0_)
+	{
+		ServerList serverlist = new ServerList(Minecraft.getMinecraft());
+		serverlist.loadServerList();
+
+		for (int i = 0; i < serverlist.countServers(); ++i)
+		{
+			ServerData serverdata = serverlist.getServerData(i);
+
+			if (serverdata.serverName.equals(p_147414_0_.serverName) && serverdata.serverIP.equals(p_147414_0_.serverIP))
+			{
+				serverlist.func_147413_a(i, p_147414_0_);
+				break;
+			}
+		}
+
+		serverlist.saveServerList();
+	}
 }

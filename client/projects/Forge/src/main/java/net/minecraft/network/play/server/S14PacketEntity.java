@@ -1,6 +1,9 @@
 package net.minecraft.network.play.server;
 
 import java.io.IOException;
+
+import net.mattbenson.Wrapper;
+import net.mattbenson.modules.types.fpssettings.FPSSettings;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketBuffer;

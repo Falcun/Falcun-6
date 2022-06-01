@@ -1,5 +1,7 @@
 package net.minecraft.client.renderer.entity.layers;
 
+
+import net.mattbenson.Wrapper;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBiped;
@@ -12,10 +14,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-@SideOnly(Side.CLIENT)
 public class LayerHeldItem implements LayerRenderer<EntityLivingBase>
 {
     private final RendererLivingEntity<?> livingEntityRenderer;
@@ -41,9 +40,53 @@ public class LayerHeldItem implements LayerRenderer<EntityLivingBase>
                 GlStateManager.scale(f, f, f);
             }
 
-            ((ModelBiped)this.livingEntityRenderer.getMainModel()).postRenderArm(0.0625F);
-            GlStateManager.translate(-0.0625F, 0.4375F, 0.0625F);
+            //((ModelBiped)this.livingEntityRenderer.getMainModel()).postRenderArm(0.0625F);
+            //GlStateManager.translate(-0.0625F, 0.4375F, 0.0625F);
 
+            Label_0327:
+				if (entitylivingbaseIn instanceof EntityPlayer) {
+					if (Wrapper.getInstance().isOldAnimations() && Wrapper.getInstance().isOldAnimationsOldBlocking()) {
+						if (((EntityPlayer) entitylivingbaseIn).isBlocking()) {
+							if (entitylivingbaseIn.isSneaking()) {
+								((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0325f);
+								GlStateManager.scale(1.05f, 1.05f, 1.05f);
+								GlStateManager.translate(-0.58f, 0.32f, -0.07f);
+								GlStateManager
+								.rotate(-24405.0f, 137290.0f, -2009900.0f, -2654900.0f);
+							} else {
+								((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0325f);
+								GlStateManager.scale(1.05f, 1.05f, 1.05f);
+								GlStateManager.translate(-0.45f, 0.25f, -0.07f);
+								GlStateManager
+								.rotate(-24405.0f, 137290.0f, -2009900.0f, -2654900.0f);
+							}
+						} else {
+							((ModelBiped) livingEntityRenderer.getMainModel())
+							.postRenderArm(0.0625f);
+						}
+					} else {
+						((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0625f);
+					}
+					if (Wrapper.getInstance().isOldAnimations() && Wrapper.getInstance().isOldAnimationsOldHoldItem()) {
+						if (!((EntityPlayer) entitylivingbaseIn).isBlocking()) {
+								GlStateManager.translate(-0.0855f, 0.4775f, 0.1585f);
+								GlStateManager.rotate(-19.0f, 20.0f, 0.0f, -6.0f);
+								break Label_0327;
+						}
+
+						if (((EntityPlayer) entitylivingbaseIn).isBlocking()) {
+							GlStateManager.translate(-0.0625f, 0.4375f, 0.0625f);
+						}
+					} else {
+						GlStateManager.translate(-0.0625f, 0.4375f, 0.0625f);
+					}
+				} else {
+					((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0625f);
+					GlStateManager.translate(-0.0625f, 0.4375f, 0.0625f);
+				}
+
+            
+            
             if (entitylivingbaseIn instanceof EntityPlayer && ((EntityPlayer)entitylivingbaseIn).fishEntity != null)
             {
                 itemstack = new ItemStack(Items.fishing_rod, 0);
@@ -67,7 +110,7 @@ public class LayerHeldItem implements LayerRenderer<EntityLivingBase>
             }
 
             minecraft.getItemRenderer().renderItem(entitylivingbaseIn, itemstack, ItemCameraTransforms.TransformType.THIRD_PERSON);
-            GlStateManager.popMatrix();
+            GlStateManager.popMatrix();   
         }
     }
 

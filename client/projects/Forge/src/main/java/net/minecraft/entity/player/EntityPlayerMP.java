@@ -8,6 +8,9 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import net.mattbenson.Wrapper;
+import net.mattbenson.events.types.entity.EntityDeathEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockFenceGate;
@@ -426,6 +429,9 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
 
     public void onDeath(DamageSource cause)
     {
+    	if(!Wrapper.getInstance().post(new EntityDeathEvent(this, cause))) {
+    		return;
+    	}
         if (net.minecraftforge.common.ForgeHooks.onLivingDeath(this, cause)) return;
         if (this.worldObj.getGameRules().getBoolean("showDeathMessages"))
         {

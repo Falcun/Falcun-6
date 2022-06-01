@@ -57,6 +57,10 @@ public class C17PacketCustomPayload implements Packet<INetHandlerPlayServer>
     public void processPacket(INetHandlerPlayServer handler)
     {
         handler.processVanilla250Packet(this);
+        //MATT NEW FPS
+        if (this.data != null) {
+            this.data.release();
+        }
     }
 
     public String getChannelName()

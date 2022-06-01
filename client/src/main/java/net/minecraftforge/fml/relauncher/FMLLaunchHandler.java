@@ -24,7 +24,7 @@ import com.google.common.base.Throwables;
 public class FMLLaunchHandler
 {
     private static FMLLaunchHandler INSTANCE;
-    static Side side;
+    public static Side side;
     private LaunchClassLoader classLoader;
     private FMLTweaker tweaker;
     private File minecraftHome;

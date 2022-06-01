@@ -155,4 +155,10 @@ public class SimpleBakedModel implements IBakedModel
                 }
             }
         }
+
+	@Override
+	public TextureAtlasSprite getTexture() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

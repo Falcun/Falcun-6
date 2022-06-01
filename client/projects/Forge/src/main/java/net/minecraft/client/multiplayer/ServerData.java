@@ -21,20 +21,35 @@ public class ServerData
     private ServerData.ServerResourceMode resourceMode = ServerData.ServerResourceMode.PROMPT;
     private String serverIcon;
     private boolean field_181042_l;
+    public boolean isPartner;
+
+    public ServerData(String p_i46420_1_, String p_i46420_2_, boolean p_i46420_3_, boolean isPartner)
+    {
+        this.serverName = p_i46420_1_;
+        this.serverIP = p_i46420_2_;
+        this.field_181042_l = p_i46420_3_;
+        this.isPartner = isPartner;
+    }
 
     public ServerData(String p_i46420_1_, String p_i46420_2_, boolean p_i46420_3_)
     {
         this.serverName = p_i46420_1_;
         this.serverIP = p_i46420_2_;
         this.field_181042_l = p_i46420_3_;
+        this.isPartner = false;
     }
-
+    
     public NBTTagCompound getNBTCompound()
     {
         NBTTagCompound nbttagcompound = new NBTTagCompound();
         nbttagcompound.setString("name", this.serverName);
         nbttagcompound.setString("ip", this.serverIP);
-
+        if(this.isPartner)
+        {
+            nbttagcompound.setBoolean("partner", true);
+        } else {
+        	nbttagcompound.setBoolean("partner", false);
+        }
         if (this.serverIcon != null)
         {
             nbttagcompound.setString("icon", this.serverIcon);
@@ -86,6 +101,22 @@ public class ServerData
         {
             serverdata.setResourceMode(ServerData.ServerResourceMode.PROMPT);
         }
+        
+        if (nbtCompound.hasKey("partner", 1))
+        {
+            if (nbtCompound.getBoolean("partner"))
+            {
+                serverdata.isPartner = true;
+            }
+            else
+            {
+                serverdata.isPartner = false;
+            }
+        }
+        else
+        {
+            serverdata.isPartner = false;
+        }
 
         return serverdata;
     }
@@ -104,6 +135,10 @@ public class ServerData
     {
         return this.field_181042_l;
     }
+    
+    public boolean isPartner() {
+    	return this.isPartner;
+    }
 
     public void copyFrom(ServerData serverDataIn)
     {
@@ -112,6 +147,7 @@ public class ServerData
         this.setResourceMode(serverDataIn.getResourceMode());
         this.serverIcon = serverDataIn.serverIcon;
         this.field_181042_l = serverDataIn.field_181042_l;
+        this.isPartner = serverDataIn.isPartner;
     }
 
     @SideOnly(Side.CLIENT)

@@ -344,6 +344,7 @@ public abstract class MobSpawnerBaseLogic
             if (entity != null)
             {
                 entity = this.spawnNewEntity(entity, false);
+                entity.isMobSpawner = true;
                 this.cachedEntity = entity;
             }
         }

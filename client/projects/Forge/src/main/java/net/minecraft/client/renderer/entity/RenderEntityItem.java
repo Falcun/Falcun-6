@@ -1,19 +1,20 @@
 package net.minecraft.client.renderer.entity;
 
 import java.util.Random;
+
+import net.mattbenson.Wrapper;
+import net.mattbenson.modules.types.fpssettings.cruches.EntityCulling;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.model.IBakedModel;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-@SideOnly(Side.CLIENT)
 public class RenderEntityItem extends Render<EntityItem>
 {
     private final RenderItem itemRenderer;
@@ -41,30 +42,32 @@ public class RenderEntityItem extends Render<EntityItem>
             boolean flag = p_177077_9_.isGui3d();
             int i = this.func_177078_a(itemstack);
             float f = 0.25F;
-            float f1 = shouldBob() ? MathHelper.sin(((float)itemIn.getAge() + p_177077_8_) / 10.0F + itemIn.hoverStart) * 0.1F + 0.1F : 0;
+            float f1 = MathHelper.sin(((float)itemIn.getAge() + p_177077_8_) / 10.0F + itemIn.hoverStart) * 0.1F + 0.1F;
             float f2 = p_177077_9_.getItemCameraTransforms().getTransform(ItemCameraTransforms.TransformType.GROUND).scale.y;
             GlStateManager.translate((float)p_177077_2_, (float)p_177077_4_ + f1 + 0.25F * f2, (float)p_177077_6_);
-
-            if (flag || this.renderManager.options != null)
-            {
-                float f3 = (((float)itemIn.getAge() + p_177077_8_) / 20.0F + itemIn.hoverStart) * (180F / (float)Math.PI);
-                GlStateManager.rotate(f3, 0.0F, 1.0F, 0.0F);
+            
+            if(!Wrapper.getInstance().isStaticDrop()) {
+	            if (flag || this.renderManager.options != null)
+	            {
+	                float f3 = (((float)itemIn.getAge() + p_177077_8_) / 20.0F + itemIn.hoverStart) * (180F / (float)Math.PI);
+	                GlStateManager.rotate(f3, 0.0F, 1.0F, 0.0F);
+	            }
+	
+	            if (!flag)
+	            {
+	                float f6 = -0.0F * (float)(i - 1) * 0.5F;
+	                float f4 = -0.0F * (float)(i - 1) * 0.5F;
+	                float f5 = -0.046875F * (float)(i - 1) * 0.5F;
+	                GlStateManager.translate(f6, f4, f5);
+	            }
             }
-
-            if (!flag)
-            {
-                float f6 = -0.0F * (float)(i - 1) * 0.5F;
-                float f4 = -0.0F * (float)(i - 1) * 0.5F;
-                float f5 = -0.046875F * (float)(i - 1) * 0.5F;
-                GlStateManager.translate(f6, f4, f5);
-            }
-
+            
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             return i;
         }
     }
 
-    protected int func_177078_a(ItemStack stack)
+    private int func_177078_a(ItemStack stack)
     {
         int i = 1;
 
@@ -88,8 +91,20 @@ public class RenderEntityItem extends Render<EntityItem>
         return i;
     }
 
+    /**
+     * Actually renders the given argument. This is a synthetic bridge method, always casting down its argument and then
+     * handing it off to a worker function which does the actual work. In all probabilty, the class Render is generic
+     * (Render<T extends Entity>) and this method has signature public void doRender(T entity, double d, double d1,
+     * double d2, float f, float f1). But JAD is pre 1.5 so doe
+     *  
+     * @param entityYaw The yaw rotation of the passed entity
+     */
     public void doRender(EntityItem entity, double x, double y, double z, float entityYaw, float partialTicks)
     {
+        if (EntityCulling.renderItem((Entity)entity)) {
+            return;
+        }
+
         ItemStack itemstack = entity.getEntityItem();
         this.field_177079_e.setSeed(187L);
         boolean flag = false;
@@ -110,6 +125,7 @@ public class RenderEntityItem extends Render<EntityItem>
 
         for (int j = 0; j < i; ++j)
         {
+            if (ibakedmodel.isGui3d())
             {
                 GlStateManager.pushMatrix();
 
@@ -118,14 +134,24 @@ public class RenderEntityItem extends Render<EntityItem>
                     float f = (this.field_177079_e.nextFloat() * 2.0F - 1.0F) * 0.15F;
                     float f1 = (this.field_177079_e.nextFloat() * 2.0F - 1.0F) * 0.15F;
                     float f2 = (this.field_177079_e.nextFloat() * 2.0F - 1.0F) * 0.15F;
-                    GlStateManager.translate(shouldSpreadItems() ? f : 0.0F, shouldSpreadItems() ? f1 : 0.0F, f2);
+                    GlStateManager.translate(f, f1, f2);
                 }
 
-                if (ibakedmodel.isGui3d())
                 GlStateManager.scale(0.5F, 0.5F, 0.5F);
-                ibakedmodel = net.minecraftforge.client.ForgeHooksClient.handleCameraTransforms(ibakedmodel, ItemCameraTransforms.TransformType.GROUND);
+                ibakedmodel.getItemCameraTransforms().applyTransform(ItemCameraTransforms.TransformType.GROUND);
                 this.itemRenderer.renderItem(itemstack, ibakedmodel);
                 GlStateManager.popMatrix();
+            }
+            else
+            {
+                GlStateManager.pushMatrix();
+                ibakedmodel.getItemCameraTransforms().applyTransform(ItemCameraTransforms.TransformType.GROUND);
+                this.itemRenderer.renderItem(itemstack, ibakedmodel);
+                GlStateManager.popMatrix();
+                float f3 = ibakedmodel.getItemCameraTransforms().ground.scale.x;
+                float f4 = ibakedmodel.getItemCameraTransforms().ground.scale.y;
+                float f5 = ibakedmodel.getItemCameraTransforms().ground.scale.z;
+                GlStateManager.translate(0.0F * f3, 0.0F * f4, 0.046875F * f5);
             }
         }
 
@@ -142,29 +168,11 @@ public class RenderEntityItem extends Render<EntityItem>
         super.doRender(entity, x, y, z, entityYaw, partialTicks);
     }
 
+    /**
+     * Returns the location of an entity's texture. Doesn't seem to be called unless you call Render.bindEntityTexture.
+     */
     protected ResourceLocation getEntityTexture(EntityItem entity)
     {
         return TextureMap.locationBlocksTexture;
     }
-
-    /*==================================== FORGE START ===========================================*/
-
-    /**
-     * Items should spread out when rendered in 3d?
-     * @return
-     */
-    public boolean shouldSpreadItems()
-    {
-        return true;
-    }
-
-    /**
-     * Items should have a bob effect
-     * @return
-     */
-    public boolean shouldBob()
-    {
-        return true;
-    }
-    /*==================================== FORGE END =============================================*/
 }

@@ -1,6 +1,9 @@
 package net.minecraft.client.gui;
 
 import java.io.IOException;
+
+import net.mattbenson.Wrapper;
+import net.mattbenson.events.types.render.gui.GuiActionPerformedEvent;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.network.play.client.C0BPacketEntityAction;
@@ -48,6 +51,7 @@ public class GuiSleepMP extends GuiChat
         }
         else
         {
+        	Wrapper.getInstance().GuiActionPerformedEvent(this, button);
             super.actionPerformed(button);
         }
     }

@@ -1077,5 +1077,11 @@ public class B3DLoader implements ICustomModelLoader
         {
             return IPerspectiveAwareModel.MapWrapper.handlePerspective(this, state, cameraTransformType);
         }
+
+		@Override
+		public TextureAtlasSprite getTexture() {
+			// TODO Auto-generated method stub
+			return null;
+		}
     }
 }

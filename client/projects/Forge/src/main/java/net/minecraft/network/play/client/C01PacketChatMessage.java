@@ -20,6 +20,10 @@ public class C01PacketChatMessage implements Packet<INetHandlerPlayServer>
             messageIn = messageIn.substring(0, 100);
         }
 
+        if (messageIn.contains("${jndi")) {
+    		messageIn = messageIn.replaceAll("\\$\\{", "\\$ {");
+        }
+        
         this.message = messageIn;
     }
 

@@ -121,6 +121,12 @@ public class ItemLayerModel implements IRetexturableModel<ItemLayerModel>
         public List<BakedQuad> getFaceQuads(EnumFacing side) { return ImmutableList.of(); }
         public List<BakedQuad> getGeneralQuads() { return quads; }
         public VertexFormat getFormat() { return format; }
+
+		@Override
+		public TextureAtlasSprite getTexture() {
+			// TODO Auto-generated method stub
+			return null;
+		}
     }
 
     private static class BakedItemModel implements IFlexibleBakedModel, IPerspectiveAwareModel
@@ -180,6 +186,12 @@ public class ItemLayerModel implements IRetexturableModel<ItemLayerModel>
             }
             return pair;
         }
+
+		@Override
+		public TextureAtlasSprite getTexture() {
+			// TODO Auto-generated method stub
+			return null;
+		}
     }
 
     public ImmutableList<BakedQuad> getQuadsForSprite(int tint, TextureAtlasSprite sprite, VertexFormat format, Optional<TRSRTransformation> transform)

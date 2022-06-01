@@ -39,8 +39,6 @@ import static org.lwjgl.opengl.GL11.glMatrixMode;
 import static org.lwjgl.opengl.GL11.glOrtho;
 import static org.lwjgl.opengl.GL11.glPopMatrix;
 import static org.lwjgl.opengl.GL11.glPushMatrix;
-import static org.lwjgl.opengl.GL11.glRotatef;
-import static org.lwjgl.opengl.GL11.glScalef;
 import static org.lwjgl.opengl.GL11.glTexCoord2f;
 import static org.lwjgl.opengl.GL11.glTexImage2D;
 import static org.lwjgl.opengl.GL11.glTexParameteri;
@@ -53,6 +51,7 @@ import static org.lwjgl.opengl.GL12.GL_UNSIGNED_INT_8_8_8_8_REV;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -62,7 +61,10 @@ import java.io.PrintWriter;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
@@ -72,9 +74,25 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.Level;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.LWJGLException;
+import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.Drawable;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.SharedDrawable;
+import org.lwjgl.util.glu.GLU;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.renderer.texture.TextureUtil;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.FileResourcePack;
 import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.resources.IResourcePack;
@@ -88,16 +106,7 @@ import net.minecraftforge.fml.common.ICrashCallable;
 import net.minecraftforge.fml.common.ProgressManager;
 import net.minecraftforge.fml.common.ProgressManager.ProgressBar;
 import net.minecraftforge.fml.common.asm.FMLSanityChecker;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.Level;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.LWJGLException;
-import org.lwjgl.opengl.Display;
-import org.lwjgl.opengl.Drawable;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.SharedDrawable;
-import org.lwjgl.util.glu.GLU;
+import net.optifine.util.TextureUtils;
 
 /**
  * Not a fully fleshed out API, may change in future MC versions.
@@ -120,7 +129,6 @@ public class SplashProgress
     private static IResourcePack miscPack;
 
     private static Texture fontTexture;
-    private static Texture logoTexture;
     private static Texture forgeTexture;
 
     private static Properties config;
@@ -133,6 +141,18 @@ public class SplashProgress
     private static int barBorderColor;
     private static int barColor;
     private static int barBackgroundColor;
+    
+    //TODO: Falcun | Options.
+    private static final int 	min 			= 1;								//Start index for the frames
+    private static final int	max 			= 111; 								//End index for the frames
+    private static final String	folder 			= Minecraft.getMinecraft().mcDataDir + "/falcunassets/loader/";	//The folder for the frames.
+    private static final long 	updateInterval 	= 4L;								//Milliseconds per frame, higher = slower animations.
+
+    //TODO: Falcun | Loading image variables.
+    private static List<DynamicTextureImage> loadingImages = new ArrayList<>();
+    private static int counter;
+    private static long lastCounterUpdate;
+    
     static final Semaphore mutex = new Semaphore(1);
 
     private static String getString(String name, String def)
@@ -156,9 +176,19 @@ public class SplashProgress
     {
         return Integer.decode(getString(name, "0x" + Integer.toString(def, 16).toUpperCase()));
     }
-
+    
     public static void start()
     {
+    	//TODO: Falcun | Load images.
+    	for(int i = min; i < max; i++) {
+    		try {
+    			DynamicTextureImage texture = new DynamicTextureImage(ImageIO.read(Paths.get(folder, "falcun_layer_" + i + ".png").toFile()));
+				loadingImages.add(texture);
+    		} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+    	}
+    	
         File configFile = new File(Minecraft.getMinecraft().mcDataDir, "config/splash.properties");
 
         File parent = configFile.getParentFile();
@@ -200,7 +230,7 @@ public class SplashProgress
         final ResourceLocation fontLoc = new ResourceLocation(getString("fontTexture", "textures/font/ascii.png"));
         final ResourceLocation logoLoc = new ResourceLocation(getString("logoTexture", "textures/gui/title/mojang.png"));
         final ResourceLocation forgeLoc = new ResourceLocation(getString("forgeTexture", "fml:textures/gui/forge.gif"));
-
+        
         File miscPackFile = new File(Minecraft.getMinecraft().mcDataDir, getString("resourcePackPath", "resources"));
 
         FileWriter w = null;
@@ -220,7 +250,13 @@ public class SplashProgress
 
         miscPack = createResourcePack(miscPackFile);
 
-        if(!enabled) return;
+        
+        
+        //TODO: Falcun | It got stuck here, so I commented out the line under.
+        //if(!enabled) return;
+        
+        
+        
         // getting debug info out of the way, while we still can
         FMLCommonHandler.instance().registerCrashCallable(new ICrashCallable()
         {
@@ -243,7 +279,6 @@ public class SplashProgress
             @Override public void printStackTrace(final PrintWriter s){ s.println(getMessage()); }
             @Override public void printStackTrace(final PrintStream s) { s.println(getMessage()); }
         }, "Loading screen debug info");
-        System.out.println(report.getCompleteReport());
 
         try
         {
@@ -272,7 +307,8 @@ public class SplashProgress
             {
                 setGL();
                 fontTexture = new Texture(fontLoc);
-                logoTexture = new Texture(logoLoc);
+                
+   
                 forgeTexture = new Texture(forgeLoc);
                 glEnable(GL_TEXTURE_2D);
                 fontRenderer = new SplashFontRenderer();
@@ -290,7 +326,21 @@ public class SplashProgress
                             last = i.next();
                         }
                     }
-
+                    
+                    //TODO: Falcun | Handle loading animation.
+                    long time = System.currentTimeMillis();
+                    
+                    if(time - lastCounterUpdate > updateInterval) {
+                    	lastCounterUpdate = time;
+                    	counter++;
+                    }
+                    
+                    if (counter >= loadingImages.size() || counter < 0) {
+                    	counter = min;
+                    }
+                    
+                    DynamicTextureImage logo = loadingImages.get(counter);
+                   
                     glClear(GL_COLOR_BUFFER_BIT);
 
                     // matrix setup
@@ -299,75 +349,30 @@ public class SplashProgress
                     glViewport(0, 0, w, h);
                     glMatrixMode(GL_PROJECTION);
                     glLoadIdentity();
-                    glOrtho(320 - w/2, 320 + w/2, 240 + h/2, 240 - h/2, -1, 1);
+                    //TODO: Falcun | Modified so its starts from 0, 0 and not center.
+                    glOrtho(0, w, h, 0, -1, 1);
                     glMatrixMode(GL_MODELVIEW);
                     glLoadIdentity();
-
-                    // mojang logo
+                    
                     setColor(backgroundColor);
-                    glEnable(GL_TEXTURE_2D);
-                    logoTexture.bind();
-                    glBegin(GL_QUADS);
-                    logoTexture.texCoord(0, 0, 0);
-                    glVertex2f(320 - 256, 240 - 256);
-                    logoTexture.texCoord(0, 0, 1);
-                    glVertex2f(320 - 256, 240 + 256);
-                    logoTexture.texCoord(0, 1, 1);
-                    glVertex2f(320 + 256, 240 + 256);
-                    logoTexture.texCoord(0, 1, 0);
-                    glVertex2f(320 + 256, 240 - 256);
-                    glEnd();
-                    glDisable(GL_TEXTURE_2D);
-
+                    
+                    //TODO: Falcun | Modified render code since custom binding.
+                    int width = logo.getWidth();
+                    int height = logo.getHeight();
+                    int x = (w / 2) - (width / 2);
+                    int y = (h / 2) - (height / 2);
+                    
+                    logo.draw(x, y, width, height);
+                    
                     // bars
                     if(first != null)
                     {
                         glPushMatrix();
-                        glTranslatef(320 - (float)barWidth / 2, 310, 0);
-                        drawBar(first);
-                        if(penult != null)
-                        {
-                            glTranslatef(0, barOffset, 0);
-                            drawBar(penult);
-                        }
-                        if(last != null)
-                        {
-                            glTranslatef(0, barOffset, 0);
-                            drawBar(last);
-                        }
+                        glTranslatef(320 - (float)barWidth / 2, 410, 0);
                         glPopMatrix();
                     }
 
                     angle += 1;
-
-                    // forge logo
-                    setColor(backgroundColor);
-                    float fw = (float)forgeTexture.getWidth() / 2 / 2;
-                    float fh = (float)forgeTexture.getHeight() / 2 / 2;
-                    if(rotate)
-                    {
-                        float sh = Math.max(fw, fh);
-                        glTranslatef(320 + w/2 - sh - logoOffset, 240 + h/2 - sh - logoOffset, 0);
-                        glRotatef(angle, 0, 0, 1);
-                    }
-                    else
-                    {
-                        glTranslatef(320 + w/2 - fw - logoOffset, 240 + h/2 - fh - logoOffset, 0);
-                    }
-                    int f = (angle / 10) % forgeTexture.getFrames();
-                    glEnable(GL_TEXTURE_2D);
-                    forgeTexture.bind();
-                    glBegin(GL_QUADS);
-                    forgeTexture.texCoord(f, 0, 0);
-                    glVertex2f(-fw, -fh);
-                    forgeTexture.texCoord(f, 0, 1);
-                    glVertex2f(-fw, fh);
-                    forgeTexture.texCoord(f, 1, 1);
-                    glVertex2f(fw, fh);
-                    forgeTexture.texCoord(f, 1, 0);
-                    glVertex2f(fw, -fh);
-                    glEnd();
-                    glDisable(GL_TEXTURE_2D);
 
                     // We use mutex to indicate safely to the main thread that we're taking the display global lock
                     // So the main thread can skip processing messages while we're updating.
@@ -404,38 +409,6 @@ public class SplashProgress
                 glEnd();
             }
 
-            private void drawBar(ProgressBar b)
-            {
-                glPushMatrix();
-                // title - message
-                setColor(fontColor);
-                glScalef(2, 2, 1);
-                glEnable(GL_TEXTURE_2D);
-                fontRenderer.drawString(b.getTitle() + " - " + b.getMessage(), 0, 0, 0x000000);
-                glDisable(GL_TEXTURE_2D);
-                glPopMatrix();
-                // border
-                glPushMatrix();
-                glTranslatef(0, textHeight2, 0);
-                setColor(barBorderColor);
-                drawBox(barWidth, barHeight);
-                // interior
-                setColor(barBackgroundColor);
-                glTranslatef(1, 1, 0);
-                drawBox(barWidth - 2, barHeight - 2);
-                // slidy part
-                setColor(barColor);
-                drawBox((barWidth - 2) * (b.getStep() + 1) / (b.getSteps() + 1), barHeight - 2); // Step can sometimes be 0.
-                // progress text
-                String progress = "" + b.getStep() + "/" + b.getSteps();
-                glTranslatef(((float)barWidth - 2) / 2 - fontRenderer.getStringWidth(progress), 2, 0);
-                setColor(fontColor);
-                glScalef(2, 2, 1);
-                glEnable(GL_TEXTURE_2D);
-                fontRenderer.drawString(progress, 0, 0, 0x000000);
-                glPopMatrix();
-            }
-
             private void setGL()
             {
                 lock.lock();
@@ -448,7 +421,7 @@ public class SplashProgress
                     e.printStackTrace();
                     throw new RuntimeException(e);
                 }
-                glClearColor((float)((backgroundColor >> 16) & 0xFF) / 0xFF, (float)((backgroundColor >> 8) & 0xFF) / 0xFF, (float)(backgroundColor & 0xFF) / 0xFF, 1);
+                glClearColor(0,0,0,0);
                 glDisable(GL_LIGHTING);
                 glDisable(GL_DEPTH_TEST);
                 glEnable(GL_BLEND);
@@ -525,7 +498,8 @@ public class SplashProgress
     @Deprecated
     public static void pause()
     {
-        if(!enabled) return;
+        //TODO: Falcun override
+    	//if(!enabled) return;
         checkThreadState();
         pause = true;
         lock.lock();
@@ -547,7 +521,8 @@ public class SplashProgress
     @Deprecated
     public static void resume()
     {
-        if(!enabled) return;
+        //TODO: Falcun override
+    	//if(!enabled) return;
         checkThreadState();
         pause = false;
         try
@@ -565,7 +540,8 @@ public class SplashProgress
 
     public static void finish()
     {
-        if(!enabled) return;
+        //TODO: Falcun override
+    	//if(!enabled) return;
         try
         {
             checkThreadState();
@@ -574,8 +550,12 @@ public class SplashProgress
             d.releaseContext();
             Display.getDrawable().makeCurrent();
             fontTexture.delete();
-            logoTexture.delete();
             forgeTexture.delete();
+            
+            //TODO: Falcun | Clear loaded images.
+            for(DynamicTexture texture : loadingImages) {
+            	texture.deleteGlTexture();
+            }
         }
         catch (Exception e)
         {
@@ -616,6 +596,7 @@ public class SplashProgress
         }
     }
 
+    
     private static boolean disableSplash()
     {
         File configFile = new File(Minecraft.getMinecraft().mcDataDir, "config/splash.properties");
@@ -656,6 +637,50 @@ public class SplashProgress
         }
     }
 
+    //TODO: Falcun, custom image texture, allows 1 call to draw and also allows loading images directly instead of resources
+    private static class DynamicTextureImage extends DynamicTexture {
+		public DynamicTextureImage(BufferedImage bufferedImage) {
+			super(bufferedImage);
+		}
+    	
+        public void draw(int x, int y, int width, int height) {
+            glEnable(GL_TEXTURE_2D);
+        	bind();
+            drawImage(x, y, width, height);	
+            glDisable(GL_TEXTURE_2D);
+		}
+
+		public int getWidth()
+        {
+            return width;
+        }
+
+        public int getHeight()
+        {
+            return height;
+        }
+
+        public void bind()
+        {
+            glBindTexture(GL_TEXTURE_2D, getGlTextureId());
+        }
+        
+        private void drawImage(int x, int y, int width, int height)
+        {
+            glBegin(GL_QUADS);
+            glTexCoord2f(0, 0);
+            glVertex2f(x, y);
+            glTexCoord2f(0, 1);
+            glVertex2f(x, y + height);
+            glTexCoord2f(1, 1);
+            glVertex2f(x + width, y + height);
+            glTexCoord2f(1, 0);
+            glVertex2f(x + width, y);
+            glEnd();
+        }
+    }
+    
+    
     private static final IntBuffer buf = BufferUtils.createIntBuffer(4 * 1024 * 1024);
 
     @SuppressWarnings("unused")
@@ -814,15 +839,18 @@ public class SplashProgress
 
     public static void drawVanillaScreen(TextureManager renderEngine) throws LWJGLException
     {
+    	//TODO: Falcun override
+    	/*
         if(!enabled)
-        {
+        {*/
             Minecraft.getMinecraft().drawSplashScreen(renderEngine);
-        }
+        //}
     }
 
     public static void clearVanillaResources(TextureManager renderEngine, ResourceLocation mojangLogo)
     {
-        if(!enabled)
+    	//TODO: Falcun override
+    	if(!enabled)
         {
             renderEngine.deleteTexture(mojangLogo);
         }

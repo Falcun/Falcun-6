@@ -1,5 +1,6 @@
 package net.minecraftforge.fluids;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -44,6 +45,7 @@ public abstract class FluidRegistry
     static BiMap<Fluid, Integer> fluidIDs = HashBiMap.create();
     static BiMap<Integer, String> fluidNames = HashBiMap.create(); //Caching this just makes some other calls faster
     static BiMap<Block, Fluid> fluidBlocks;
+    static Set<Fluid> bucketFluids;
 
     // the globally unique fluid map - only used to associate non-defaults during world/server loading
     static BiMap<String,Fluid> masterFluidReference = HashBiMap.create();
@@ -51,7 +53,6 @@ public abstract class FluidRegistry
     static Map<Fluid,FluidDelegate> delegates = Maps.newHashMap();
 
     static boolean universalBucketEnabled = false;
-    static Set<Fluid> bucketFluids = Sets.newHashSet();
 
     public static final Fluid WATER = new Fluid("water", new ResourceLocation("blocks/water_still"), new ResourceLocation("blocks/water_flow")) {
         @Override
@@ -299,7 +300,7 @@ public abstract class FluidRegistry
      */
     public static Set<Fluid> getBucketFluids()
     {
-        return ImmutableSet.copyOf(bucketFluids);
+        return Collections.unmodifiableSet((Set<? extends Fluid>)FluidRegistry.bucketFluids);
     }
 
 

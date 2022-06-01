@@ -1,11 +1,16 @@
 package net.minecraft.client.particle;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.Callable;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
+import net.mattbenson.Wrapper;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -19,24 +24,28 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
+import net.minecraft.src.Config;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.optifine.reflect.Reflector;
 
-@SideOnly(Side.CLIENT)
 public class EffectRenderer
 {
     private static final ResourceLocation particleTextures = new ResourceLocation("textures/particle/particles.png");
+
+    /** Reference to the World object. */
     protected World worldObj;
     private List<EntityFX>[][] fxLayers = new List[4][];
     private List<EntityParticleEmitter> particleEmitters = Lists.<EntityParticleEmitter>newArrayList();
     private TextureManager renderer;
+
+    /** RNG. */
     private Random rand = new Random();
     private Map<Integer, IParticleFactory> particleTypes = Maps.<Integer, IParticleFactory>newHashMap();
 
@@ -113,10 +122,22 @@ public class EffectRenderer
         this.particleEmitters.add(new EntityParticleEmitter(this.worldObj, entityIn, particleTypes));
     }
 
+    /**
+     * Spawns the relevant particle according to the particle id.
+     *  
+     * @param particleId The id of the particle
+     */
     public EntityFX spawnEffectParticle(int particleId, double p_178927_2_, double p_178927_4_, double p_178927_6_, double p_178927_8_, double p_178927_10_, double p_178927_12_, int... p_178927_14_)
     {
-        IParticleFactory iparticlefactory = (IParticleFactory)this.particleTypes.get(Integer.valueOf(particleId));
-
+    	//TODO: Falcun
+    	for(EnumParticleTypes type : Wrapper.getInstance().getParticles()) {
+    		if(type.getParticleID() == particleId) {
+    			return null;
+    		}
+    	}
+    	
+    	IParticleFactory iparticlefactory = (IParticleFactory)this.particleTypes.get(Integer.valueOf(particleId));
+        
         if (iparticlefactory != null)
         {
             EntityFX entityfx = iparticlefactory.getEntityFX(particleId, this.worldObj, p_178927_2_, p_178927_4_, p_178927_6_, p_178927_8_, p_178927_10_, p_178927_12_, p_178927_14_);
@@ -133,16 +154,41 @@ public class EffectRenderer
 
     public void addEffect(EntityFX effect)
     {
-        if (effect == null) return; //Forge: Prevent modders from being bad and adding nulls causing untraceable NPEs.
-        int i = effect.getFXLayer();
-        int j = effect.getAlpha() != 1.0F ? 0 : 1;
-
-        if (this.fxLayers[i][j].size() >= 4000)
+        if (effect != null)
         {
-            this.fxLayers[i][j].remove(0);
-        }
+        	//TODO: Falcun
+        	int id = -1;
+        	
+        	String effectName = effect.getClass().getSimpleName();
+        	
+        	for(Entry<Integer, IParticleFactory> entry : particleTypes.entrySet()) {
+        		String name = entry.getValue().getClass().getName();
+        		
+        		if(name.indexOf(effectName) >= 0) {
+        			id = entry.getKey();
+        			break;
+        		}
+        	}
+        	
+        	for(EnumParticleTypes type : Wrapper.getInstance().getParticles()) {
+        		if(type.getParticleID() == id) {
+        			return;
+        		}
+        	}
+        	
+            if (!(effect instanceof EntityFirework.SparkFX) || Config.isFireworkParticles())
+            {
+                int i = effect.getFXLayer();
+                int j = effect.getAlpha() != 1.0F ? 0 : 1;
 
-        this.fxLayers[i][j].add(effect);
+                if (this.fxLayers[i][j].size() >= 4000)
+                {
+                    this.fxLayers[i][j].remove(0);
+                }
+
+                this.fxLayers[i][j].add(effect);
+            }
+        }
     }
 
     public void updateEffects()
@@ -177,16 +223,37 @@ public class EffectRenderer
 
     private void updateEffectAlphaLayer(List<EntityFX> p_178925_1_)
     {
-        List<EntityFX> list = Lists.<EntityFX>newArrayList();
+        List<EntityFX> list = Lists.newArrayList();
+        long i = System.currentTimeMillis();
+        int j = p_178925_1_.size();
 
-        for (int i = 0; i < p_178925_1_.size(); ++i)
+        for (int k = 0; k < p_178925_1_.size(); ++k)
         {
-            EntityFX entityfx = (EntityFX)p_178925_1_.get(i);
+            EntityFX entityfx = p_178925_1_.get(k);
             this.tickParticle(entityfx);
 
             if (entityfx.isDead)
             {
                 list.add(entityfx);
+            }
+
+            --j;
+
+            if (System.currentTimeMillis() > i + 20L)
+            {
+                break;
+            }
+        }
+
+        if (j > 0)
+        {
+            int l = j;
+
+            for (Iterator iterator = p_178925_1_.iterator(); iterator.hasNext() && l > 0; --l)
+            {
+                EntityFX entityfx1 = (EntityFX)iterator.next();
+                entityfx1.setDead();
+                iterator.remove();
             }
         }
 
@@ -222,6 +289,9 @@ public class EffectRenderer
         }
     }
 
+    /**
+     * Renders all current particles. Args player, partialTickTime
+     */
     public void renderParticles(Entity entityIn, float partialTicks)
     {
         float f = ActiveRenderInfo.getRotationX();
@@ -249,6 +319,7 @@ public class EffectRenderer
                         case 0:
                             GlStateManager.depthMask(false);
                             break;
+
                         case 1:
                             GlStateManager.depthMask(true);
                     }
@@ -259,6 +330,7 @@ public class EffectRenderer
                         default:
                             this.renderer.bindTexture(particleTextures);
                             break;
+
                         case 1:
                             this.renderer.bindTexture(TextureMap.locationBlocksTexture);
                     }
@@ -271,7 +343,7 @@ public class EffectRenderer
                     for (int k = 0; k < this.fxLayers[i][j].size(); ++k)
                     {
                         final EntityFX entityfx = (EntityFX)this.fxLayers[i][j].get(k);
-
+                        
                         try
                         {
                             entityfx.renderParticle(worldrenderer, entityIn, partialTicks, f, f4, f1, f2, f3);
@@ -352,20 +424,32 @@ public class EffectRenderer
 
     public void addBlockDestroyEffects(BlockPos pos, IBlockState state)
     {
-        if (!state.getBlock().isAir(worldObj, pos) && !state.getBlock().addDestroyEffects(worldObj, pos, this))
+        boolean flag;
+
+        if (Reflector.ForgeBlock_addDestroyEffects.exists() && Reflector.ForgeBlock_isAir.exists())
+        {
+            Block block = state.getBlock();
+            flag = !Reflector.callBoolean(block, Reflector.ForgeBlock_isAir, new Object[] {this.worldObj, pos}) && !Reflector.callBoolean(block, Reflector.ForgeBlock_addDestroyEffects, new Object[] {this.worldObj, pos, this});
+        }
+        else
+        {
+            flag = state.getBlock().getMaterial() != Material.air;
+        }
+
+        if (flag)
         {
             state = state.getBlock().getActualState(state, this.worldObj, pos);
-            int i = 4;
+            int l = 4;
 
-            for (int j = 0; j < i; ++j)
+            for (int i = 0; i < l; ++i)
             {
-                for (int k = 0; k < i; ++k)
+                for (int j = 0; j < l; ++j)
                 {
-                    for (int l = 0; l < i; ++l)
+                    for (int k = 0; k < l; ++k)
                     {
-                        double d0 = (double)pos.getX() + ((double)j + 0.5D) / (double)i;
-                        double d1 = (double)pos.getY() + ((double)k + 0.5D) / (double)i;
-                        double d2 = (double)pos.getZ() + ((double)l + 0.5D) / (double)i;
+                        double d0 = (double)pos.getX() + ((double)i + 0.5D) / (double)l;
+                        double d1 = (double)pos.getY() + ((double)j + 0.5D) / (double)l;
+                        double d2 = (double)pos.getZ() + ((double)k + 0.5D) / (double)l;
                         this.addEffect((new EntityDiggingFX(this.worldObj, d0, d1, d2, d0 - (double)pos.getX() - 0.5D, d1 - (double)pos.getY() - 0.5D, d2 - (double)pos.getZ() - 0.5D, state)).func_174846_a(pos));
                     }
                 }
@@ -373,6 +457,12 @@ public class EffectRenderer
         }
     }
 
+    /**
+     * Adds block hit particles for the specified block
+     *  
+     * @param pos The block's coordinates
+     * @param side The side the block was hit from
+     */
     public void addBlockHitEffects(BlockPos pos, EnumFacing side)
     {
         IBlockState iblockstate = this.worldObj.getBlockState(pos);
@@ -459,12 +549,18 @@ public class EffectRenderer
         return "" + i;
     }
 
-    public void addBlockHitEffects(BlockPos pos, net.minecraft.util.MovingObjectPosition target)
+    public void addBlockHitEffects(BlockPos p_addBlockHitEffects_1_, MovingObjectPosition p_addBlockHitEffects_2_)
     {
-        Block block = worldObj.getBlockState(pos).getBlock();
-        if (block != null && !block.addHitEffects(worldObj, target, this))
+        IBlockState iblockstate = this.worldObj.getBlockState(p_addBlockHitEffects_1_);
+
+        if (iblockstate != null)
         {
-            addBlockHitEffects(pos, target.sideHit);
+            boolean flag = Reflector.callBoolean(iblockstate.getBlock(), Reflector.ForgeBlock_addHitEffects, new Object[] {this.worldObj, p_addBlockHitEffects_2_, this});
+
+            if (iblockstate != null && !flag)
+            {
+                this.addBlockHitEffects(p_addBlockHitEffects_1_, p_addBlockHitEffects_2_.sideHit);
+            }
         }
-     }
+    }
 }

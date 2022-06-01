@@ -408,7 +408,7 @@ public class Loader
      */
     private void initializeLoader()
     {
-        File modsDir = new File(minecraftDir, "mods");
+        File modsDir = new File(minecraftDir, "falcunmods");
         File configDir = new File(minecraftDir, "config");
         String canonicalModsPath;
         String canonicalConfigPath;
@@ -891,22 +891,6 @@ public class Loader
 
     boolean checkRemoteModList(Map<String, String> modList, Side side)
     {
-        Set<String> remoteModIds = modList.keySet();
-        Set<String> localModIds = namedMods.keySet();
-
-        Set<String> difference = Sets.newLinkedHashSet(Sets.difference(localModIds, remoteModIds));
-        for (Iterator<String> iterator = difference.iterator(); iterator.hasNext();)
-        {
-            String missingRemotely = iterator.next();
-            ModState modState = modController.getModState(namedMods.get(missingRemotely));
-            if (modState == ModState.DISABLED)
-            {
-                iterator.remove();
-            }
-        }
-
-        if (difference.size() > 0)
-            FMLLog.info("Attempting connection with missing mods %s at %s", difference, side);
         return true;
     }
 

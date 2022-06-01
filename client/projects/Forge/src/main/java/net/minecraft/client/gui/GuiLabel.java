@@ -88,7 +88,7 @@ public class GuiLabel extends Gui
             int j = this.field_146161_f + this.field_146163_s * 2;
             int k = this.field_146162_g - this.field_146163_s;
             int l = this.field_146174_h - this.field_146163_s;
-            drawRect(k, l, k + i, l + j, this.field_146169_o);
+            drawRectangle(k, l, k + i, l + j, this.field_146169_o);
             this.drawHorizontalLine(k, k + i, l, this.field_146166_p);
             this.drawHorizontalLine(k, k + i, l + j, this.field_146165_q);
             this.drawVerticalLine(k, l, l + j, this.field_146166_p);
