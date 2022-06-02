@@ -9,6 +9,7 @@ public final class FalcunTexture {
 
 	public static final ResourceLocation[] moduleBoxToggle = new ResourceLocation[4];
 
+	public static final ResourceLocation discordIcon = new ResourceLocation("falcun:gui/discord.png");
 	public static void setupArrays(){
 		for (int i = 0; i < 112; i++) {
 			loadingAnimation[i] = new ResourceLocation("falcun:animated/loading/falcun_layer_" + (i) + ".png");

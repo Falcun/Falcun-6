@@ -6,10 +6,7 @@ import java.io.Serializable;
 
 public final class FalcunKeyBind  {
 	public int keyBind;
-	public FalcunKeyBind() {
-		this.keyBind = 0;
-	}
-	public FalcunKeyBind(final int keycode) {
+	public FalcunKeyBind( int keycode) {
 		this.keyBind = keycode;
 	}
 

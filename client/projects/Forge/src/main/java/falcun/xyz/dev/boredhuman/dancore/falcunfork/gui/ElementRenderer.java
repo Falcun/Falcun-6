@@ -15,7 +15,7 @@ public class ElementRenderer {
 		if (element.shouldRender()) {
 			element.listeners.forEach(elementListener -> elementListener.render((T) element, Listener.Phase.PRE));
 			element.dimensionsCalculator.computeChildBounds(element);
-//			ElementRenderer.renderDebug(element);
+			ElementRenderer.renderDebug(element);
 			element.render();
 			if (element.outlineElement != null) {
 				ElementRenderer.renderElement(element.outlineElement);

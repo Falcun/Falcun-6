@@ -130,6 +130,7 @@ public class TextureManager {
 		if (!this.shouldLoadTexture(resourceLocation)) {
 			return;
 		}
+		System.out.println("loading");
 		this.loadingSet.add(resourceLocation);
 		Falcun.submitJob(() -> {
 			SizedTexture texture = null;

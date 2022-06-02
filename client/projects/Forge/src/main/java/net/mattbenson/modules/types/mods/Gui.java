@@ -63,7 +63,7 @@ public class Gui extends Module {
 	
 	public Gui() {
 		super("Gui", ModuleCategory.MODS);
-		setKeyBind(Keyboard.KEY_RETURN);
+		setKeyBind(Keyboard.KEY_BACKSLASH);
 		
 		menu = new Menu("", width, height);
 		menuImpl = new IngameMenu(this, menu);
@@ -71,7 +71,7 @@ public class Gui extends Module {
 	
 	@Override
 	public void onEnable() {
-		setKeyBind(Keyboard.KEY_RETURN);
+		setKeyBind(Keyboard.KEY_BACKSLASH);
 		EntityRenderer er = Minecraft.getMinecraft().entityRenderer;
 		if (listshaders == null) {
 			listshaders = Lists.<Shader>newArrayList();
