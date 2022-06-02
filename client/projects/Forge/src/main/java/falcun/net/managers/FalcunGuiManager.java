@@ -1,10 +1,10 @@
 package falcun.net.managers;
 
 import falcun.net.Falcun;
-import falcun.net.dangui.mainmenu.FalcunGuiMainMenu;
-import falcun.net.gui.container.playerinventory.FalcunGuiInventory;
-import falcun.net.gui.mainmenu.FalcunMainMenu;
-import falcun.net.gui.ingame.FalcunInGameMenu;
+import falcun.net.guidan.mainmenu.FalcunGuiMainMenu;
+import falcun.net.guidragonclient.container.playerinventory.FalcunGuiInventory;
+import falcun.net.guidragonclient.mainmenu.FalcunMainMenu;
+import falcun.net.guidragonclient.ingame.FalcunInGameMenu;
 import net.minecraft.client.gui.*;
 import net.minecraft.network.play.client.C16PacketClientStatus;
 import net.minecraftforge.fml.common.ModContainer;
@@ -16,18 +16,19 @@ public final class FalcunGuiManager {
 //	private static final FalcunModListMenu modListMenu = new FalcunModListMenu();
 
 	public static void openMainMenu() {
-		Falcun.minecraft.displayGuiScreen(new FalcunMainMenu());
+//		Falcun.minecraft.displayGuiScreen(new FalcunMainMenu());
+		Falcun.minecraft.displayGuiScreen(new FalcunGuiMainMenu());
 	}
 
 	public static void openSinglePlayerMenu() {
-		Falcun.minecraft.displayGuiScreen(new GuiSelectWorld(new FalcunMainMenu()));
+		Falcun.minecraft.displayGuiScreen(new GuiSelectWorld(new FalcunGuiMainMenu()));
 	}
 
 	public static void openMultiPlayerMenu() {
-		Falcun.minecraft.displayGuiScreen(new GuiMultiplayer(new FalcunMainMenu()));
+		Falcun.minecraft.displayGuiScreen(new GuiMultiplayer(new FalcunGuiMainMenu()));
 	}
 
-	public static void openOptionsMenu(FalcunMainMenu mainMenu) {
+	public static void openOptionsMenu(GuiScreen mainMenu) {
 		Falcun.minecraft.displayGuiScreen(new GuiOptions(mainMenu, Falcun.minecraft.gameSettings));
 //		Falcun.minecraft.displayGuiScreen(new GuiModList(mainMenu));
 	}
@@ -44,7 +45,6 @@ public final class FalcunGuiManager {
 	}
 
 	public static void openModConfigMenu(ModContainer modContainer) {
-//		Falcun.minecraft.displayGuiScreen(new GuiMod);
 	}
 
 	public static void openModGui() {

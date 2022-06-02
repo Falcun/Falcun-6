@@ -1,5 +1,6 @@
 package falcun.xyz.dev.boredhuman.dancore.falcunfork.gui.elements;
 
+import falcun.net.Falcun;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.api.DanCoreAPI;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.api.textures.GIFTexture;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.api.textures.SizedTexture;
@@ -68,6 +69,7 @@ public class ImageElement<T extends ImageElement<T>> extends BasicElement<T> {
 					}
 					float[] texData = gifTexture.getUVForFrame(this.currentFrame);
 					GuiUtil.drawTextureSquare(this.x + excessWidth / 2, this.y, expectedWidth, this.height, texData[0], texData[1], texData[2], texData[3]);
+					System.out.println("draw 72");
 					if (gifTexture.shouldDoNextFrame(this.lastFrame)) {
 						this.lastFrame = System.currentTimeMillis();
 						this.currentFrame = gifTexture.getNextFrame(this.currentFrame);
@@ -77,6 +79,7 @@ public class ImageElement<T extends ImageElement<T>> extends BasicElement<T> {
 						this.setWidthPX(texture.getWidth());
 					}
 					GuiUtil.drawTextureSquare(this.x + excessWidth / 2, this.y, expectedWidth, this.height);
+					System.out.println("draw 82");
 				}
 			} else {
 				int expectedHeight = (int) (imgY / imgX) * this.width;
@@ -86,10 +89,12 @@ public class ImageElement<T extends ImageElement<T>> extends BasicElement<T> {
 						this.setWidthPX(texture.getHeight());
 					}
 					GuiUtil.drawTextureSquare(this.x, this.y + excessHeight / 2, this.width, expectedHeight);
+					System.out.println("draw 92");
 				}
 			}
 		} else {
 			GuiUtil.drawTextureSquare(this.x, this.y, this.width, this.height);
+			System.out.println("draw 97");
 		}
 		GlStateManager.color(1, 1, 1, 1);
 	}

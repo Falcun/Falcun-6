@@ -4,14 +4,14 @@ import falcun.net.api.fonts.Fonts;
 import falcun.net.api.modules.FalcunModule;
 import falcun.net.api.modules.hud.FalcunHudModule;
 import falcun.net.api.textures.FalcunTexture;
-import falcun.net.gui.ingame.hud.FalcunHudEditor;
+import falcun.net.guidragonclient.ingame.hud.FalcunHudEditor;
 import falcun.net.managers.FalcunConfigManager;
 import falcun.net.managers.FalcunKeyBindManager;
 import falcun.net.modules.hypixel.skyblock.utils.SkyblockPlayer;
+import falcun.xyz.dev.boredhuman.dancore.falcunfork.api.DanCoreAPI;
+import falcun.xyz.dev.boredhuman.dancore.falcunfork.api.textures.TextureManager;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.compute.LineRenderer;
-import falcun.xyz.dev.boredhuman.dancore.falcunfork.events.DanLineRenderEvent;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.events.RenderHook;
-import falcun.xyz.dev.boredhuman.dancore.falcunfork.shapes.Box;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.util.FutureCallBack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -29,20 +29,19 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 @Mod(modid = "Falcun", name = "Falcun", version = "6.0.0")
-public final class Falcun {
+public final class Falcun extends DanCoreAPI {
 
 	public static Minecraft minecraft = Minecraft.getMinecraft();
 
-	public static Falcun instance; // r
+	public static Falcun instance;
 
 	public Falcun() {
 		instance = this;
@@ -63,6 +62,13 @@ public final class Falcun {
 
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent e) {
+		try {
+			Field field = DanCoreAPI.class.getDeclaredField("API");
+			field.setAccessible(true);
+			field.set(null, this);
+		} catch (Throwable err) {
+			err.printStackTrace();
+		}
 		try {
 			InputStream is = Falcun.minecraft.getResourceManager().getResource(new ResourceLocation("falcun:falcun16x16.png")).getInputStream();
 			InputStream is1 = Falcun.minecraft.getResourceManager().getResource(new ResourceLocation("falcun:falcun32x32.png")).getInputStream();
@@ -135,15 +141,6 @@ public final class Falcun {
 		}
 	};
 
-	@SubscribeEvent
-	public void lines(DanLineRenderEvent e) {
-		double x = minecraft.thePlayer.posX, y = minecraft.thePlayer.posY, z = minecraft.thePlayer.posZ;
-		Box box = new Box(x - 5, y - 5, z - 5, x + 5, y + 5, z + 5);
-		List<Box> boxes = new LinkedList<>();
-		boxes.add(box);
-		e.addBoxOutlines(1.4f, this.renderHook, boxes, 0xFFFFFFFF);
-	}
-
 
 	public static void saveConfig() {
 		submitJob(() -> {
@@ -169,4 +166,10 @@ public final class Falcun {
 
 	}
 
+	private final TextureManager textureManager = new TextureManager();
+
+	@Override
+	public TextureManager getTextureManager() {
+		return textureManager;
+	}
 }
