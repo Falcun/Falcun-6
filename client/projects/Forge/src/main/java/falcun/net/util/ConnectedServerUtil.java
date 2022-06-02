@@ -19,14 +19,14 @@ public final class ConnectedServerUtil {
 		return isLocal;
 	}
 
-	public static String getServerIP(){
+	public static String getServerIP() {
 		return serverIP == null ? "" : serverIP;
 	}
 
 
 	public final static ConnectedServerUtil instance = new ConnectedServerUtil();
 
-	public static void init() {
+	static {
 		MinecraftForge.EVENT_BUS.register(instance);
 	}
 
@@ -41,8 +41,6 @@ public final class ConnectedServerUtil {
 		if ((isLocal = e.isLocal)) {
 			return;
 		}
-
-
 	}
 
 

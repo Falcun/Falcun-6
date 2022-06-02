@@ -38,9 +38,9 @@ public abstract class FalcunHudModule extends FalcunModule {
 	public FalcunValue<Integer> scale = new FalcunValue<>(200);
 
 	@FalcunConfigValue("width")
-	public FalcunValue<Integer> width = new FalcunValue<>(0);
+	public FalcunValue<Integer> width = new FalcunValue<>(100);
 	@FalcunConfigValue("height")
-	public FalcunValue<Integer> height = new FalcunValue<>(0);
+	public FalcunValue<Integer> height = new FalcunValue<>(100);
 
 	public abstract void render();
 
@@ -63,7 +63,7 @@ public abstract class FalcunHudModule extends FalcunModule {
 	}
 
 
-	private int getIntFromDouble(Double d) {
+	protected int getIntFromDouble(Double d) {
 		return (int) (double) d;
 	}
 

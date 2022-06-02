@@ -1,5 +1,6 @@
 package falcun.net;
 
+import falcun.net.api.events.TickingEvent;
 import falcun.net.api.fonts.Fonts;
 import falcun.net.api.modules.FalcunModule;
 import falcun.net.api.modules.hud.FalcunHudModule;
@@ -7,6 +8,8 @@ import falcun.net.api.textures.FalcunTexture;
 import falcun.net.guidragonclient.ingame.hud.FalcunHudEditor;
 import falcun.net.managers.FalcunConfigManager;
 import falcun.net.managers.FalcunKeyBindManager;
+import falcun.net.managers.FalcunScoreBoardManager;
+import falcun.net.modules.hypixel.skyblock.Checks;
 import falcun.net.modules.hypixel.skyblock.utils.SkyblockPlayer;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.api.DanCoreAPI;
 import falcun.xyz.dev.boredhuman.dancore.falcunfork.api.textures.TextureManager;
@@ -49,6 +52,11 @@ public final class Falcun extends DanCoreAPI {
 
 	@SubscribeEvent
 	public void tick(TickEvent.ClientTickEvent e) {
+		if (Falcun.minecraft.theWorld != null && Falcun.minecraft.thePlayer != null && e.phase == TickEvent.Phase.START) {
+			FalcunScoreBoardManager.tick();
+			TickingEvent event = new TickingEvent();
+			MinecraftForge.EVENT_BUS.post(event);
+		}
 	}
 
 	public static native void process();
@@ -89,11 +97,11 @@ public final class Falcun extends DanCoreAPI {
 		FalcunConfigManager.init();
 		LineRenderer.init();
 		new SkyblockPlayer();
+		Checks.init();
 	}
 
 	@SubscribeEvent
 	public void renderOverlay(RenderGameOverlayEvent e) {
-
 		if (e.type == RenderGameOverlayEvent.ElementType.HOTBAR && !(Falcun.minecraft.currentScreen instanceof FalcunHudEditor)) {
 			int old = minecraft.gameSettings.guiScale;
 			minecraft.gameSettings.guiScale = 1;

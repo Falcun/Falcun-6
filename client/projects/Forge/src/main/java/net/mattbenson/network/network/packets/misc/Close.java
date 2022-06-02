@@ -41,26 +41,25 @@ public class Close implements Packet {
 			}
 		}).start();
 		
-		JFrame panel = new JFrame();
-		panel.setAlwaysOnTop(true);
-		panel.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		panel.setLocationRelativeTo(null);
-		Toolkit.getDefaultToolkit().beep();
-		JOptionPane.showMessageDialog(panel, args[1], args[0], JOptionPane.ERROR_MESSAGE, null);
+//		JFrame panel = new JFrame();
+//		panel.setAlwaysOnTop(true);
+//		panel.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+//		panel.setLocationRelativeTo(null);
+//		Toolkit.getDefaultToolkit().beep();
+//		JOptionPane.showMessageDialog(panel, args[1], "efwiufhweiuheiuwfhweufii", JOptionPane.ERROR_MESSAGE, null);
 		//Matt
-		if (!devEnv()) {
-			System.exit(0);
-			Runtime.getRuntime().halt(0);
-		}
+//		if (!devEnv()) {
+//			System.exit(0);
+//			Runtime.getRuntime().halt(0);
+//		}
 
 		
-		new Thread(() -> {
-			//Matt
-			if (!devEnv()) {
-			System.exit(0);
-			Runtime.getRuntime().halt(0);
-			}
-		}).start();
+//		new Thread(() -> {
+//			if (!devEnv()) {
+//			System.exit(0);
+//			Runtime.getRuntime().halt(0);
+//			}
+//		}).start();
 	}
 	
 	

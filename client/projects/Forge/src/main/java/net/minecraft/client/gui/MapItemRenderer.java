@@ -20,7 +20,7 @@ public class MapItemRenderer
 {
     private static final ResourceLocation mapIcons = new ResourceLocation("textures/map/map_icons.png");
     private final TextureManager textureManager;
-    private final Map<String, MapItemRenderer.Instance> loadedMaps = Maps.<String, MapItemRenderer.Instance>newHashMap();
+    public final Map<String, MapItemRenderer.Instance> loadedMaps = Maps.<String, MapItemRenderer.Instance>newHashMap();
 
     public MapItemRenderer(TextureManager textureManagerIn)
     {
@@ -61,10 +61,10 @@ public class MapItemRenderer
     }
 
     @SideOnly(Side.CLIENT)
-    class Instance
+   public  class Instance
     {
         private final MapData mapData;
-        private final DynamicTexture mapTexture;
+        public final DynamicTexture mapTexture;
         private final ResourceLocation location;
         private final int[] mapTextureData;
 

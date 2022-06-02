@@ -67,7 +67,7 @@ public class PacketManager {
 		// Misc
 		packets.add(new ChatMessage());
 		packets.add(new ChatMessageStatus());
-		packets.add(new Close());
+//		packets.add(new Close());
 		packets.add(new CloseQuiet());
 		packets.add(new Info());
 		packets.add(new Notification());
