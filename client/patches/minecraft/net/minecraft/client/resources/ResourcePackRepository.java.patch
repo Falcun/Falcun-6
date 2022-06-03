@@ -1,0 +1,28 @@
+--- ../src-base/minecraft/net/minecraft/client/resources/ResourcePackRepository.java
++++ ../src-work/minecraft/net/minecraft/client/resources/ResourcePackRepository.java
+@@ -19,6 +19,7 @@
+ import java.util.List;
+ import java.util.Map;
+ import java.util.concurrent.locks.ReentrantLock;
++
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.gui.GuiScreenWorking;
+ import net.minecraft.client.renderer.texture.DynamicTexture;
+@@ -60,7 +61,7 @@
+     private final ReentrantLock field_177321_h = new ReentrantLock();
+     private ListenableFuture<Object> field_177322_i;
+     private List<ResourcePackRepository.Entry> field_110619_e = Lists.<ResourcePackRepository.Entry>newArrayList();
+-    private List<ResourcePackRepository.Entry> field_110617_f = Lists.<ResourcePackRepository.Entry>newArrayList();
++    public List<ResourcePackRepository.Entry> field_110617_f = Lists.<ResourcePackRepository.Entry>newArrayList();
+ 
+     public ResourcePackRepository(File p_i45101_1_, File p_i45101_2_, IResourcePack p_i45101_3_, IMetadataSerializer p_i45101_4_, GameSettings p_i45101_5_)
+     {
+@@ -312,7 +313,7 @@
+         private BufferedImage field_110522_e;
+         private ResourceLocation field_110520_f;
+ 
+-        private Entry(File p_i1295_2_)
++        public Entry(File p_i1295_2_)
+         {
+             this.field_110523_b = p_i1295_2_;
+         }

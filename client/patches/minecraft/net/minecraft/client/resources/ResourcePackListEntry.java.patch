@@ -1,0 +1,20 @@
+--- ../src-base/minecraft/net/minecraft/client/resources/ResourcePackListEntry.java
++++ ../src-work/minecraft/net/minecraft/client/resources/ResourcePackListEntry.java
+@@ -37,7 +37,7 @@
+         if (i != 1)
+         {
+             GlStateManager.func_179131_c(1.0F, 1.0F, 1.0F, 1.0F);
+-            Gui.func_73734_a(p_180790_2_ - 1, p_180790_3_ - 1, p_180790_2_ + p_180790_4_ - 9, p_180790_3_ + p_180790_5_ + 1, -8978432);
++            Gui.drawRectangle(p_180790_2_ - 1, p_180790_3_ - 1, p_180790_2_ + p_180790_4_ - 9, p_180790_3_ + p_180790_5_ + 1, -8978432);
+         }
+ 
+         this.func_148313_c();
+@@ -49,7 +49,7 @@
+         if ((this.field_148317_a.field_71474_y.field_85185_A || p_180790_8_) && this.func_148310_d())
+         {
+             this.field_148317_a.func_110434_K().func_110577_a(field_148316_c);
+-            Gui.func_73734_a(p_180790_2_, p_180790_3_, p_180790_2_ + 32, p_180790_3_ + 32, -1601138544);
++            Gui.drawRectangle(p_180790_2_, p_180790_3_, p_180790_2_ + 32, p_180790_3_ + 32, -1601138544);
+             GlStateManager.func_179131_c(1.0F, 1.0F, 1.0F, 1.0F);
+             int j = p_180790_6_ - p_180790_2_;
+             int k = p_180790_7_ - p_180790_3_;

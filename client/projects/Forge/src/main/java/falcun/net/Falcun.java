@@ -53,7 +53,7 @@ public final class Falcun extends DanCoreAPI {
 	@SubscribeEvent
 	public void tick(TickEvent.ClientTickEvent e) {
 		if (Falcun.minecraft.theWorld != null && Falcun.minecraft.thePlayer != null && e.phase == TickEvent.Phase.START) {
-			FalcunScoreBoardManager.tick();
+//			FalcunScoreBoardManager.tick();
 			TickingEvent event = new TickingEvent();
 			MinecraftForge.EVENT_BUS.post(event);
 		}

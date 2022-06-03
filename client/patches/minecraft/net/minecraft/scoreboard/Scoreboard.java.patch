@@ -1,0 +1,26 @@
+--- ../src-base/minecraft/net/minecraft/scoreboard/Scoreboard.java
++++ ../src-work/minecraft/net/minecraft/scoreboard/Scoreboard.java
+@@ -198,6 +198,7 @@
+ 
+     public void func_96519_k(ScoreObjective p_96519_1_)
+     {
++    	if (p_96519_1_ != null) {
+         this.field_96545_a.remove(p_96519_1_.func_96679_b());
+ 
+         for (int i = 0; i < 19; ++i)
+@@ -221,6 +222,7 @@
+         }
+ 
+         this.func_96533_c(p_96519_1_);
++    	}
+     }
+ 
+     public void func_96530_a(int p_96530_1_, ScoreObjective p_96530_2_)
+@@ -264,6 +266,7 @@
+ 
+     public void func_96511_d(ScorePlayerTeam p_96511_1_)
+     {
++    	if (p_96511_1_.func_96661_b() != null)
+         this.field_96542_e.remove(p_96511_1_.func_96661_b());
+ 
+         for (String s : p_96511_1_.func_96670_d())

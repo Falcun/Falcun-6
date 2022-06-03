@@ -9,3 +9,13 @@
          IBlockState iblockstate = this.func_177485_a(p_177484_1_, p_177484_2_, p_177484_3_);
          Block block = iblockstate.func_177230_c();
          Block block1 = p_177484_4_.func_177230_c();
+@@ -163,4 +165,9 @@
+     {
+         this.field_76685_h = p_76666_1_;
+     }
++    
++    public int getBlockRefCount()
++    {
++        return this.field_76682_b;
++    }
+ }

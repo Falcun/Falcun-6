@@ -1,15 +1,49 @@
 --- ../src-base/minecraft/net/minecraft/client/renderer/entity/RenderPlayer.java
 +++ ../src-work/minecraft/net/minecraft/client/renderer/entity/RenderPlayer.java
-@@ -49,6 +49,7 @@
+@@ -1,5 +1,12 @@
+ package net.minecraft.client.renderer.entity;
+ 
++import java.awt.Color;
++
++import org.lwjgl.opengl.GL11;
++
++import net.mattbenson.Wrapper;
++import net.mattbenson.cosmetics.bandana.LayerBandana;
++import net.mattbenson.events.types.render.RenderPlayerEvent;
+ import net.minecraft.client.entity.AbstractClientPlayer;
+ import net.minecraft.client.entity.EntityPlayerSP;
+ import net.minecraft.client.model.ModelPlayer;
+@@ -40,6 +47,7 @@
+         this.func_177094_a(new LayerDeadmau5Head(this));
+         this.func_177094_a(new LayerCape(this));
+         this.func_177094_a(new LayerCustomHead(this.func_177087_b().field_78116_c));
++        this.func_177094_a(new LayerBandana(this));
+     }
+ 
+     public ModelPlayer func_177087_b()
+@@ -49,6 +57,11 @@
  
      public void func_76986_a(AbstractClientPlayer p_76986_1_, double p_76986_2_, double p_76986_4_, double p_76986_6_, float p_76986_8_, float p_76986_9_)
      {
++    	if (!Wrapper.getInstance().post(new RenderPlayerEvent(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_9_))) {
++    		return;
++    	}
++    	
 +        if (net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.RenderPlayerEvent.Pre(p_76986_1_, this, p_76986_9_, p_76986_2_, p_76986_4_, p_76986_6_))) return;
          if (!p_76986_1_.func_175144_cb() || this.field_76990_c.field_78734_h == p_76986_1_)
          {
              double d0 = p_76986_4_;
-@@ -61,6 +62,7 @@
+@@ -59,8 +72,16 @@
+             }
+ 
              this.func_177137_d(p_76986_1_);
++            
++            Color color = Wrapper.getInstance().getHighlightColor(p_76986_1_.func_110124_au());
++            
++        	if(color != null) {
++        		GL11.glColor4f((float)color.getRed() / 255, (float)color.getGreen() / 255, (float)color.getBlue() / 255, (float)color.getAlpha() / 255);
++        	}
++            
              super.func_76986_a(p_76986_1_, p_76986_2_, d0, p_76986_6_, p_76986_8_, p_76986_9_);
          }
 +        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.RenderPlayerEvent.Post(p_76986_1_, this, p_76986_9_, p_76986_2_, p_76986_4_, p_76986_6_));

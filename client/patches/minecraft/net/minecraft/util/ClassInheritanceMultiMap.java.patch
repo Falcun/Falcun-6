@@ -1,0 +1,90 @@
+--- ../src-base/minecraft/net/minecraft/util/ClassInheritanceMultiMap.java
++++ ../src-work/minecraft/net/minecraft/util/ClassInheritanceMultiMap.java
+@@ -5,18 +5,22 @@
+ import com.google.common.collect.Maps;
+ import com.google.common.collect.Sets;
+ import java.util.AbstractSet;
++import java.util.Collections;
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
++import java.util.concurrent.ConcurrentHashMap;
++import net.optifine.util.IteratorCache;
+ 
+ public class ClassInheritanceMultiMap<T> extends AbstractSet<T>
+ {
+-    private static final Set < Class<? >> field_181158_a = Sets. < Class<? >> newHashSet();
++    private static final Set < Class<? >> field_181158_a = Collections. < Class<? >> newSetFromMap(new ConcurrentHashMap());
+     private final Map < Class<?>, List<T >> field_180218_a = Maps. < Class<?>, List<T >> newHashMap();
+     private final Set < Class<? >> field_180216_b = Sets. < Class<? >> newIdentityHashSet();
+     private final Class<T> field_180217_c;
+     private final List<T> field_181745_e = Lists.<T>newArrayList();
++    public boolean empty;
+ 
+     public ClassInheritanceMultiMap(Class<T> p_i45909_1_)
+     {
+@@ -28,14 +32,19 @@
+         {
+             this.func_180213_a(oclass);
+         }
++
++        this.empty = this.field_181745_e.size() == 0;
+     }
+ 
+     protected void func_180213_a(Class<?> p_180213_1_)
+     {
+         field_181158_a.add(p_180213_1_);
++        int i = this.field_181745_e.size();
+ 
+-        for (T t : this.field_181745_e)
++        for (int j = 0; j < i; ++j)
+         {
++            T t = this.field_181745_e.get(j);
++
+             if (p_180213_1_.isAssignableFrom(t.getClass()))
+             {
+                 this.func_181743_a(t, p_180213_1_);
+@@ -72,6 +81,7 @@
+             }
+         }
+ 
++        this.empty = this.field_181745_e.size() == 0;
+         return true;
+     }
+ 
+@@ -87,6 +97,8 @@
+         {
+             list.add(p_181743_1_);
+         }
++
++        this.empty = this.field_181745_e.size() == 0;
+     }
+ 
+     public boolean remove(Object p_remove_1_)
+@@ -107,6 +119,7 @@
+             }
+         }
+ 
++        this.empty = this.field_181745_e.size() == 0;
+         return flag;
+     }
+ 
+@@ -138,11 +151,16 @@
+ 
+     public Iterator<T> iterator()
+     {
+-        return this.field_181745_e.isEmpty() ? Iterators.<T>emptyIterator() : Iterators.unmodifiableIterator(this.field_181745_e.iterator());
++        return (Iterator<T>)(this.field_181745_e.isEmpty() ? Iterators.emptyIterator() : IteratorCache.getReadOnly(this.field_181745_e));
+     }
+ 
+     public int size()
+     {
+         return this.field_181745_e.size();
+     }
++
++    public boolean isEmpty()
++    {
++        return this.empty;
++    }
+ }

@@ -1,0 +1,13 @@
+--- ../src-base/minecraft/net/minecraft/client/resources/model/BuiltInModel.java
++++ ../src-work/minecraft/net/minecraft/client/resources/model/BuiltInModel.java
+@@ -52,4 +52,10 @@
+     {
+         return this.field_177557_a;
+     }
++
++	@Override
++	public TextureAtlasSprite getTexture() {
++		// TODO Auto-generated method stub
++		return null;
++	}
+ }

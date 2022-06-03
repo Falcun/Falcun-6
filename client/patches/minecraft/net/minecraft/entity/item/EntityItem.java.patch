@@ -1,6 +1,13 @@
 --- ../src-base/minecraft/net/minecraft/entity/item/EntityItem.java
 +++ ../src-work/minecraft/net/minecraft/entity/item/EntityItem.java
-@@ -29,6 +29,11 @@
+@@ -1,5 +1,6 @@
+ package net.minecraft.entity.item;
+ 
++import net.mattbenson.Wrapper;
+ import net.minecraft.block.material.Material;
+ import net.minecraft.entity.Entity;
+ import net.minecraft.entity.player.EntityPlayer;
+@@ -29,6 +30,11 @@
      private String field_145802_g;
      public float field_70290_d;
  
@@ -12,7 +19,7 @@
      public EntityItem(World p_i1709_1_, double p_i1709_2_, double p_i1709_4_, double p_i1709_6_)
      {
          super(p_i1709_1_);
-@@ -46,6 +51,7 @@
+@@ -46,6 +52,7 @@
      {
          this(p_i1710_1_, p_i1710_2_, p_i1710_4_, p_i1710_6_);
          this.func_92058_a(p_i1710_8_);
@@ -20,7 +27,7 @@
      }
  
      protected boolean func_70041_e_()
-@@ -69,6 +75,8 @@
+@@ -69,6 +76,8 @@
  
      public void func_70071_h_()
      {
@@ -29,7 +36,7 @@
          if (this.func_92059_d() == null)
          {
              this.func_70106_y();
-@@ -129,8 +137,16 @@
+@@ -129,8 +138,16 @@
  
              this.func_70072_I();
  
@@ -47,7 +54,19 @@
                  this.func_70106_y();
              }
          }
-@@ -271,6 +287,7 @@
+@@ -138,6 +155,11 @@
+ 
+     private void func_85054_d()
+     {
++    	if(Wrapper.getInstance().isItemSearching()) {
++    		if(func_92059_d().field_77994_a >= func_92059_d().func_77976_d()) {
++    			return;
++    		}
++    	}
+         for (EntityItem entityitem : this.field_70170_p.func_72872_a(EntityItem.class, this.func_174813_aQ().func_72314_b(0.5D, 0.0D, 0.5D)))
+         {
+             this.func_70289_a(entityitem);
+@@ -271,6 +293,7 @@
          p_70014_1_.func_74777_a("Health", (short)((byte)this.field_70291_e));
          p_70014_1_.func_74777_a("Age", (short)this.field_70292_b);
          p_70014_1_.func_74777_a("PickupDelay", (short)this.field_145804_b);
@@ -55,7 +74,7 @@
  
          if (this.func_145800_j() != null)
          {
-@@ -311,20 +328,23 @@
+@@ -311,20 +334,23 @@
          NBTTagCompound nbttagcompound = p_70037_1_.func_74775_l("Item");
          this.func_92058_a(ItemStack.func_77949_a(nbttagcompound));
  
@@ -84,7 +103,7 @@
              {
                  if (itemstack.func_77973_b() == Item.func_150898_a(Blocks.field_150364_r))
                  {
-@@ -361,6 +381,7 @@
+@@ -361,6 +387,7 @@
                      }
                  }
  
@@ -92,7 +111,7 @@
                  if (!this.func_174814_R())
                  {
                      this.field_70170_p.func_72956_a(p_70100_1_, "random.pop", 0.2F, ((this.field_70146_Z.nextFloat() - this.field_70146_Z.nextFloat()) * 0.7F + 1.0F) * 2.0F);
-@@ -402,11 +423,6 @@
+@@ -402,11 +429,6 @@
  
          if (itemstack == null)
          {
@@ -104,7 +123,7 @@
              return new ItemStack(Blocks.field_150348_b);
          }
          else
-@@ -480,6 +496,6 @@
+@@ -480,6 +502,6 @@
      public void func_174870_v()
      {
          this.func_174871_r();

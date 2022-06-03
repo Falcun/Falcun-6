@@ -1,11 +1,94 @@
 --- ../src-base/minecraft/net/minecraft/client/renderer/tileentity/RenderItemFrame.java
 +++ ../src-work/minecraft/net/minecraft/client/renderer/tileentity/RenderItemFrame.java
-@@ -99,15 +99,18 @@
+@@ -18,21 +18,23 @@
+ import net.minecraft.client.resources.model.IBakedModel;
+ import net.minecraft.client.resources.model.ModelManager;
+ import net.minecraft.client.resources.model.ModelResourceLocation;
++import net.minecraft.entity.Entity;
+ import net.minecraft.entity.item.EntityItem;
+ import net.minecraft.entity.item.EntityItemFrame;
+ import net.minecraft.init.Items;
+ import net.minecraft.item.Item;
++import net.minecraft.item.ItemMap;
+ import net.minecraft.item.ItemSkull;
+ import net.minecraft.item.ItemStack;
++import net.minecraft.src.Config;
+ import net.minecraft.util.BlockPos;
+ import net.minecraft.util.MathHelper;
+ import net.minecraft.util.ResourceLocation;
+ import net.minecraft.world.storage.MapData;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import net.optifine.reflect.Reflector;
++import net.optifine.shaders.Shaders;
+ import org.lwjgl.opengl.GL11;
+ 
+-@SideOnly(Side.CLIENT)
+ public class RenderItemFrame extends Render<EntityItemFrame>
+ {
+     private static final ResourceLocation field_110789_a = new ResourceLocation("textures/map/map_background.png");
+@@ -40,6 +42,7 @@
+     private final ModelResourceLocation field_177072_f = new ModelResourceLocation("item_frame", "normal");
+     private final ModelResourceLocation field_177073_g = new ModelResourceLocation("item_frame", "map");
+     private RenderItem field_177074_h;
++    private static double itemRenderDistanceSq = 4096.0D;
+ 
+     public RenderItemFrame(RenderManager p_i46166_1_, RenderItem p_i46166_2_)
+     {
+@@ -47,6 +50,14 @@
+         this.field_177074_h = p_i46166_2_;
+     }
+ 
++    /**
++     * Actually renders the given argument. This is a synthetic bridge method, always casting down its argument and then
++     * handing it off to a worker function which does the actual work. In all probabilty, the class Render is generic
++     * (Render<T extends Entity>) and this method has signature public void doRender(T entity, double d, double d1,
++     * double d2, float f, float f1). But JAD is pre 1.5 so doe
++     *  
++     * @param entityYaw The yaw rotation of the passed entity
++     */
+     public void func_76986_a(EntityItemFrame p_76986_1_, double p_76986_2_, double p_76986_4_, double p_76986_6_, float p_76986_8_, float p_76986_9_)
+     {
+         GlStateManager.func_179094_E();
+@@ -80,6 +91,9 @@
+         this.func_177067_a(p_76986_1_, p_76986_2_ + (double)((float)p_76986_1_.field_174860_b.func_82601_c() * 0.3F), p_76986_4_ - 0.25D, p_76986_6_ + (double)((float)p_76986_1_.field_174860_b.func_82599_e() * 0.3F));
+     }
+ 
++    /**
++     * Returns the location of an entity's texture. Doesn't seem to be called unless you call Render.bindEntityTexture.
++     */
+     protected ResourceLocation func_110775_a(EntityItemFrame p_110775_1_)
+     {
+         return null;
+@@ -91,6 +105,22 @@
+ 
+         if (itemstack != null)
+         {
++            if (!this.isRenderItem(p_82402_1_))
++            {
++                return;
++            }
++
++            if (!Config.zoomMode)
++            {
++                Entity entity = this.field_147917_g.field_71439_g;
++                double d0 = p_82402_1_.func_70092_e(entity.field_70165_t, entity.field_70163_u, entity.field_70161_v);
++
++                if (d0 > 4096.0D)
++                {
++                    return;
++                }
++            }
++
+             EntityItem entityitem = new EntityItem(p_82402_1_.field_70170_p, 0.0D, 0.0D, 0.0D, itemstack);
+             Item item = entityitem.func_92059_d().func_77973_b();
+             entityitem.func_92059_d().field_77994_a = 1;
+@@ -99,73 +129,75 @@
              GlStateManager.func_179140_f();
              int i = p_82402_1_.func_82333_j();
  
 -            if (item == Items.field_151098_aY)
-+            if (item instanceof net.minecraft.item.ItemMap)
++            if (item instanceof ItemMap)
              {
                  i = i % 4 * 2;
              }
@@ -13,19 +96,150 @@
              GlStateManager.func_179114_b((float)i * 360.0F / 8.0F, 0.0F, 0.0F, 1.0F);
  
 -            if (item == Items.field_151098_aY)
-+            net.minecraftforge.client.event.RenderItemInFrameEvent event = new net.minecraftforge.client.event.RenderItemInFrameEvent(p_82402_1_, this);
-+            if (!net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(event))
++            if (!Reflector.postForgeBusEvent(Reflector.RenderItemInFrameEvent_Constructor, new Object[] {p_82402_1_, this}))
              {
-+            if (item instanceof net.minecraft.item.ItemMap)
-+            {
-                 this.field_76990_c.field_78724_e.func_110577_a(field_110789_a);
-                 GlStateManager.func_179114_b(180.0F, 0.0F, 0.0F, 1.0F);
-                 float f = 0.0078125F;
-@@ -165,6 +168,7 @@
-                     textureatlassprite.func_94219_l();
-                 }
-             }
-+            }
+-                this.field_76990_c.field_78724_e.func_110577_a(field_110789_a);
+-                GlStateManager.func_179114_b(180.0F, 0.0F, 0.0F, 1.0F);
+-                float f = 0.0078125F;
+-                GlStateManager.func_179152_a(f, f, f);
+-                GlStateManager.func_179109_b(-64.0F, -64.0F, 0.0F);
+-                MapData mapdata = Items.field_151098_aY.func_77873_a(entityitem.func_92059_d(), p_82402_1_.field_70170_p);
+-                GlStateManager.func_179109_b(0.0F, 0.0F, -1.0F);
+-
+-                if (mapdata != null)
++                if (item instanceof ItemMap)
+                 {
+-                    this.field_147917_g.field_71460_t.func_147701_i().func_148250_a(mapdata, true);
+-                }
+-            }
+-            else
+-            {
+-                TextureAtlasSprite textureatlassprite = null;
++                    this.field_76990_c.field_78724_e.func_110577_a(field_110789_a);
++                    GlStateManager.func_179114_b(180.0F, 0.0F, 0.0F, 1.0F);
++                    float f = 0.0078125F;
++                    GlStateManager.func_179152_a(f, f, f);
++                    GlStateManager.func_179109_b(-64.0F, -64.0F, 0.0F);
++                    MapData mapdata = Items.field_151098_aY.func_77873_a(entityitem.func_92059_d(), p_82402_1_.field_70170_p);
++                    GlStateManager.func_179109_b(0.0F, 0.0F, -1.0F);
  
+-                if (item == Items.field_151111_aL)
++                    if (mapdata != null)
++                    {
++                        this.field_147917_g.field_71460_t.func_147701_i().func_148250_a(mapdata, true);
++                    }
++                }
++                else
+                 {
+-                    textureatlassprite = this.field_147917_g.func_147117_R().func_110572_b(TextureCompass.field_176608_l);
+-                    this.field_147917_g.func_110434_K().func_110577_a(TextureMap.field_110575_b);
++                    TextureAtlasSprite textureatlassprite = null;
+ 
+-                    if (textureatlassprite instanceof TextureCompass)
++                    if (item == Items.field_151111_aL)
+                     {
+-                        TextureCompass texturecompass = (TextureCompass)textureatlassprite;
+-                        double d0 = texturecompass.field_94244_i;
+-                        double d1 = texturecompass.field_94242_j;
+-                        texturecompass.field_94244_i = 0.0D;
+-                        texturecompass.field_94242_j = 0.0D;
+-                        texturecompass.func_94241_a(p_82402_1_.field_70170_p, p_82402_1_.field_70165_t, p_82402_1_.field_70161_v, (double)MathHelper.func_76142_g((float)(180 + p_82402_1_.field_174860_b.func_176736_b() * 90)), false, true);
+-                        texturecompass.field_94244_i = d0;
+-                        texturecompass.field_94242_j = d1;
++                        textureatlassprite = this.field_147917_g.func_147117_R().func_110572_b(TextureCompass.field_176608_l);
++                        this.field_147917_g.func_110434_K().func_110577_a(TextureMap.field_110575_b);
++
++                        if (textureatlassprite instanceof TextureCompass)
++                        {
++                            TextureCompass texturecompass = (TextureCompass)textureatlassprite;
++                            double d1 = texturecompass.field_94244_i;
++                            double d2 = texturecompass.field_94242_j;
++                            texturecompass.field_94244_i = 0.0D;
++                            texturecompass.field_94242_j = 0.0D;
++                            texturecompass.func_94241_a(p_82402_1_.field_70170_p, p_82402_1_.field_70165_t, p_82402_1_.field_70161_v, (double)MathHelper.func_76142_g((float)(180 + p_82402_1_.field_174860_b.func_176736_b() * 90)), false, true);
++                            texturecompass.field_94244_i = d1;
++                            texturecompass.field_94242_j = d2;
++                        }
++                        else
++                        {
++                            textureatlassprite = null;
++                        }
+                     }
+-                    else
++
++                    GlStateManager.func_179152_a(0.5F, 0.5F, 0.5F);
++
++                    if (!this.field_177074_h.func_175050_a(entityitem.func_92059_d()) || item instanceof ItemSkull)
+                     {
+-                        textureatlassprite = null;
++                        GlStateManager.func_179114_b(180.0F, 0.0F, 1.0F, 0.0F);
+                     }
+-                }
+ 
+-                GlStateManager.func_179152_a(0.5F, 0.5F, 0.5F);
++                    GlStateManager.func_179123_a();
++                    RenderHelper.func_74519_b();
++                    this.field_177074_h.func_181564_a(entityitem.func_92059_d(), ItemCameraTransforms.TransformType.FIXED);
++                    RenderHelper.func_74518_a();
++                    GlStateManager.func_179099_b();
+ 
+-                if (!this.field_177074_h.func_175050_a(entityitem.func_92059_d()) || item instanceof ItemSkull)
+-                {
+-                    GlStateManager.func_179114_b(180.0F, 0.0F, 1.0F, 0.0F);
++                    if (textureatlassprite != null && textureatlassprite.func_110970_k() > 0)
++                    {
++                        textureatlassprite.func_94219_l();
++                    }
+                 }
+-
+-                GlStateManager.func_179123_a();
+-                RenderHelper.func_74519_b();
+-                this.field_177074_h.func_181564_a(entityitem.func_92059_d(), ItemCameraTransforms.TransformType.FIXED);
+-                RenderHelper.func_74518_a();
+-                GlStateManager.func_179099_b();
+-
+-                if (textureatlassprite != null && textureatlassprite.func_110970_k() > 0)
+-                {
+-                    textureatlassprite.func_94219_l();
+-                }
+             }
+-
              GlStateManager.func_179145_e();
              GlStateManager.func_179121_F();
+         }
+@@ -223,4 +255,35 @@
+             }
+         }
+     }
++
++    private boolean isRenderItem(EntityItemFrame p_isRenderItem_1_)
++    {
++        if (Shaders.isShadowPass)
++        {
++            return false;
++        }
++        else
++        {
++            if (!Config.zoomMode)
++            {
++                Entity entity = this.field_147917_g.func_175606_aa();
++                double d0 = p_isRenderItem_1_.func_70092_e(entity.field_70165_t, entity.field_70163_u, entity.field_70161_v);
++
++                if (d0 > itemRenderDistanceSq)
++                {
++                    return false;
++                }
++            }
++
++            return true;
++        }
++    }
++
++    public static void updateItemRenderDistance()
++    {
++        Minecraft minecraft = Config.getMinecraft();
++        double d0 = (double)Config.limit(minecraft.field_71474_y.field_74334_X, 1.0F, 120.0F);
++        double d1 = Math.max(6.0D * (double)minecraft.field_71440_d / d0, 16.0D);
++        itemRenderDistanceSq = d1 * d1;
++    }
+ }

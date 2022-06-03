@@ -91,10 +91,29 @@
      private void func_177597_h()
      {
          this.func_177574_i();
-@@ -722,4 +737,35 @@
+@@ -722,4 +737,60 @@
          field_177617_q.field_178317_b = "class generation marker";
          field_177616_r.field_178317_b = "block entity marker";
      }
++    
++    public void loadItemModel(String p_loadItemModel_1_, ResourceLocation p_loadItemModel_2_, ResourceLocation p_loadItemModel_3_)
++    {
++        this.field_177615_s.put(p_loadItemModel_1_, p_loadItemModel_2_);
++
++        if (this.field_177611_h.get(p_loadItemModel_2_) == null)
++        {
++            try
++            {
++                ModelBlock modelblock = this.func_177594_c(p_loadItemModel_2_);
++                this.field_177611_h.put(p_loadItemModel_2_, modelblock);
++            }
++            catch (Exception exception)
++            {
++                field_177603_c.warn("Unable to load item model: \'{}\' for item: \'{}\'", new Object[] {p_loadItemModel_2_, p_loadItemModel_3_});
++                field_177603_c.warn(exception.getClass().getName() + ": " + exception.getMessage());
++            }
++        }
++    }
 +    
 +    /***********************************************************
 +     * FML Start
@@ -126,4 +145,10 @@
 +    /***********************************************************
 +     * FML End
 +     ***********************************************************/
++
++	public void loadItemModel(String string, ModelResourceLocation modelresourcelocation,
++			ResourceLocation resourcelocation) {
++		// TODO Auto-generated method stub
++		
++	}
  }

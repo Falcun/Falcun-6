@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/entity/layers/LayerSheepWool.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/entity/layers/LayerSheepWool.java
+@@ -14,7 +14,7 @@
+ {
+     private static final ResourceLocation field_177165_a = new ResourceLocation("textures/entity/sheep/sheep_fur.png");
+     private final RenderSheep field_177163_b;
+-    private final ModelSheep1 field_177164_c = new ModelSheep1();
++    public ModelSheep1 field_177164_c = new ModelSheep1();
+ 
+     public LayerSheepWool(RenderSheep p_i46112_1_)
+     {

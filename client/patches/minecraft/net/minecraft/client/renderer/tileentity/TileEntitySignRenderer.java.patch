@@ -1,0 +1,134 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/tileentity/TileEntitySignRenderer.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/tileentity/TileEntitySignRenderer.java
+@@ -2,23 +2,28 @@
+ 
+ import java.util.List;
+ import net.minecraft.block.Block;
++import net.minecraft.client.Minecraft;
+ import net.minecraft.client.gui.FontRenderer;
+ import net.minecraft.client.gui.GuiUtilRenderComponents;
+ import net.minecraft.client.model.ModelSign;
+ import net.minecraft.client.renderer.GlStateManager;
++import net.minecraft.entity.Entity;
+ import net.minecraft.init.Blocks;
++import net.minecraft.src.Config;
+ import net.minecraft.tileentity.TileEntitySign;
+ import net.minecraft.util.IChatComponent;
+ import net.minecraft.util.ResourceLocation;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import net.optifine.CustomColors;
++import net.optifine.shaders.Shaders;
+ import org.lwjgl.opengl.GL11;
+ 
+-@SideOnly(Side.CLIENT)
+ public class TileEntitySignRenderer extends TileEntitySpecialRenderer<TileEntitySign>
+ {
+     private static final ResourceLocation field_147513_b = new ResourceLocation("textures/entity/sign.png");
++
++    /** The ModelSign instance for use in this renderer */
+     private final ModelSign field_147514_c = new ModelSign();
++    private static double textRenderDistanceSq = 4096.0D;
+ 
+     public void func_180535_a(TileEntitySign p_180535_1_, double p_180535_2_, double p_180535_4_, double p_180535_6_, float p_180535_8_, int p_180535_9_)
+     {
+@@ -78,33 +83,42 @@
+         GlStateManager.func_179152_a(f, -f, -f);
+         this.field_147514_c.func_78164_a();
+         GlStateManager.func_179121_F();
+-        FontRenderer fontrenderer = this.func_147498_b();
+-        float f3 = 0.015625F * f;
+-        GlStateManager.func_179109_b(0.0F, 0.5F * f, 0.07F * f);
+-        GlStateManager.func_179152_a(f3, -f3, f3);
+-        GL11.glNormal3f(0.0F, 0.0F, -1.0F * f3);
+-        GlStateManager.func_179132_a(false);
+-        int i = 0;
+ 
+-        if (p_180535_9_ < 0)
++        if (isRenderText(p_180535_1_))
+         {
+-            for (int j = 0; j < p_180535_1_.field_145915_a.length; ++j)
++            FontRenderer fontrenderer = this.func_147498_b();
++            float f3 = 0.015625F * f;
++            GlStateManager.func_179109_b(0.0F, 0.5F * f, 0.07F * f);
++            GlStateManager.func_179152_a(f3, -f3, f3);
++            GL11.glNormal3f(0.0F, 0.0F, -1.0F * f3);
++            GlStateManager.func_179132_a(false);
++            int i = 0;
++
++            if (Config.isCustomColors())
+             {
+-                if (p_180535_1_.field_145915_a[j] != null)
+-                {
+-                    IChatComponent ichatcomponent = p_180535_1_.field_145915_a[j];
+-                    List<IChatComponent> list = GuiUtilRenderComponents.func_178908_a(ichatcomponent, 90, fontrenderer, false, true);
+-                    String s = list != null && list.size() > 0 ? ((IChatComponent)list.get(0)).func_150254_d() : "";
++                i = CustomColors.getSignTextColor(i);
++            }
+ 
+-                    if (j == p_180535_1_.field_145918_i)
++            if (p_180535_9_ < 0)
++            {
++                for (int j = 0; j < p_180535_1_.field_145915_a.length; ++j)
++                {
++                    if (p_180535_1_.field_145915_a[j] != null)
+                     {
+-                        s = "> " + s + " <";
+-                        fontrenderer.func_78276_b(s, -fontrenderer.func_78256_a(s) / 2, j * 10 - p_180535_1_.field_145915_a.length * 5, i);
++                        IChatComponent ichatcomponent = p_180535_1_.field_145915_a[j];
++                        List<IChatComponent> list = GuiUtilRenderComponents.func_178908_a(ichatcomponent, 90, fontrenderer, false, true);
++                        String s = list != null && list.size() > 0 ? ((IChatComponent)list.get(0)).func_150254_d() : "";
++
++                        if (j == p_180535_1_.field_145918_i)
++                        {
++                            s = "> " + s + " <";
++                            fontrenderer.func_78276_b(s, -fontrenderer.func_78256_a(s) / 2, j * 10 - p_180535_1_.field_145915_a.length * 5, i);
++                        }
++                        else
++                        {
++                            fontrenderer.func_78276_b(s, -fontrenderer.func_78256_a(s) / 2, j * 10 - p_180535_1_.field_145915_a.length * 5, i);
++                        }
+                     }
+-                    else
+-                    {
+-                        fontrenderer.func_78276_b(s, -fontrenderer.func_78256_a(s) / 2, j * 10 - p_180535_1_.field_145915_a.length * 5, i);
+-                    }
+                 }
+             }
+         }
+@@ -120,4 +134,35 @@
+             GlStateManager.func_179128_n(5888);
+         }
+     }
++
++    private static boolean isRenderText(TileEntitySign p_isRenderText_0_)
++    {
++        if (Shaders.isShadowPass)
++        {
++            return false;
++        }
++        else
++        {
++            if (!Config.zoomMode && p_isRenderText_0_.field_145918_i < 0)
++            {
++                Entity entity = Config.getMinecraft().func_175606_aa();
++                double d0 = p_isRenderText_0_.func_145835_a(entity.field_70165_t, entity.field_70163_u, entity.field_70161_v);
++
++                if (d0 > textRenderDistanceSq)
++                {
++                    return false;
++                }
++            }
++
++            return true;
++        }
++    }
++
++    public static void updateTextRenderDistance()
++    {
++        Minecraft minecraft = Config.getMinecraft();
++        double d0 = (double)Config.limit(minecraft.field_71474_y.field_74334_X, 1.0F, 120.0F);
++        double d1 = Math.max(1.5D * (double)minecraft.field_71440_d / d0, 16.0D);
++        textRenderDistanceSq = d1 * d1;
++    }
+ }

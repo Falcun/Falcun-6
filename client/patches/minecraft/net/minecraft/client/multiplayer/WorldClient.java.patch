@@ -1,17 +1,295 @@
 --- ../src-base/minecraft/net/minecraft/client/multiplayer/WorldClient.java
 +++ ../src-work/minecraft/net/minecraft/client/multiplayer/WorldClient.java
-@@ -52,12 +52,13 @@
+@@ -20,6 +20,7 @@
+ import net.minecraft.nbt.NBTTagCompound;
+ import net.minecraft.profiler.Profiler;
+ import net.minecraft.scoreboard.Scoreboard;
++import net.minecraft.src.Config;
+ import net.minecraft.util.BlockPos;
+ import net.minecraft.util.ChatComponentText;
+ import net.minecraft.util.EnumParticleTypes;
+@@ -34,38 +35,53 @@
+ import net.minecraft.world.storage.SaveDataMemoryStorage;
+ import net.minecraft.world.storage.SaveHandlerMP;
+ import net.minecraft.world.storage.WorldInfo;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import net.optifine.CustomGuis;
++import net.optifine.DynamicLights;
++import net.optifine.override.PlayerControllerOF;
++import net.optifine.reflect.Reflector;
+ 
+-@SideOnly(Side.CLIENT)
+ public class WorldClient extends World
+ {
++    /** The packets that need to be sent to the server. */
+     private NetHandlerPlayClient field_73035_a;
++
++    /** The ChunkProviderClient instance */
+     private ChunkProviderClient field_73033_b;
+     private final Set<Entity> field_73032_d = Sets.<Entity>newHashSet();
+     private final Set<Entity> field_73036_L = Sets.<Entity>newHashSet();
+     private final Minecraft field_73037_M = Minecraft.func_71410_x();
+     private final Set<ChunkCoordIntPair> field_73038_N = Sets.<ChunkCoordIntPair>newHashSet();
++    private boolean playerUpdate = false;
+ 
+     public WorldClient(NetHandlerPlayClient p_i45063_1_, WorldSettings p_i45063_2_, int p_i45063_3_, EnumDifficulty p_i45063_4_, Profiler p_i45063_5_)
+     {
          super(new SaveHandlerMP(), new WorldInfo(p_i45063_2_, "MpServer"), WorldProvider.func_76570_a(p_i45063_3_), p_i45063_5_, true);
          this.field_73035_a = p_i45063_1_;
          this.func_72912_H().func_176144_a(p_i45063_4_);
 -        this.func_175652_B(new BlockPos(8, 64, 8));
          this.field_73011_w.func_76558_a(this);
-+        this.func_175652_B(new BlockPos(8, 64, 8)); //Forge: Moved below registerWorld to prevent NPE in our redirect.
++        this.func_175652_B(new BlockPos(8, 64, 8));
          this.field_73020_y = this.func_72970_h();
          this.field_72988_C = new SaveDataMemoryStorage();
          this.func_72966_v();
          this.func_72947_a();
-+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.WorldEvent.Load(this));
++        Reflector.postForgeBusEvent(Reflector.WorldEvent_Load_Constructor, new Object[] {this});
++
++        if (this.field_73037_M.field_71442_b != null && this.field_73037_M.field_71442_b.getClass() == PlayerControllerMP.class)
++        {
++            this.field_73037_M.field_71442_b = new PlayerControllerOF(this.field_73037_M, p_i45063_1_);
++            CustomGuis.setPlayerControllerOF((PlayerControllerOF)this.field_73037_M.field_71442_b);
++        }
      }
  
++    /**
++     * Runs a single tick for the world
++     */
      public void func_72835_b()
+     {
+         super.func_72835_b();
+         this.func_82738_a(this.func_82737_E() + 1L);
+ 
+-        if (this.func_82736_K().func_82766_b("doDaylightCycle"))
++        if (this.func_82736_K().getGameRuleBooleanValue("doDaylightCycle"))
+         {
+             this.func_72877_b(this.func_72820_D() + 1L);
+         }
+@@ -88,12 +104,22 @@
+         this.field_72984_F.func_76318_c("blocks");
+         this.func_147456_g();
+         this.field_72984_F.func_76319_b();
++        /* WDL >>> */
++		wdl.WDLHooks.onWorldClientTick(this);
++		/* <<< WDL */
+     }
+ 
++    /**
++     * Invalidates an AABB region of blocks from the receive queue, in the event that the block has been modified
++     * client-side in the intervening 80 receive ticks.
++     */
+     public void func_73031_a(int p_73031_1_, int p_73031_2_, int p_73031_3_, int p_73031_4_, int p_73031_5_, int p_73031_6_)
+     {
+     }
+ 
++    /**
++     * Creates the chunk provider for this world. Called in the constructor. Retrieves provider from worldProvider?
++     */
+     protected IChunkProvider func_72970_h()
+     {
+         this.field_73033_b = new ChunkProviderClient(this);
+@@ -135,6 +161,9 @@
+ 
+     public void func_73025_a(int p_73025_1_, int p_73025_2_, boolean p_73025_3_)
+     {
++    	/* WDL >>> */
++		wdl.WDLHooks.onWorldClientDoPreChunk(this, p_73025_1_, p_73025_2_, p_73025_3_);
++		/* <<< WDL */
+         if (p_73025_3_)
+         {
+             this.field_73033_b.func_73158_c(p_73025_1_, p_73025_2_);
+@@ -150,6 +179,9 @@
+         }
+     }
+ 
++    /**
++     * Called when an entity is spawned in the world. This includes players.
++     */
+     public boolean func_72838_d(Entity p_72838_1_)
+     {
+         boolean flag = super.func_72838_d(p_72838_1_);
+@@ -167,13 +199,16 @@
+         return flag;
+     }
+ 
++    /**
++     * Schedule the entity for removal during the next tick. Marks the entity dead in anticipation.
++     */
+     public void func_72900_e(Entity p_72900_1_)
+     {
+         super.func_72900_e(p_72900_1_);
+         this.field_73032_d.remove(p_72900_1_);
+     }
+ 
+-    public void func_72923_a(Entity p_72923_1_)
++    protected void func_72923_a(Entity p_72923_1_)
+     {
+         super.func_72923_a(p_72923_1_);
+ 
+@@ -183,7 +218,7 @@
+         }
+     }
+ 
+-    public void func_72847_b(Entity p_72847_1_)
++    protected void func_72847_b(Entity p_72847_1_)
+     {
+         super.func_72847_b(p_72847_1_);
+         boolean flag = false;
+@@ -202,6 +237,9 @@
+         }
+     }
+ 
++    /**
++     * Add an ID to Entity mapping to entityHashSet
++     */
+     public void func_73027_a(int p_73027_1_, Entity p_73027_2_)
+     {
+         Entity entity = this.func_73045_a(p_73027_1_);
+@@ -222,6 +260,9 @@
+         this.field_175729_l.func_76038_a(p_73027_1_, p_73027_2_);
+     }
+ 
++    /**
++     * Returns the Entity with the given ID, or null if it doesn't exist in this World.
++     */
+     public Entity func_73045_a(int p_73045_1_)
+     {
+         return (Entity)(p_73045_1_ == this.field_73037_M.field_71439_g.func_145782_y() ? this.field_73037_M.field_71439_g : super.func_73045_a(p_73045_1_));
+@@ -229,6 +270,9 @@
+ 
+     public Entity func_73028_b(int p_73028_1_)
+     {
++    	/* WDL >>> */
++    	wdl.WDLHooks.onWorldClientRemoveEntityFromWorld(this, p_73028_1_);
++    	/* <<< WDL */
+         Entity entity = (Entity)this.field_175729_l.func_76049_d(p_73028_1_);
+ 
+         if (entity != null)
+@@ -249,11 +293,17 @@
+         return super.func_180501_a(p_180503_1_, p_180503_2_, 3);
+     }
+ 
++    /**
++     * If on MP, sends a quitting packet.
++     */
+     public void func_72882_A()
+     {
+         this.field_73035_a.func_147298_b().func_150718_a(new ChatComponentText("Quitting"));
+     }
+ 
++    /**
++     * Updates all weather states.
++     */
+     protected void func_72979_l()
+     {
+     }
+@@ -271,7 +321,7 @@
+         boolean flag = this.field_73037_M.field_71442_b.func_178889_l() == WorldSettings.GameType.CREATIVE && itemstack != null && Block.func_149634_a(itemstack.func_77973_b()) == Blocks.field_180401_cv;
+         BlockPos.MutableBlockPos blockpos$mutableblockpos = new BlockPos.MutableBlockPos();
+ 
+-        for (int j = 0; j < 1000; ++j)
++        for (int j = 0; j < 100; ++j)
+         {
+             int k = p_73029_1_ + this.field_73012_v.nextInt(i) - this.field_73012_v.nextInt(i);
+             int l = p_73029_2_ + this.field_73012_v.nextInt(i) - this.field_73012_v.nextInt(i);
+@@ -287,6 +337,9 @@
+         }
+     }
+ 
++    /**
++     * also releases skins.
++     */
+     public void func_73022_a()
+     {
+         this.field_72996_f.removeAll(this.field_72997_g);
+@@ -341,6 +394,9 @@
+         }
+     }
+ 
++    /**
++     * Adds some basic stats of the world to the given crash report.
++     */
+     public CrashReportCategory func_72914_a(CrashReport p_72914_1_)
+     {
+         CrashReportCategory crashreportcategory = super.func_72914_a(p_72914_1_);
+@@ -375,11 +431,17 @@
+         return crashreportcategory;
+     }
+ 
++    /**
++     * Plays a sound at the specified position.
++     */
+     public void func_175731_a(BlockPos p_175731_1_, String p_175731_2_, float p_175731_3_, float p_175731_4_, boolean p_175731_5_)
+     {
+         this.func_72980_b((double)p_175731_1_.func_177958_n() + 0.5D, (double)p_175731_1_.func_177956_o() + 0.5D, (double)p_175731_1_.func_177952_p() + 0.5D, p_175731_2_, p_175731_3_, p_175731_4_, p_175731_5_);
+     }
+ 
++    /**
++     * par8 is loudness, all pars passed to minecraftInstance.sndManager.playSound
++     */
+     public void func_72980_b(double p_72980_1_, double p_72980_3_, double p_72980_5_, String p_72980_7_, float p_72980_8_, float p_72980_9_, boolean p_72980_10_)
+     {
+         double d0 = this.field_73037_M.func_175606_aa().func_70092_e(p_72980_1_, p_72980_3_, p_72980_5_);
+@@ -406,6 +468,9 @@
+         this.field_96442_D = p_96443_1_;
+     }
+ 
++    /**
++     * Sets the world time.
++     */
+     public void func_72877_b(long p_72877_1_)
+     {
+         if (p_72877_1_ < 0L)
+@@ -420,4 +485,50 @@
+ 
+         super.func_72877_b(p_72877_1_);
+     }
++
++    public int func_175626_b(BlockPos pos, int lightValue)
++    {
++        int i = super.func_175626_b(pos, lightValue);
++
++        if (Config.isDynamicLights())
++        {
++            i = DynamicLights.getCombinedLight(pos, i);
++        }
++
++        return i;
++    }
++
++    /**
++     * Sets the block state at a given location. Flag 1 will cause a block update. Flag 2 will send the change to
++     * clients (you almost always want this). Flag 4 prevents the block from being re-rendered, if this is a client
++     * world. Flags can be added together.
++     *  
++     * @param flags Flag 1 will cause a block update. Flag 2 will send the change to clients (you almost always want
++     * this). Flag 4 prevents the block from being re-rendered, if this is a client world. Flags can be added together.
++     */
++    public boolean func_180501_a(BlockPos pos, IBlockState newState, int flags)
++    {
++        this.playerUpdate = this.isPlayerActing();
++        boolean flag = super.func_180501_a(pos, newState, flags);
++        this.playerUpdate = false;
++        return flag;
++    }
++
++    private boolean isPlayerActing()
++    {
++        if (this.field_73037_M.field_71442_b instanceof PlayerControllerOF)
++        {
++            PlayerControllerOF playercontrollerof = (PlayerControllerOF)this.field_73037_M.field_71442_b;
++            return playercontrollerof.isActing();
++        }
++        else
++        {
++            return false;
++        }
++    }
++
++    public boolean isPlayerUpdate()
++    {
++        return this.playerUpdate;
++    }
+ }

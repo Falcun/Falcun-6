@@ -1,6 +1,29 @@
 --- ../src-base/minecraft/net/minecraft/entity/Entity.java
 +++ ../src-work/minecraft/net/minecraft/entity/Entity.java
-@@ -49,7 +49,7 @@
+@@ -1,13 +1,17 @@
+ package net.minecraft.entity;
+ 
+ import java.util.List;
++
+ import java.util.Random;
+ import java.util.UUID;
+ import java.util.concurrent.Callable;
++
++import net.mattbenson.Wrapper;
++import net.mattbenson.events.types.entity.EntityCreateEvent;
++import net.mattbenson.modules.types.fpssettings.FPSSettings;
+ import net.minecraft.block.Block;
+ import net.minecraft.block.BlockFence;
+ import net.minecraft.block.BlockFenceGate;
+-import net.minecraft.block.BlockLiquid;
+ import net.minecraft.block.BlockWall;
+ import net.minecraft.block.material.Material;
+ import net.minecraft.block.state.IBlockState;
+@@ -46,10 +50,11 @@
+ import net.minecraft.world.Explosion;
+ import net.minecraft.world.World;
+ import net.minecraft.world.WorldServer;
++import net.minecraftforge.common.capabilities.Capability;
  import net.minecraftforge.fml.relauncher.Side;
  import net.minecraftforge.fml.relauncher.SideOnly;
  
@@ -9,7 +32,7 @@
  {
      private static final AxisAlignedBB field_174836_a = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D);
      private static int field_70152_a;
-@@ -129,6 +129,15 @@
+@@ -129,6 +134,19 @@
      protected UUID field_96093_i;
      private final CommandResultStats field_174837_as;
  
@@ -22,20 +45,25 @@
 +    protected java.util.HashMap<String, net.minecraftforge.common.IExtendedEntityProperties> extendedProperties = new java.util.HashMap<String, net.minecraftforge.common.IExtendedEntityProperties>();
 +    private net.minecraftforge.common.capabilities.CapabilityDispatcher capabilities;
 +
++    public boolean isMobSpawner;
++    
++    public boolean dontRenderNameTag;
++    
      public int func_145782_y()
      {
          return this.field_145783_c;
-@@ -172,6 +181,9 @@
+@@ -172,6 +190,10 @@
          this.field_70180_af.func_75682_a(2, "");
          this.field_70180_af.func_75682_a(4, Byte.valueOf((byte)0));
          this.func_70088_a();
 +        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.EntityEvent.EntityConstructing(this));
 +        for (net.minecraftforge.common.IExtendedEntityProperties props : extendedProperties.values()) props.init(this, p_i1582_1_);
 +        capabilities = net.minecraftforge.event.ForgeEventFactory.gatherCapabilities(this);
++        Wrapper.getInstance().post(new EntityCreateEvent(this, p_i1582_1_));
      }
  
      protected abstract void func_70088_a();
-@@ -996,12 +1008,12 @@
+@@ -996,12 +1018,12 @@
          IBlockState iblockstate = this.field_70170_p.func_180495_p(blockpos);
          Block block = iblockstate.func_177230_c();
  
@@ -52,7 +80,27 @@
          }
          else
          {
-@@ -1356,6 +1368,23 @@
+@@ -1040,12 +1062,19 @@
+     @SideOnly(Side.CLIENT)
+     public int func_70070_b(float p_70070_1_)
+     {
++    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
++    		return 10000;
++    	}
+         BlockPos blockpos = new BlockPos(this.field_70165_t, this.field_70163_u + (double)this.func_70047_e(), this.field_70161_v);
+         return this.field_70170_p.func_175667_e(blockpos) ? this.field_70170_p.func_175626_b(blockpos, 0) : 0;
+     }
+ 
+     public float func_70013_c(float p_70013_1_)
+     {
++    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
++    		return 1;
++    	}
++    	
+         BlockPos blockpos = new BlockPos(this.field_70165_t, this.field_70163_u + (double)this.func_70047_e(), this.field_70161_v);
+         return this.field_70170_p.func_175667_e(blockpos) ? this.field_70170_p.func_175724_o(blockpos) : 0.0F;
+     }
+@@ -1356,6 +1385,23 @@
                  p_70109_1_.func_74757_a("Silent", this.func_174814_R());
              }
  
@@ -76,7 +124,7 @@
              this.func_70014_b(p_70109_1_);
  
              if (this.field_70154_o != null)
-@@ -1438,6 +1467,30 @@
+@@ -1438,6 +1484,30 @@
              this.func_174805_g(p_70020_1_.func_74767_n("CustomNameVisible"));
              this.field_174837_as.func_179668_a(p_70020_1_);
              this.func_174810_b(p_70020_1_.func_74767_n("Silent"));
@@ -107,7 +155,7 @@
              this.func_70037_a(p_70020_1_);
  
              if (this.func_142008_O())
-@@ -1512,7 +1565,10 @@
+@@ -1512,7 +1582,10 @@
          {
              EntityItem entityitem = new EntityItem(this.field_70170_p, this.field_70165_t, this.field_70163_u + (double)p_70099_2_, this.field_70161_v, p_70099_1_);
              entityitem.func_174869_p();
@@ -119,7 +167,7 @@
              return entityitem;
          }
          else
-@@ -1655,6 +1711,7 @@
+@@ -1655,6 +1728,7 @@
  
      public void func_70078_a(Entity p_70078_1_)
      {
@@ -127,7 +175,7 @@
          this.field_70149_e = 0.0D;
          this.field_70147_f = 0.0D;
  
-@@ -2049,6 +2106,7 @@
+@@ -2049,6 +2123,7 @@
      {
          if (!this.field_70170_p.field_72995_K && !this.field_70128_L)
          {
@@ -135,7 +183,7 @@
              this.field_70170_p.field_72984_F.func_76320_a("changeDimension");
              MinecraftServer minecraftserver = MinecraftServer.func_71276_C();
              int i = this.field_71093_bK;
-@@ -2092,7 +2150,7 @@
+@@ -2092,7 +2167,7 @@
  
      public float func_180428_a(Explosion p_180428_1_, World p_180428_2_, BlockPos p_180428_3_, IBlockState p_180428_4_)
      {
@@ -144,10 +192,29 @@
      }
  
      public boolean func_174816_a(Explosion p_174816_1_, World p_174816_2_, BlockPos p_174816_3_, IBlockState p_174816_4_, float p_174816_5_)
-@@ -2353,4 +2411,209 @@
+@@ -2353,4 +2428,226 @@
  
          EnchantmentHelper.func_151385_b(p_174815_1_, p_174815_2_);
      }
++    
++    public String getCommandSenderName()
++    {
++        if (this.func_145818_k_())
++        {
++            return this.func_95999_t();
++        }
++        else
++        {
++            String s = EntityList.func_75621_b(this);
++
++            if (s == null)
++            {
++                s = "generic";
++            }
++
++            return StatCollector.func_74838_a("entity." + s + ".name");
++        }
++    }
 +
 +    /* ================================== Forge Start =====================================*/
 +    /**
@@ -328,13 +395,6 @@
 +        return this instanceof EntityLivingBase;
 +    }
 +
-+    public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability, net.minecraft.util.EnumFacing facing)
-+    {
-+        if (getCapability(capability, facing) != null)
-+            return true;
-+        return capabilities == null ? false : capabilities.hasCapability(capability, facing);
-+    }
-+
 +    public <T> T getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, net.minecraft.util.EnumFacing facing)
 +    {
 +        return capabilities == null ? null : capabilities.getCapability(capability, facing);
@@ -343,6 +403,11 @@
 +    public void deserializeNBT(NBTTagCompound nbt)
 +    {
 +        this.func_70020_e(nbt);
++    }
++    
++    //MATT NEW FPS
++    public boolean hasCapability(final Capability<?> capability, final EnumFacing direction) {
++        return this.capabilities != null && this.capabilities.hasCapability((Capability)capability, direction);
 +    }
 +
 +    public NBTTagCompound serializeNBT()

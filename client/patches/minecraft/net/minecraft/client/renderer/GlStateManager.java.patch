@@ -1,0 +1,1166 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/GlStateManager.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/GlStateManager.java
+@@ -1,11 +1,18 @@
+ package net.minecraft.client.renderer;
+ 
++import java.nio.ByteBuffer;
+ import java.nio.FloatBuffer;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import java.nio.IntBuffer;
++import net.minecraft.src.Config;
++import net.optifine.SmartAnimations;
++import net.optifine.render.GlAlphaState;
++import net.optifine.render.GlBlendState;
++import net.optifine.shaders.Shaders;
++import net.optifine.util.LockCounter;
+ import org.lwjgl.opengl.GL11;
++import org.lwjgl.opengl.GL13;
++import org.lwjgl.opengl.GL14;
+ 
+-@SideOnly(Side.CLIENT)
+ public class GlStateManager
+ {
+     private static GlStateManager.AlphaState field_179160_a = new GlStateManager.AlphaState();
+@@ -22,12 +29,18 @@
+     private static GlStateManager.ClearState field_179163_l = new GlStateManager.ClearState();
+     private static GlStateManager.StencilState field_179164_m = new GlStateManager.StencilState();
+     private static GlStateManager.BooleanState field_179161_n = new GlStateManager.BooleanState(2977);
+-    private static int field_179162_o = 0;
+-    private static GlStateManager.TextureState[] field_179174_p = new GlStateManager.TextureState[8];
++    public static int field_179162_o = 0;
++    public static GlStateManager.TextureState[] field_179174_p = new GlStateManager.TextureState[32];
+     private static int field_179173_q = 7425;
+     private static GlStateManager.BooleanState field_179172_r = new GlStateManager.BooleanState(32826);
+     private static GlStateManager.ColorMask field_179171_s = new GlStateManager.ColorMask();
+-    private static GlStateManager.Color field_179170_t = new GlStateManager.Color();
++    public static GlStateManager.Color field_179170_t = new GlStateManager.Color();
++    public static boolean clearEnabled = true;
++    private static LockCounter alphaLock = new LockCounter();
++    private static GlAlphaState alphaLockState = new GlAlphaState();
++    private static LockCounter blendLock = new LockCounter();
++    private static GlBlendState blendLockState = new GlBlendState();
++    private static boolean creatingDisplayList = false;
+ 
+     public static void func_179123_a()
+     {
+@@ -41,22 +54,43 @@
+ 
+     public static void func_179118_c()
+     {
+-        field_179160_a.field_179208_a.func_179198_a();
++        if (alphaLock.isLocked())
++        {
++            alphaLockState.setDisabled();
++        }
++        else
++        {
++            field_179160_a.field_179208_a.func_179198_a();
++        }
+     }
+ 
+     public static void func_179141_d()
+     {
+-        field_179160_a.field_179208_a.func_179200_b();
++        if (alphaLock.isLocked())
++        {
++            alphaLockState.setEnabled();
++        }
++        else
++        {
++            field_179160_a.field_179208_a.func_179200_b();
++        }
+     }
+ 
+     public static void func_179092_a(int p_179092_0_, float p_179092_1_)
+     {
+-        if (p_179092_0_ != field_179160_a.field_179206_b || p_179092_1_ != field_179160_a.field_179207_c)
++        if (alphaLock.isLocked())
+         {
+-            field_179160_a.field_179206_b = p_179092_0_;
+-            field_179160_a.field_179207_c = p_179092_1_;
+-            GL11.glAlphaFunc(p_179092_0_, p_179092_1_);
++            alphaLockState.setFuncRef(p_179092_0_, p_179092_1_);
+         }
++        else
++        {
++            if (p_179092_0_ != field_179160_a.field_179206_b || p_179092_1_ != field_179160_a.field_179207_c)
++            {
++                field_179160_a.field_179206_b = p_179092_0_;
++                field_179160_a.field_179207_c = p_179092_1_;
++                GL11.glAlphaFunc(p_179092_0_, p_179092_1_);
++            }
++        }
+     }
+ 
+     public static void func_179145_e()
+@@ -129,34 +163,76 @@
+ 
+     public static void func_179084_k()
+     {
+-        field_179157_e.field_179213_a.func_179198_a();
++        if (blendLock.isLocked())
++        {
++            blendLockState.setDisabled();
++        }
++        else
++        {
++            field_179157_e.field_179213_a.func_179198_a();
++        }
+     }
+ 
+     public static void func_179147_l()
+     {
+-        field_179157_e.field_179213_a.func_179200_b();
++        if (blendLock.isLocked())
++        {
++            blendLockState.setEnabled();
++        }
++        else
++        {
++            field_179157_e.field_179213_a.func_179200_b();
++        }
+     }
+ 
+     public static void func_179112_b(int p_179112_0_, int p_179112_1_)
+     {
+-        if (p_179112_0_ != field_179157_e.field_179211_b || p_179112_1_ != field_179157_e.field_179212_c)
++        if (blendLock.isLocked())
+         {
+-            field_179157_e.field_179211_b = p_179112_0_;
+-            field_179157_e.field_179212_c = p_179112_1_;
+-            GL11.glBlendFunc(p_179112_0_, p_179112_1_);
++            blendLockState.setFactors(p_179112_0_, p_179112_1_);
+         }
++        else
++        {
++            if (p_179112_0_ != field_179157_e.field_179211_b || p_179112_1_ != field_179157_e.field_179212_c || p_179112_0_ != field_179157_e.field_179209_d || p_179112_1_ != field_179157_e.field_179210_e)
++            {
++                field_179157_e.field_179211_b = p_179112_0_;
++                field_179157_e.field_179212_c = p_179112_1_;
++                field_179157_e.field_179209_d = p_179112_0_;
++                field_179157_e.field_179210_e = p_179112_1_;
++
++                if (Config.isShaders())
++                {
++                    Shaders.uniform_blendFunc.setValue(p_179112_0_, p_179112_1_, p_179112_0_, p_179112_1_);
++                }
++
++                GL11.glBlendFunc(p_179112_0_, p_179112_1_);
++            }
++        }
+     }
+ 
+     public static void func_179120_a(int p_179120_0_, int p_179120_1_, int p_179120_2_, int p_179120_3_)
+     {
+-        if (p_179120_0_ != field_179157_e.field_179211_b || p_179120_1_ != field_179157_e.field_179212_c || p_179120_2_ != field_179157_e.field_179209_d || p_179120_3_ != field_179157_e.field_179210_e)
++        if (blendLock.isLocked())
+         {
+-            field_179157_e.field_179211_b = p_179120_0_;
+-            field_179157_e.field_179212_c = p_179120_1_;
+-            field_179157_e.field_179209_d = p_179120_2_;
+-            field_179157_e.field_179210_e = p_179120_3_;
+-            OpenGlHelper.func_148821_a(p_179120_0_, p_179120_1_, p_179120_2_, p_179120_3_);
++            blendLockState.setFactors(p_179120_0_, p_179120_1_, p_179120_2_, p_179120_3_);
+         }
++        else
++        {
++            if (p_179120_0_ != field_179157_e.field_179211_b || p_179120_1_ != field_179157_e.field_179212_c || p_179120_2_ != field_179157_e.field_179209_d || p_179120_3_ != field_179157_e.field_179210_e)
++            {
++                field_179157_e.field_179211_b = p_179120_0_;
++                field_179157_e.field_179212_c = p_179120_1_;
++                field_179157_e.field_179209_d = p_179120_2_;
++                field_179157_e.field_179210_e = p_179120_3_;
++
++                if (Config.isShaders())
++                {
++                    Shaders.uniform_blendFunc.setValue(p_179120_0_, p_179120_1_, p_179120_2_, p_179120_3_);
++                }
++
++                OpenGlHelper.func_148821_a(p_179120_0_, p_179120_1_, p_179120_2_, p_179120_3_);
++            }
++        }
+     }
+ 
+     public static void func_179127_m()
+@@ -175,15 +251,30 @@
+         {
+             field_179155_g.field_179047_b = p_179093_0_;
+             GL11.glFogi(GL11.GL_FOG_MODE, p_179093_0_);
++
++            if (Config.isShaders())
++            {
++                Shaders.setFogMode(p_179093_0_);
++            }
+         }
+     }
+ 
+     public static void func_179095_a(float p_179095_0_)
+     {
++        if (p_179095_0_ < 0.0F)
++        {
++            p_179095_0_ = 0.0F;
++        }
++
+         if (p_179095_0_ != field_179155_g.field_179048_c)
+         {
+             field_179155_g.field_179048_c = p_179095_0_;
+             GL11.glFogf(GL11.GL_FOG_DENSITY, p_179095_0_);
++
++            if (Config.isShaders())
++            {
++                Shaders.setFogDensity(p_179095_0_);
++            }
+         }
+     }
+ 
+@@ -205,6 +296,16 @@
+         }
+     }
+ 
++    public static void glFog(int p_glFog_0_, FloatBuffer p_glFog_1_)
++    {
++        GL11.glFog(p_glFog_0_, p_glFog_1_);
++    }
++
++    public static void glFogi(int p_glFogi_0_, int p_glFogi_1_)
++    {
++        GL11.glFogi(p_glFogi_0_, p_glFogi_1_);
++    }
++
+     public static void func_179089_o()
+     {
+         field_179167_h.field_179054_a.func_179200_b();
+@@ -295,12 +396,16 @@
+         {
+             case S:
+                 return field_179166_k.field_179064_a;
++
+             case T:
+                 return field_179166_k.field_179062_b;
++
+             case R:
+                 return field_179166_k.field_179063_c;
++
+             case Q:
+                 return field_179166_k.field_179061_d;
++
+             default:
+                 return field_179166_k.field_179064_a;
+         }
+@@ -332,13 +437,16 @@
+ 
+     public static void func_179150_h(int p_179150_0_)
+     {
+-        GL11.glDeleteTextures(p_179150_0_);
+-
+-        for (GlStateManager.TextureState glstatemanager$texturestate : field_179174_p)
++        if (p_179150_0_ != 0)
+         {
+-            if (glstatemanager$texturestate.field_179059_b == p_179150_0_)
++            GL11.glDeleteTextures(p_179150_0_);
++
++            for (GlStateManager.TextureState glstatemanager$texturestate : field_179174_p)
+             {
+-                glstatemanager$texturestate.field_179059_b = -1;
++                if (glstatemanager$texturestate.field_179059_b == p_179150_0_)
++                {
++                    glstatemanager$texturestate.field_179059_b = 0;
++                }
+             }
+         }
+     }
+@@ -349,6 +457,11 @@
+         {
+             field_179174_p[field_179162_o].field_179059_b = p_179144_0_;
+             GL11.glBindTexture(GL11.GL_TEXTURE_2D, p_179144_0_);
++
++            if (SmartAnimations.isActive())
++            {
++                SmartAnimations.textureRendered(p_179144_0_);
++            }
+         }
+     }
+ 
+@@ -421,7 +534,10 @@
+ 
+     public static void func_179086_m(int p_179086_0_)
+     {
+-        GL11.glClear(p_179086_0_);
++        if (clearEnabled)
++        {
++            GL11.glClear(p_179086_0_);
++        }
+     }
+ 
+     public static void func_179128_n(int p_179128_0_)
+@@ -506,277 +622,604 @@
+         field_179170_t.field_179195_a = field_179170_t.field_179193_b = field_179170_t.field_179194_c = field_179170_t.field_179192_d = -1.0F;
+     }
+ 
+-    public static void func_179148_o(int p_179148_0_)
++    public static void glNormalPointer(int p_glNormalPointer_0_, int p_glNormalPointer_1_, ByteBuffer p_glNormalPointer_2_)
+     {
+-        GL11.glCallList(p_179148_0_);
++        GL11.glNormalPointer(p_glNormalPointer_0_, p_glNormalPointer_1_, p_glNormalPointer_2_);
+     }
+ 
+-    static
++    public static void glTexCoordPointer(int p_glTexCoordPointer_0_, int p_glTexCoordPointer_1_, int p_glTexCoordPointer_2_, int p_glTexCoordPointer_3_)
+     {
+-        for (int i = 0; i < 8; ++i)
+-        {
+-            field_179159_c[i] = new GlStateManager.BooleanState(16384 + i);
+-        }
++        GL11.glTexCoordPointer(p_glTexCoordPointer_0_, p_glTexCoordPointer_1_, p_glTexCoordPointer_2_, (long)p_glTexCoordPointer_3_);
++    }
+ 
+-        for (int j = 0; j < 8; ++j)
+-        {
+-            field_179174_p[j] = new GlStateManager.TextureState();
+-        }
++    public static void glTexCoordPointer(int p_glTexCoordPointer_0_, int p_glTexCoordPointer_1_, int p_glTexCoordPointer_2_, ByteBuffer p_glTexCoordPointer_3_)
++    {
++        GL11.glTexCoordPointer(p_glTexCoordPointer_0_, p_glTexCoordPointer_1_, p_glTexCoordPointer_2_, p_glTexCoordPointer_3_);
+     }
+ 
+-    @SideOnly(Side.CLIENT)
+-    static class AlphaState
++    public static void glVertexPointer(int p_glVertexPointer_0_, int p_glVertexPointer_1_, int p_glVertexPointer_2_, int p_glVertexPointer_3_)
++    {
++        GL11.glVertexPointer(p_glVertexPointer_0_, p_glVertexPointer_1_, p_glVertexPointer_2_, (long)p_glVertexPointer_3_);
++    }
++
++    public static void glVertexPointer(int p_glVertexPointer_0_, int p_glVertexPointer_1_, int p_glVertexPointer_2_, ByteBuffer p_glVertexPointer_3_)
++    {
++        GL11.glVertexPointer(p_glVertexPointer_0_, p_glVertexPointer_1_, p_glVertexPointer_2_, p_glVertexPointer_3_);
++    }
++
++    public static void glColorPointer(int p_glColorPointer_0_, int p_glColorPointer_1_, int p_glColorPointer_2_, int p_glColorPointer_3_)
++    {
++        GL11.glColorPointer(p_glColorPointer_0_, p_glColorPointer_1_, p_glColorPointer_2_, (long)p_glColorPointer_3_);
++    }
++
++    public static void glColorPointer(int p_glColorPointer_0_, int p_glColorPointer_1_, int p_glColorPointer_2_, ByteBuffer p_glColorPointer_3_)
++    {
++        GL11.glColorPointer(p_glColorPointer_0_, p_glColorPointer_1_, p_glColorPointer_2_, p_glColorPointer_3_);
++    }
++
++    public static void glDisableClientState(int p_glDisableClientState_0_)
++    {
++        GL11.glDisableClientState(p_glDisableClientState_0_);
++    }
++
++    public static void glEnableClientState(int p_glEnableClientState_0_)
++    {
++        GL11.glEnableClientState(p_glEnableClientState_0_);
++    }
++
++    public static void glBegin(int p_glBegin_0_)
++    {
++        GL11.glBegin(p_glBegin_0_);
++    }
++
++    public static void glEnd()
++    {
++        GL11.glEnd();
++    }
++
++    public static void glDrawArrays(int p_glDrawArrays_0_, int p_glDrawArrays_1_, int p_glDrawArrays_2_)
++    {
++        GL11.glDrawArrays(p_glDrawArrays_0_, p_glDrawArrays_1_, p_glDrawArrays_2_);
++
++        if (Config.isShaders() && !creatingDisplayList)
+         {
+-            public GlStateManager.BooleanState field_179208_a;
+-            public int field_179206_b;
+-            public float field_179207_c;
++            int i = Shaders.activeProgram.getCountInstances();
+ 
+-            private AlphaState()
++            if (i > 1)
+             {
+-                this.field_179208_a = new GlStateManager.BooleanState(3008);
+-                this.field_179206_b = 519;
+-                this.field_179207_c = -1.0F;
++                for (int j = 1; j < i; ++j)
++                {
++                    Shaders.uniform_instanceId.setValue(j);
++                    GL11.glDrawArrays(p_glDrawArrays_0_, p_glDrawArrays_1_, p_glDrawArrays_2_);
++                }
++
++                Shaders.uniform_instanceId.setValue(0);
+             }
+         }
++    }
+ 
+-    @SideOnly(Side.CLIENT)
+-    static class BlendState
++    public static void func_179148_o(int p_179148_0_)
++    {
++        GL11.glCallList(p_179148_0_);
++
++        if (Config.isShaders() && !creatingDisplayList)
+         {
+-            public GlStateManager.BooleanState field_179213_a;
+-            public int field_179211_b;
+-            public int field_179212_c;
+-            public int field_179209_d;
+-            public int field_179210_e;
++            int i = Shaders.activeProgram.getCountInstances();
+ 
+-            private BlendState()
++            if (i > 1)
+             {
+-                this.field_179213_a = new GlStateManager.BooleanState(3042);
+-                this.field_179211_b = 1;
+-                this.field_179212_c = 0;
+-                this.field_179209_d = 1;
+-                this.field_179210_e = 0;
++                for (int j = 1; j < i; ++j)
++                {
++                    Shaders.uniform_instanceId.setValue(j);
++                    GL11.glCallList(p_179148_0_);
++                }
++
++                Shaders.uniform_instanceId.setValue(0);
+             }
+         }
++    }
+ 
+-    @SideOnly(Side.CLIENT)
+-    static class BooleanState
++    public static void callLists(IntBuffer p_callLists_0_)
++    {
++        GL11.glCallLists(p_callLists_0_);
++
++        if (Config.isShaders() && !creatingDisplayList)
+         {
+-            private final int field_179202_a;
+-            private boolean field_179201_b = false;
++            int i = Shaders.activeProgram.getCountInstances();
+ 
+-            public BooleanState(int p_i46267_1_)
++            if (i > 1)
+             {
+-                this.field_179202_a = p_i46267_1_;
+-            }
++                for (int j = 1; j < i; ++j)
++                {
++                    Shaders.uniform_instanceId.setValue(j);
++                    GL11.glCallLists(p_callLists_0_);
++                }
+ 
+-            public void func_179198_a()
+-            {
+-                this.func_179199_a(false);
++                Shaders.uniform_instanceId.setValue(0);
+             }
++        }
++    }
+ 
+-            public void func_179200_b()
+-            {
+-                this.func_179199_a(true);
+-            }
++    public static void glDeleteLists(int p_glDeleteLists_0_, int p_glDeleteLists_1_)
++    {
++        GL11.glDeleteLists(p_glDeleteLists_0_, p_glDeleteLists_1_);
++    }
+ 
+-            public void func_179199_a(boolean p_179199_1_)
++    public static void glNewList(int p_glNewList_0_, int p_glNewList_1_)
++    {
++        GL11.glNewList(p_glNewList_0_, p_glNewList_1_);
++        creatingDisplayList = true;
++    }
++
++    public static void glEndList()
++    {
++        GL11.glEndList();
++        creatingDisplayList = false;
++    }
++
++    public static int glGetError()
++    {
++        return GL11.glGetError();
++    }
++
++    public static void glTexImage2D(int p_glTexImage2D_0_, int p_glTexImage2D_1_, int p_glTexImage2D_2_, int p_glTexImage2D_3_, int p_glTexImage2D_4_, int p_glTexImage2D_5_, int p_glTexImage2D_6_, int p_glTexImage2D_7_, IntBuffer p_glTexImage2D_8_)
++    {
++        GL11.glTexImage2D(p_glTexImage2D_0_, p_glTexImage2D_1_, p_glTexImage2D_2_, p_glTexImage2D_3_, p_glTexImage2D_4_, p_glTexImage2D_5_, p_glTexImage2D_6_, p_glTexImage2D_7_, p_glTexImage2D_8_);
++    }
++
++    public static void glTexSubImage2D(int p_glTexSubImage2D_0_, int p_glTexSubImage2D_1_, int p_glTexSubImage2D_2_, int p_glTexSubImage2D_3_, int p_glTexSubImage2D_4_, int p_glTexSubImage2D_5_, int p_glTexSubImage2D_6_, int p_glTexSubImage2D_7_, IntBuffer p_glTexSubImage2D_8_)
++    {
++        GL11.glTexSubImage2D(p_glTexSubImage2D_0_, p_glTexSubImage2D_1_, p_glTexSubImage2D_2_, p_glTexSubImage2D_3_, p_glTexSubImage2D_4_, p_glTexSubImage2D_5_, p_glTexSubImage2D_6_, p_glTexSubImage2D_7_, p_glTexSubImage2D_8_);
++    }
++
++    public static void glCopyTexSubImage2D(int p_glCopyTexSubImage2D_0_, int p_glCopyTexSubImage2D_1_, int p_glCopyTexSubImage2D_2_, int p_glCopyTexSubImage2D_3_, int p_glCopyTexSubImage2D_4_, int p_glCopyTexSubImage2D_5_, int p_glCopyTexSubImage2D_6_, int p_glCopyTexSubImage2D_7_)
++    {
++        GL11.glCopyTexSubImage2D(p_glCopyTexSubImage2D_0_, p_glCopyTexSubImage2D_1_, p_glCopyTexSubImage2D_2_, p_glCopyTexSubImage2D_3_, p_glCopyTexSubImage2D_4_, p_glCopyTexSubImage2D_5_, p_glCopyTexSubImage2D_6_, p_glCopyTexSubImage2D_7_);
++    }
++
++    public static void glGetTexImage(int p_glGetTexImage_0_, int p_glGetTexImage_1_, int p_glGetTexImage_2_, int p_glGetTexImage_3_, IntBuffer p_glGetTexImage_4_)
++    {
++        GL11.glGetTexImage(p_glGetTexImage_0_, p_glGetTexImage_1_, p_glGetTexImage_2_, p_glGetTexImage_3_, p_glGetTexImage_4_);
++    }
++
++    public static void glTexParameterf(int p_glTexParameterf_0_, int p_glTexParameterf_1_, float p_glTexParameterf_2_)
++    {
++        GL11.glTexParameterf(p_glTexParameterf_0_, p_glTexParameterf_1_, p_glTexParameterf_2_);
++    }
++
++    public static void glTexParameteri(int p_glTexParameteri_0_, int p_glTexParameteri_1_, int p_glTexParameteri_2_)
++    {
++        GL11.glTexParameteri(p_glTexParameteri_0_, p_glTexParameteri_1_, p_glTexParameteri_2_);
++    }
++
++    public static int glGetTexLevelParameteri(int p_glGetTexLevelParameteri_0_, int p_glGetTexLevelParameteri_1_, int p_glGetTexLevelParameteri_2_)
++    {
++        return GL11.glGetTexLevelParameteri(p_glGetTexLevelParameteri_0_, p_glGetTexLevelParameteri_1_, p_glGetTexLevelParameteri_2_);
++    }
++
++    public static int getActiveTextureUnit()
++    {
++        return OpenGlHelper.field_77478_a + field_179162_o;
++    }
++
++    public static void bindCurrentTexture()
++    {
++        GL11.glBindTexture(GL11.GL_TEXTURE_2D, field_179174_p[field_179162_o].field_179059_b);
++    }
++
++    public static int getBoundTexture()
++    {
++        return field_179174_p[field_179162_o].field_179059_b;
++    }
++
++    public static void checkBoundTexture()
++    {
++        if (Config.isMinecraftThread())
++        {
++            int i = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
++            int j = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
++            int k = getActiveTextureUnit();
++            int l = getBoundTexture();
++
++            if (l > 0)
+             {
+-                if (p_179199_1_ != this.field_179201_b)
++                if (i != k || j != l)
+                 {
+-                    this.field_179201_b = p_179199_1_;
+-
+-                    if (p_179199_1_)
+-                    {
+-                        GL11.glEnable(this.field_179202_a);
+-                    }
+-                    else
+-                    {
+-                        GL11.glDisable(this.field_179202_a);
+-                    }
++                    Config.dbg("checkTexture: act: " + k + ", glAct: " + i + ", tex: " + l + ", glTex: " + j);
+                 }
+             }
+         }
++    }
+ 
+-    @SideOnly(Side.CLIENT)
+-    static class ClearState
++    public static void deleteTextures(IntBuffer p_deleteTextures_0_)
++    {
++        p_deleteTextures_0_.rewind();
++
++        while (p_deleteTextures_0_.position() < p_deleteTextures_0_.limit())
+         {
+-            public double field_179205_a;
+-            public GlStateManager.Color field_179203_b;
+-            public int field_179204_c;
++            int i = p_deleteTextures_0_.get();
++            func_179150_h(i);
++        }
+ 
+-            private ClearState()
+-            {
+-                this.field_179205_a = 1.0D;
+-                this.field_179203_b = new GlStateManager.Color(0.0F, 0.0F, 0.0F, 0.0F);
+-                this.field_179204_c = 0;
+-            }
++        p_deleteTextures_0_.rewind();
++    }
++
++    public static boolean isFogEnabled()
++    {
++        return field_179155_g.field_179049_a.field_179201_b;
++    }
++
++    public static void setFogEnabled(boolean p_setFogEnabled_0_)
++    {
++        field_179155_g.field_179049_a.func_179199_a(p_setFogEnabled_0_);
++    }
++
++    public static void lockAlpha(GlAlphaState p_lockAlpha_0_)
++    {
++        if (!alphaLock.isLocked())
++        {
++            getAlphaState(alphaLockState);
++            setAlphaState(p_lockAlpha_0_);
++            alphaLock.lock();
+         }
++    }
+ 
+-    @SideOnly(Side.CLIENT)
+-    static class Color
++    public static void unlockAlpha()
++    {
++        if (alphaLock.unlock())
+         {
+-            public float field_179195_a = 1.0F;
+-            public float field_179193_b = 1.0F;
+-            public float field_179194_c = 1.0F;
+-            public float field_179192_d = 1.0F;
++            setAlphaState(alphaLockState);
++        }
++    }
+ 
+-            public Color()
++    public static void getAlphaState(GlAlphaState p_getAlphaState_0_)
++    {
++        if (alphaLock.isLocked())
++        {
++            p_getAlphaState_0_.setState(alphaLockState);
++        }
++        else
++        {
++            p_getAlphaState_0_.setState(field_179160_a.field_179208_a.field_179201_b, field_179160_a.field_179206_b, field_179160_a.field_179207_c);
++        }
++    }
++
++    public static void setAlphaState(GlAlphaState p_setAlphaState_0_)
++    {
++        if (alphaLock.isLocked())
++        {
++            alphaLockState.setState(p_setAlphaState_0_);
++        }
++        else
++        {
++            field_179160_a.field_179208_a.func_179199_a(p_setAlphaState_0_.isEnabled());
++            func_179092_a(p_setAlphaState_0_.getFunc(), p_setAlphaState_0_.getRef());
++        }
++    }
++
++    public static void lockBlend(GlBlendState p_lockBlend_0_)
++    {
++        if (!blendLock.isLocked())
++        {
++            getBlendState(blendLockState);
++            setBlendState(p_lockBlend_0_);
++            blendLock.lock();
++        }
++    }
++
++    public static void unlockBlend()
++    {
++        if (blendLock.unlock())
++        {
++            setBlendState(blendLockState);
++        }
++    }
++
++    public static void getBlendState(GlBlendState p_getBlendState_0_)
++    {
++        if (blendLock.isLocked())
++        {
++            p_getBlendState_0_.setState(blendLockState);
++        }
++        else
++        {
++            p_getBlendState_0_.setState(field_179157_e.field_179213_a.field_179201_b, field_179157_e.field_179211_b, field_179157_e.field_179212_c, field_179157_e.field_179209_d, field_179157_e.field_179210_e);
++        }
++    }
++
++    public static void setBlendState(GlBlendState p_setBlendState_0_)
++    {
++        if (blendLock.isLocked())
++        {
++            blendLockState.setState(p_setBlendState_0_);
++        }
++        else
++        {
++            field_179157_e.field_179213_a.func_179199_a(p_setBlendState_0_.isEnabled());
++
++            if (!p_setBlendState_0_.isSeparate())
+             {
++                func_179112_b(p_setBlendState_0_.getSrcFactor(), p_setBlendState_0_.getDstFactor());
+             }
+-
+-            public Color(float p_i46265_1_, float p_i46265_2_, float p_i46265_3_, float p_i46265_4_)
++            else
+             {
+-                this.field_179195_a = p_i46265_1_;
+-                this.field_179193_b = p_i46265_2_;
+-                this.field_179194_c = p_i46265_3_;
+-                this.field_179192_d = p_i46265_4_;
++                func_179120_a(p_setBlendState_0_.getSrcFactor(), p_setBlendState_0_.getDstFactor(), p_setBlendState_0_.getSrcFactorAlpha(), p_setBlendState_0_.getDstFactorAlpha());
+             }
+         }
++    }
+ 
+-    @SideOnly(Side.CLIENT)
+-    static class ColorLogicState
++    public static void glMultiDrawArrays(int p_glMultiDrawArrays_0_, IntBuffer p_glMultiDrawArrays_1_, IntBuffer p_glMultiDrawArrays_2_)
++    {
++        GL14.glMultiDrawArrays(p_glMultiDrawArrays_0_, p_glMultiDrawArrays_1_, p_glMultiDrawArrays_2_);
++
++        if (Config.isShaders() && !creatingDisplayList)
+         {
+-            public GlStateManager.BooleanState field_179197_a;
+-            public int field_179196_b;
++            int i = Shaders.activeProgram.getCountInstances();
+ 
+-            private ColorLogicState()
++            if (i > 1)
+             {
+-                this.field_179197_a = new GlStateManager.BooleanState(3058);
+-                this.field_179196_b = 5379;
++                for (int j = 1; j < i; ++j)
++                {
++                    Shaders.uniform_instanceId.setValue(j);
++                    GL14.glMultiDrawArrays(p_glMultiDrawArrays_0_, p_glMultiDrawArrays_1_, p_glMultiDrawArrays_2_);
++                }
++
++                Shaders.uniform_instanceId.setValue(0);
+             }
+         }
++    }
+ 
+-    @SideOnly(Side.CLIENT)
+-    static class ColorMask
++    static
++    {
++        for (int i = 0; i < 8; ++i)
+         {
+-            public boolean field_179188_a;
+-            public boolean field_179186_b;
+-            public boolean field_179187_c;
+-            public boolean field_179185_d;
++            field_179159_c[i] = new GlStateManager.BooleanState(16384 + i);
++        }
+ 
+-            private ColorMask()
+-            {
+-                this.field_179188_a = true;
+-                this.field_179186_b = true;
+-                this.field_179187_c = true;
+-                this.field_179185_d = true;
+-            }
++        for (int j = 0; j < field_179174_p.length; ++j)
++        {
++            field_179174_p[j] = new GlStateManager.TextureState();
+         }
++    }
+ 
+-    @SideOnly(Side.CLIENT)
+-    static class ColorMaterialState
++    static class AlphaState
++    {
++        public GlStateManager.BooleanState field_179208_a;
++        public int field_179206_b;
++        public float field_179207_c;
++
++        private AlphaState()
+         {
+-            public GlStateManager.BooleanState field_179191_a;
+-            public int field_179189_b;
+-            public int field_179190_c;
++            this.field_179208_a = new GlStateManager.BooleanState(3008);
++            this.field_179206_b = 519;
++            this.field_179207_c = -1.0F;
++        }
++    }
+ 
+-            private ColorMaterialState()
+-            {
+-                this.field_179191_a = new GlStateManager.BooleanState(2903);
+-                this.field_179189_b = 1032;
+-                this.field_179190_c = 5634;
+-            }
++    static class BlendState
++    {
++        public GlStateManager.BooleanState field_179213_a;
++        public int field_179211_b;
++        public int field_179212_c;
++        public int field_179209_d;
++        public int field_179210_e;
++
++        private BlendState()
++        {
++            this.field_179213_a = new GlStateManager.BooleanState(3042);
++            this.field_179211_b = 1;
++            this.field_179212_c = 0;
++            this.field_179209_d = 1;
++            this.field_179210_e = 0;
+         }
++    }
+ 
+-    @SideOnly(Side.CLIENT)
+-    static class CullState
++    static class BooleanState
++    {
++        private final int field_179202_a;
++        private boolean field_179201_b = false;
++
++        public BooleanState(int p_i46267_1_)
+         {
+-            public GlStateManager.BooleanState field_179054_a;
+-            public int field_179053_b;
++            this.field_179202_a = p_i46267_1_;
++        }
+ 
+-            private CullState()
+-            {
+-                this.field_179054_a = new GlStateManager.BooleanState(2884);
+-                this.field_179053_b = 1029;
+-            }
++        public void func_179198_a()
++        {
++            this.func_179199_a(false);
+         }
+ 
+-    @SideOnly(Side.CLIENT)
+-    static class DepthState
++        public void func_179200_b()
+         {
+-            public GlStateManager.BooleanState field_179052_a;
+-            public boolean field_179050_b;
+-            public int field_179051_c;
++            this.func_179199_a(true);
++        }
+ 
+-            private DepthState()
++        public void func_179199_a(boolean p_179199_1_)
++        {
++            if (p_179199_1_ != this.field_179201_b)
+             {
+-                this.field_179052_a = new GlStateManager.BooleanState(2929);
+-                this.field_179050_b = true;
+-                this.field_179051_c = 513;
++                this.field_179201_b = p_179199_1_;
++
++                if (p_179199_1_)
++                {
++                    GL11.glEnable(this.field_179202_a);
++                }
++                else
++                {
++                    GL11.glDisable(this.field_179202_a);
++                }
+             }
+         }
++    }
+ 
+-    @SideOnly(Side.CLIENT)
+-    static class FogState
++    static class ClearState
++    {
++        public double field_179205_a;
++        public GlStateManager.Color field_179203_b;
++        public int field_179204_c;
++
++        private ClearState()
+         {
+-            public GlStateManager.BooleanState field_179049_a;
+-            public int field_179047_b;
+-            public float field_179048_c;
+-            public float field_179045_d;
+-            public float field_179046_e;
++            this.field_179205_a = 1.0D;
++            this.field_179203_b = new GlStateManager.Color(0.0F, 0.0F, 0.0F, 0.0F);
++            this.field_179204_c = 0;
++        }
++    }
+ 
+-            private FogState()
+-            {
+-                this.field_179049_a = new GlStateManager.BooleanState(2912);
+-                this.field_179047_b = 2048;
+-                this.field_179048_c = 1.0F;
+-                this.field_179045_d = 0.0F;
+-                this.field_179046_e = 1.0F;
+-            }
++    public static class Color
++    {
++        public float field_179195_a = 1.0F;
++        public float field_179193_b = 1.0F;
++        public float field_179194_c = 1.0F;
++        public float field_179192_d = 1.0F;
++
++        public Color()
++        {
+         }
+ 
+-    @SideOnly(Side.CLIENT)
+-    static class PolygonOffsetState
++        public Color(float p_i46265_1_, float p_i46265_2_, float p_i46265_3_, float p_i46265_4_)
+         {
+-            public GlStateManager.BooleanState field_179044_a;
+-            public GlStateManager.BooleanState field_179042_b;
+-            public float field_179043_c;
+-            public float field_179041_d;
++            this.field_179195_a = p_i46265_1_;
++            this.field_179193_b = p_i46265_2_;
++            this.field_179194_c = p_i46265_3_;
++            this.field_179192_d = p_i46265_4_;
++        }
++    }
+ 
+-            private PolygonOffsetState()
+-            {
+-                this.field_179044_a = new GlStateManager.BooleanState(32823);
+-                this.field_179042_b = new GlStateManager.BooleanState(10754);
+-                this.field_179043_c = 0.0F;
+-                this.field_179041_d = 0.0F;
+-            }
++    static class ColorLogicState
++    {
++        public GlStateManager.BooleanState field_179197_a;
++        public int field_179196_b;
++
++        private ColorLogicState()
++        {
++            this.field_179197_a = new GlStateManager.BooleanState(3058);
++            this.field_179196_b = 5379;
+         }
++    }
+ 
+-    @SideOnly(Side.CLIENT)
+-    static class StencilFunc
++    static class ColorMask
++    {
++        public boolean field_179188_a;
++        public boolean field_179186_b;
++        public boolean field_179187_c;
++        public boolean field_179185_d;
++
++        private ColorMask()
+         {
+-            public int field_179081_a;
+-            public int field_179079_b;
+-            public int field_179080_c;
++            this.field_179188_a = true;
++            this.field_179186_b = true;
++            this.field_179187_c = true;
++            this.field_179185_d = true;
++        }
++    }
+ 
+-            private StencilFunc()
+-            {
+-                this.field_179081_a = 519;
+-                this.field_179079_b = 0;
+-                this.field_179080_c = -1;
+-            }
++    static class ColorMaterialState
++    {
++        public GlStateManager.BooleanState field_179191_a;
++        public int field_179189_b;
++        public int field_179190_c;
++
++        private ColorMaterialState()
++        {
++            this.field_179191_a = new GlStateManager.BooleanState(2903);
++            this.field_179189_b = 1032;
++            this.field_179190_c = 5634;
+         }
++    }
+ 
+-    @SideOnly(Side.CLIENT)
+-    static class StencilState
++    static class CullState
++    {
++        public GlStateManager.BooleanState field_179054_a;
++        public int field_179053_b;
++
++        private CullState()
+         {
+-            public GlStateManager.StencilFunc field_179078_a;
+-            public int field_179076_b;
+-            public int field_179077_c;
+-            public int field_179074_d;
+-            public int field_179075_e;
++            this.field_179054_a = new GlStateManager.BooleanState(2884);
++            this.field_179053_b = 1029;
++        }
++    }
+ 
+-            private StencilState()
+-            {
+-                this.field_179078_a = new GlStateManager.StencilFunc();
+-                this.field_179076_b = -1;
+-                this.field_179077_c = 7680;
+-                this.field_179074_d = 7680;
+-                this.field_179075_e = 7680;
+-            }
++    static class DepthState
++    {
++        public GlStateManager.BooleanState field_179052_a;
++        public boolean field_179050_b;
++        public int field_179051_c;
++
++        private DepthState()
++        {
++            this.field_179052_a = new GlStateManager.BooleanState(2929);
++            this.field_179050_b = true;
++            this.field_179051_c = 513;
+         }
++    }
+ 
+-    @SideOnly(Side.CLIENT)
++    static class FogState
++    {
++        public GlStateManager.BooleanState field_179049_a;
++        public int field_179047_b;
++        public float field_179048_c;
++        public float field_179045_d;
++        public float field_179046_e;
++
++        private FogState()
++        {
++            this.field_179049_a = new GlStateManager.BooleanState(2912);
++            this.field_179047_b = 2048;
++            this.field_179048_c = 1.0F;
++            this.field_179045_d = 0.0F;
++            this.field_179046_e = 1.0F;
++        }
++    }
++
++    static class PolygonOffsetState
++    {
++        public GlStateManager.BooleanState field_179044_a;
++        public GlStateManager.BooleanState field_179042_b;
++        public float field_179043_c;
++        public float field_179041_d;
++
++        private PolygonOffsetState()
++        {
++            this.field_179044_a = new GlStateManager.BooleanState(32823);
++            this.field_179042_b = new GlStateManager.BooleanState(10754);
++            this.field_179043_c = 0.0F;
++            this.field_179041_d = 0.0F;
++        }
++    }
++
++    static class StencilFunc
++    {
++        public int field_179081_a;
++        public int field_179079_b;
++        public int field_179080_c;
++
++        private StencilFunc()
++        {
++            this.field_179081_a = 519;
++            this.field_179079_b = 0;
++            this.field_179080_c = -1;
++        }
++    }
++
++    static class StencilState
++    {
++        public GlStateManager.StencilFunc field_179078_a;
++        public int field_179076_b;
++        public int field_179077_c;
++        public int field_179074_d;
++        public int field_179075_e;
++
++        private StencilState()
++        {
++            this.field_179078_a = new GlStateManager.StencilFunc();
++            this.field_179076_b = -1;
++            this.field_179077_c = 7680;
++            this.field_179074_d = 7680;
++            this.field_179075_e = 7680;
++        }
++    }
++
+     public static enum TexGen
+     {
+         S,
+@@ -785,47 +1228,44 @@
+         Q;
+     }
+ 
+-    @SideOnly(Side.CLIENT)
+     static class TexGenCoord
+-        {
+-            public GlStateManager.BooleanState field_179067_a;
+-            public int field_179065_b;
+-            public int field_179066_c = -1;
++    {
++        public GlStateManager.BooleanState field_179067_a;
++        public int field_179065_b;
++        public int field_179066_c = -1;
+ 
+-            public TexGenCoord(int p_i46254_1_, int p_i46254_2_)
+-            {
+-                this.field_179065_b = p_i46254_1_;
+-                this.field_179067_a = new GlStateManager.BooleanState(p_i46254_2_);
+-            }
++        public TexGenCoord(int p_i46254_1_, int p_i46254_2_)
++        {
++            this.field_179065_b = p_i46254_1_;
++            this.field_179067_a = new GlStateManager.BooleanState(p_i46254_2_);
+         }
++    }
+ 
+-    @SideOnly(Side.CLIENT)
+     static class TexGenState
+-        {
+-            public GlStateManager.TexGenCoord field_179064_a;
+-            public GlStateManager.TexGenCoord field_179062_b;
+-            public GlStateManager.TexGenCoord field_179063_c;
+-            public GlStateManager.TexGenCoord field_179061_d;
++    {
++        public GlStateManager.TexGenCoord field_179064_a;
++        public GlStateManager.TexGenCoord field_179062_b;
++        public GlStateManager.TexGenCoord field_179063_c;
++        public GlStateManager.TexGenCoord field_179061_d;
+ 
+-            private TexGenState()
+-            {
+-                this.field_179064_a = new GlStateManager.TexGenCoord(8192, 3168);
+-                this.field_179062_b = new GlStateManager.TexGenCoord(8193, 3169);
+-                this.field_179063_c = new GlStateManager.TexGenCoord(8194, 3170);
+-                this.field_179061_d = new GlStateManager.TexGenCoord(8195, 3171);
+-            }
++        private TexGenState()
++        {
++            this.field_179064_a = new GlStateManager.TexGenCoord(8192, 3168);
++            this.field_179062_b = new GlStateManager.TexGenCoord(8193, 3169);
++            this.field_179063_c = new GlStateManager.TexGenCoord(8194, 3170);
++            this.field_179061_d = new GlStateManager.TexGenCoord(8195, 3171);
+         }
++    }
+ 
+-    @SideOnly(Side.CLIENT)
+-    static class TextureState
+-        {
+-            public GlStateManager.BooleanState field_179060_a;
+-            public int field_179059_b;
++    public static class TextureState
++    {
++        public GlStateManager.BooleanState field_179060_a;
++        public int field_179059_b;
+ 
+-            private TextureState()
+-            {
+-                this.field_179060_a = new GlStateManager.BooleanState(3553);
+-                this.field_179059_b = 0;
+-            }
++        private TextureState()
++        {
++            this.field_179060_a = new GlStateManager.BooleanState(3553);
++            this.field_179059_b = 0;
+         }
++    }
+ }

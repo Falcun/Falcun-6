@@ -1,6 +1,16 @@
 --- ../src-base/minecraft/net/minecraft/block/Block.java
 +++ ../src-work/minecraft/net/minecraft/block/Block.java
-@@ -38,8 +38,9 @@
+@@ -2,6 +2,9 @@
+ 
+ import java.util.List;
+ import java.util.Random;
++
++import net.mattbenson.Wrapper;
++import net.mattbenson.gui.menu.pages.FPSPage;
+ import net.minecraft.block.material.MapColor;
+ import net.minecraft.block.material.Material;
+ import net.minecraft.block.properties.IProperty;
+@@ -38,8 +41,9 @@
  public class Block
  {
      private static final ResourceLocation field_176230_a = new ResourceLocation("air");
@@ -12,7 +22,7 @@
      private CreativeTabs field_149772_a;
      public static final Block.SoundType field_149769_e = new Block.SoundType("stone", 1.0F, 1.0F);
      public static final Block.SoundType field_149766_f = new Block.SoundType("wood", 1.0F, 1.0F);
-@@ -119,6 +120,9 @@
+@@ -119,6 +123,9 @@
      private IBlockState field_176228_M;
      private String field_149770_b;
  
@@ -22,7 +32,7 @@
      public static int func_149682_b(Block p_149682_0_)
      {
          return field_149771_c.func_148757_b(p_149682_0_);
-@@ -132,7 +136,8 @@
+@@ -132,7 +139,8 @@
  
      public static Block func_149729_e(int p_149729_0_)
      {
@@ -32,7 +42,26 @@
      }
  
      public static IBlockState func_176220_d(int p_176220_0_)
-@@ -303,7 +308,7 @@
+@@ -186,11 +194,18 @@
+ 
+     public int func_149750_m()
+     {
++    	if(Wrapper.getInstance().isRemoveLightCalculations()) {
++    		return 1000;
++    	}
++    	
+         return this.field_149784_t;
+     }
+ 
+     public boolean func_149710_n()
+     {
++    	if(Wrapper.getInstance().isRemoveLightCalculations()) {
++    		return false;
++    	}
+         return this.field_149783_u;
+     }
+ 
+@@ -303,7 +318,7 @@
  
      public boolean func_176200_f(World p_176200_1_, BlockPos p_176200_2_)
      {
@@ -41,7 +70,7 @@
      }
  
      public Block func_149711_c(float p_149711_1_)
-@@ -340,9 +345,10 @@
+@@ -340,9 +355,10 @@
          return this.field_149789_z;
      }
  
@@ -53,9 +82,14 @@
      }
  
      public final void func_149676_a(float p_149676_1_, float p_149676_2_, float p_149676_3_, float p_149676_4_, float p_149676_5_, float p_149676_6_)
-@@ -359,13 +365,13 @@
+@@ -358,14 +374,18 @@
+     @SideOnly(Side.CLIENT)
      public int func_176207_c(IBlockAccess p_176207_1_, BlockPos p_176207_2_)
      {
++    	if(Wrapper.getInstance().isRemoveLightCalculations()) {
++    		return 1000;
++    	}
++    	
          Block block = p_176207_1_.func_180495_p(p_176207_2_).func_177230_c();
 -        int i = p_176207_1_.func_175626_b(p_176207_2_, block.func_149750_m());
 +        int i = p_176207_1_.func_175626_b(p_176207_2_, block.getLightValue(p_176207_1_, p_176207_2_));
@@ -69,7 +103,7 @@
          }
          else
          {
-@@ -376,7 +382,7 @@
+@@ -376,7 +396,7 @@
      @SideOnly(Side.CLIENT)
      public boolean func_176225_a(IBlockAccess p_176225_1_, BlockPos p_176225_2_, EnumFacing p_176225_3_)
      {
@@ -78,7 +112,18 @@
      }
  
      public boolean func_176212_b(IBlockAccess p_176212_1_, BlockPos p_176212_2_, EnumFacing p_176212_3_)
-@@ -453,6 +459,10 @@
+@@ -407,6 +427,10 @@
+ 
+     public boolean func_149662_c()
+     {
++    	//TODO: Falcun patcher
++    	if(FPSPage.BLOCKS.contains(this.getClass())) {
++    		return false;
++    	}
+         return true;
+     }
+ 
+@@ -453,6 +477,10 @@
  
      public void func_180663_b(World p_180663_1_, BlockPos p_180663_2_, IBlockState p_180663_3_)
      {
@@ -89,7 +134,7 @@
      }
  
      public int func_149745_a(Random p_149745_1_)
-@@ -467,8 +477,7 @@
+@@ -467,8 +495,7 @@
  
      public float func_180647_a(EntityPlayer p_180647_1_, World p_180647_2_, BlockPos p_180647_3_)
      {
@@ -99,7 +144,7 @@
      }
  
      public final void func_176226_b(World p_176226_1_, BlockPos p_176226_2_, IBlockState p_176226_3_, int p_176226_4_)
-@@ -478,20 +487,16 @@
+@@ -478,20 +505,16 @@
  
      public void func_180653_a(World p_180653_1_, BlockPos p_180653_2_, IBlockState p_180653_3_, float p_180653_4_, int p_180653_5_)
      {
@@ -125,7 +170,7 @@
                  }
              }
          }
-@@ -499,8 +504,13 @@
+@@ -499,8 +522,13 @@
  
      public static void func_180635_a(World p_180635_0_, BlockPos p_180635_1_, ItemStack p_180635_2_)
      {
@@ -140,7 +185,7 @@
              float f = 0.5F;
              double d0 = (double)(p_180635_0_.field_73012_v.nextFloat() * f) + (double)(1.0F - f) * 0.5D;
              double d1 = (double)(p_180635_0_.field_73012_v.nextFloat() * f) + (double)(1.0F - f) * 0.5D;
-@@ -687,7 +697,7 @@
+@@ -687,7 +715,7 @@
  
      public boolean func_176196_c(World p_176196_1_, BlockPos p_176196_2_)
      {
@@ -149,7 +194,7 @@
      }
  
      public boolean func_180639_a(World p_180639_1_, BlockPos p_180639_2_, IBlockState p_180639_3_, EntityPlayer p_180639_4_, EnumFacing p_180639_5_, float p_180639_6_, float p_180639_7_, float p_180639_8_)
-@@ -799,25 +809,35 @@
+@@ -799,25 +827,35 @@
          p_180657_2_.func_71029_a(StatList.field_75934_C[func_149682_b(this)]);
          p_180657_2_.func_71020_j(0.025F);
  
@@ -188,7 +233,17 @@
      }
  
      protected ItemStack func_180643_i(IBlockState p_180643_1_)
-@@ -1010,6 +1030,1147 @@
+@@ -887,6 +925,9 @@
+     @SideOnly(Side.CLIENT)
+     public float func_149685_I()
+     {
++    	if(Wrapper.getInstance().isRemoveLightCalculations()) {
++    		return 1;
++    	}
+         return this.func_149637_q() ? 0.2F : 1.0F;
+     }
+ 
+@@ -1010,6 +1051,1147 @@
          return "Block{" + field_149771_c.func_177774_c(this) + "}";
      }
  

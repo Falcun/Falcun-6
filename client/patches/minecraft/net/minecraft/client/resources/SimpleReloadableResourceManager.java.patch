@@ -1,5 +1,14 @@
 --- ../src-base/minecraft/net/minecraft/client/resources/SimpleReloadableResourceManager.java
 +++ ../src-work/minecraft/net/minecraft/client/resources/SimpleReloadableResourceManager.java
+@@ -23,7 +23,7 @@
+ {
+     private static final Logger field_147967_a = LogManager.getLogger();
+     private static final Joiner field_130074_a = Joiner.on(", ");
+-    private final Map<String, FallbackResourceManager> field_110548_a = Maps.<String, FallbackResourceManager>newHashMap();
++    public final Map<String, FallbackResourceManager> field_110548_a = Maps.<String, FallbackResourceManager>newHashMap();
+     private final List<IResourceManagerReloadListener> field_110546_b = Lists.<IResourceManagerReloadListener>newArrayList();
+     private final Set<String> field_135057_d = Sets.<String>newLinkedHashSet();
+     private final IMetadataSerializer field_110547_c;
 @@ -92,6 +92,7 @@
      public void func_110541_a(List<IResourcePack> p_110541_1_)
      {

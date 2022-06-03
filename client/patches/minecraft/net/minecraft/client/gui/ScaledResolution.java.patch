@@ -1,0 +1,42 @@
+--- ../src-base/minecraft/net/minecraft/client/gui/ScaledResolution.java
++++ ../src-work/minecraft/net/minecraft/client/gui/ScaledResolution.java
+@@ -2,10 +2,7 @@
+ 
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.util.MathHelper;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
+ 
+-@SideOnly(Side.CLIENT)
+ public class ScaledResolution
+ {
+     private final double field_78332_c;
+@@ -16,11 +13,16 @@
+ 
+     public ScaledResolution(Minecraft p_i46445_1_)
+     {
+-        this.field_78333_a = p_i46445_1_.field_71443_c;
+-        this.field_78331_b = p_i46445_1_.field_71440_d;
++    	this(p_i46445_1_, p_i46445_1_.field_71474_y.field_74335_Z);
++    }
++    
++    public ScaledResolution(Minecraft minecraft, int scale)
++    {
++        this.field_78333_a = minecraft.field_71443_c;
++        this.field_78331_b = minecraft.field_71440_d;
+         this.field_78330_e = 1;
+-        boolean flag = p_i46445_1_.func_152349_b();
+-        int i = p_i46445_1_.field_71474_y.field_74335_Z;
++        boolean flag = minecraft.func_152349_b();
++        int i = scale;
+ 
+         if (i == 0)
+         {
+@@ -43,6 +45,7 @@
+         this.field_78331_b = MathHelper.func_76143_f(this.field_78329_d);
+     }
+ 
++
+     public int func_78326_a()
+     {
+         return this.field_78333_a;

@@ -1,0 +1,24 @@
+--- ../src-base/minecraft/net/minecraft/client/gui/MapItemRenderer.java
++++ ../src-work/minecraft/net/minecraft/client/gui/MapItemRenderer.java
+@@ -20,7 +20,7 @@
+ {
+     private static final ResourceLocation field_148253_a = new ResourceLocation("textures/map/map_icons.png");
+     private final TextureManager field_148251_b;
+-    private final Map<String, MapItemRenderer.Instance> field_148252_c = Maps.<String, MapItemRenderer.Instance>newHashMap();
++    public final Map<String, MapItemRenderer.Instance> field_148252_c = Maps.<String, MapItemRenderer.Instance>newHashMap();
+ 
+     public MapItemRenderer(TextureManager p_i45009_1_)
+     {
+@@ -61,10 +61,10 @@
+     }
+ 
+     @SideOnly(Side.CLIENT)
+-    class Instance
++   public  class Instance
+     {
+         private final MapData field_148242_b;
+-        private final DynamicTexture field_148243_c;
++        public final DynamicTexture field_148243_c;
+         private final ResourceLocation field_148240_d;
+         private final int[] field_148241_e;
+ 

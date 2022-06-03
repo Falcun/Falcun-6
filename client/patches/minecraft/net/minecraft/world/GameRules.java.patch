@@ -1,0 +1,47 @@
+--- ../src-base/minecraft/net/minecraft/world/GameRules.java
++++ ../src-work/minecraft/net/minecraft/world/GameRules.java
+@@ -1,5 +1,6 @@
+ package net.minecraft.world;
+ 
++import java.util.Objects;
+ import java.util.Set;
+ import java.util.TreeMap;
+ import net.minecraft.nbt.NBTTagCompound;
+@@ -102,7 +103,14 @@
+         GameRules.Value gamerules$value = (GameRules.Value)this.field_82771_a.get(p_180264_1_);
+         return gamerules$value != null && (gamerules$value.func_180254_e() == p_180264_2_ || p_180264_2_ == GameRules.ValueType.ANY_VALUE);
+     }
++    
++    public boolean getGameRuleBooleanValue(String name)
++    {
++        GameRules.Value gamerules$value = (GameRules.Value)this.field_82771_a.get(name);
++        return gamerules$value != null ? gamerules$value.getGameRuleBooleanValue() : false;
++    }
+ 
++
+     static class Value
+         {
+             private String field_82762_a;
+@@ -119,6 +127,10 @@
+ 
+             public void func_82757_a(String p_82757_1_)
+             {
++            	//MATT NEW FPS
++                if (Objects.equals(this.field_82762_a, p_82757_1_)) {
++                    return;
++                }
+                 this.field_82762_a = p_82757_1_;
+                 this.field_82760_b = Boolean.parseBoolean(p_82757_1_);
+                 this.field_82761_c = this.field_82760_b ? 1 : 0;
+@@ -161,6 +173,11 @@
+             {
+                 return this.field_180256_e;
+             }
++            
++            public boolean getGameRuleBooleanValue()
++            {
++                return this.field_82760_b;
++            }
+         }
+ 
+     public static enum ValueType

@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/net/minecraft/block/material/MapColor.java
++++ ../src-work/minecraft/net/minecraft/block/material/MapColor.java
+@@ -42,7 +42,7 @@
+     public static final MapColor field_151653_I = new MapColor(33, 55610);
+     public static final MapColor field_151654_J = new MapColor(34, 8476209);
+     public static final MapColor field_151655_K = new MapColor(35, 7340544);
+-    public final int field_76291_p;
++    public int field_76291_p;
+     public final int field_76290_q;
+ 
+     private MapColor(int p_i2117_1_, int p_i2117_2_)

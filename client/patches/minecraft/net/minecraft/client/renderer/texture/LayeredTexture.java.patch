@@ -1,0 +1,47 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/texture/LayeredTexture.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/texture/LayeredTexture.java
+@@ -7,21 +7,26 @@
+ import java.io.InputStream;
+ import java.util.List;
+ import net.minecraft.client.resources.IResourceManager;
++import net.minecraft.src.Config;
+ import net.minecraft.util.ResourceLocation;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import net.optifine.shaders.ShadersTex;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ 
+-@SideOnly(Side.CLIENT)
+ public class LayeredTexture extends AbstractTexture
+ {
+     private static final Logger field_147638_c = LogManager.getLogger();
+     public final List<String> field_110567_b;
++    private ResourceLocation textureLocation;
+ 
+     public LayeredTexture(String... p_i1274_1_)
+     {
+         this.field_110567_b = Lists.newArrayList(p_i1274_1_);
++
++        if (p_i1274_1_.length > 0 && p_i1274_1_[0] != null)
++        {
++            this.textureLocation = new ResourceLocation(p_i1274_1_[0]);
++        }
+     }
+ 
+     public void func_110551_a(IResourceManager p_110551_1_) throws IOException
+@@ -53,6 +58,13 @@
+             return;
+         }
+ 
+-        TextureUtil.func_110987_a(this.func_110552_b(), bufferedimage);
++        if (Config.isShaders())
++        {
++            ShadersTex.loadSimpleTexture(this.func_110552_b(), bufferedimage, false, false, p_110551_1_, this.textureLocation, this.getMultiTexID());
++        }
++        else
++        {
++            TextureUtil.func_110987_a(this.func_110552_b(), bufferedimage);
++        }
+     }
+ }

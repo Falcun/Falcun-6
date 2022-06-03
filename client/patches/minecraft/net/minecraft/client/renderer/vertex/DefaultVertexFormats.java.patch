@@ -1,0 +1,82 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/vertex/DefaultVertexFormats.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/vertex/DefaultVertexFormats.java
+@@ -1,13 +1,20 @@
+ package net.minecraft.client.renderer.vertex;
+ 
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import java.lang.reflect.Field;
++import net.minecraft.src.Config;
++import net.optifine.reflect.ReflectorClass;
++import net.optifine.reflect.ReflectorField;
++import net.optifine.shaders.SVertexFormat;
+ 
+-@SideOnly(Side.CLIENT)
+ public class DefaultVertexFormats
+ {
+-    public static final VertexFormat field_176600_a = new VertexFormat();
+-    public static final VertexFormat field_176599_b = new VertexFormat();
++    public static VertexFormat field_176600_a = new VertexFormat();
++    public static VertexFormat field_176599_b = new VertexFormat();
++    private static final VertexFormat BLOCK_VANILLA = field_176600_a;
++    private static final VertexFormat ITEM_VANILLA = field_176599_b;
++    public static ReflectorClass Attributes = new ReflectorClass("net.minecraftforge.client.model.Attributes");
++    public static ReflectorField Attributes_DEFAULT_BAKED_FORMAT = new ReflectorField(Attributes, "DEFAULT_BAKED_FORMAT");
++    private static final VertexFormat FORGE_BAKED = SVertexFormat.duplicate((VertexFormat)getFieldValue(Attributes_DEFAULT_BAKED_FORMAT));
+     public static final VertexFormat field_181703_c = new VertexFormat();
+     public static final VertexFormat field_181704_d = new VertexFormat();
+     public static final VertexFormat field_181705_e = new VertexFormat();
+@@ -25,6 +32,53 @@
+     public static final VertexFormatElement field_181717_q = new VertexFormatElement(0, VertexFormatElement.EnumType.BYTE, VertexFormatElement.EnumUsage.NORMAL, 3);
+     public static final VertexFormatElement field_181718_r = new VertexFormatElement(0, VertexFormatElement.EnumType.BYTE, VertexFormatElement.EnumUsage.PADDING, 1);
+ 
++    public static void updateVertexFormats()
++    {
++        if (Config.isShaders())
++        {
++            field_176600_a = SVertexFormat.makeDefVertexFormatBlock();
++            field_176599_b = SVertexFormat.makeDefVertexFormatItem();
++
++            if (Attributes_DEFAULT_BAKED_FORMAT.exists())
++            {
++                SVertexFormat.setDefBakedFormat((VertexFormat)Attributes_DEFAULT_BAKED_FORMAT.getValue());
++            }
++        }
++        else
++        {
++            field_176600_a = BLOCK_VANILLA;
++            field_176599_b = ITEM_VANILLA;
++
++            if (Attributes_DEFAULT_BAKED_FORMAT.exists())
++            {
++                SVertexFormat.copy(FORGE_BAKED, (VertexFormat)Attributes_DEFAULT_BAKED_FORMAT.getValue());
++            }
++        }
++    }
++
++    public static Object getFieldValue(ReflectorField p_getFieldValue_0_)
++    {
++        try
++        {
++            Field field = p_getFieldValue_0_.getTargetField();
++
++            if (field == null)
++            {
++                return null;
++            }
++            else
++            {
++                Object object = field.get((Object)null);
++                return object;
++            }
++        }
++        catch (Throwable throwable)
++        {
++            throwable.printStackTrace();
++            return null;
++        }
++    }
++
+     static
+     {
+         field_176600_a.func_181721_a(field_181713_m);

@@ -1,6 +1,35 @@
 --- ../src-base/minecraft/net/minecraft/client/network/NetHandlerPlayClient.java
 +++ ../src-work/minecraft/net/minecraft/client/network/NetHandlerPlayClient.java
-@@ -246,7 +246,7 @@
+@@ -1,6 +1,7 @@
+ package net.minecraft.client.network;
+ 
+ import com.google.common.collect.Maps;
++
+ import com.google.common.util.concurrent.FutureCallback;
+ import com.google.common.util.concurrent.Futures;
+ import com.mojang.authlib.GameProfile;
+@@ -13,6 +14,12 @@
+ import java.util.Random;
+ import java.util.UUID;
+ import java.util.Map.Entry;
++
++import net.mattbenson.Wrapper;
++import net.mattbenson.events.types.entity.ItemPickupEvent;
++import net.mattbenson.events.types.network.ChatMessageEvent;
++import net.mattbenson.modules.types.render.Cooldowns;
++import net.mattbenson.utils.Cooldown;
+ import net.minecraft.block.Block;
+ import net.minecraft.client.ClientBrandRetriever;
+ import net.minecraft.client.Minecraft;
+@@ -228,6 +235,7 @@
+     public int field_147304_c = 20;
+     private boolean field_147308_k = false;
+     private final Random field_147306_l = new Random();
++    private int counter;
+ 
+     public NetHandlerPlayClient(Minecraft p_i46300_1_, GuiScreen p_i46300_2_, NetworkManager p_i46300_3_, GameProfile p_i46300_4_)
+     {
+@@ -246,11 +254,12 @@
      {
          PacketThreadUtil.func_180031_a(p_147282_1_, this, this.field_147299_f);
          this.field_147299_f.field_71442_b = new PlayerControllerMP(this.field_147299_f, this);
@@ -9,26 +38,157 @@
          this.field_147299_f.field_71474_y.field_74318_M = p_147282_1_.func_149192_g();
          this.field_147299_f.func_71403_a(this.field_147300_g);
          this.field_147299_f.field_71439_g.field_71093_bK = p_147282_1_.func_149194_f();
-@@ -750,14 +750,16 @@
+-        this.field_147299_f.func_147108_a(new GuiDownloadTerrain(this));
++        //MATT NEW FPS
++        //this.gameController.displayGuiScreen(new GuiDownloadTerrain(this));
+         this.field_147299_f.field_71439_g.func_145769_d(p_147282_1_.func_149197_c());
+         this.field_147304_c = p_147282_1_.func_149193_h();
+         this.field_147299_f.field_71439_g.func_175150_k(p_147282_1_.func_179744_h());
+@@ -302,6 +311,11 @@
+         }
+         else if (p_147235_1_.func_148993_l() == 65)
+         {
++        	if (Wrapper.getInstance().getCooldown()) {
++        		if (Wrapper.getInstance().getEnderPearlCooldown()) {
++        			Cooldown.add(368, (long) (Wrapper.getInstance().getEnderPearlCooldownTime() * 1000), System.currentTimeMillis(), "EnderPearl");
++        		}
++        	}
+             entity = new EntityEnderPearl(this.field_147300_g, d0, d1, d2);
+         }
+         else if (p_147235_1_.func_148993_l() == 72)
+@@ -347,7 +361,9 @@
+         }
+         else if (p_147235_1_.func_148993_l() == 50)
+         {
+-            entity = new EntityTNTPrimed(this.field_147300_g, d0, d1, d2, (EntityLivingBase)null);
++        	if(!Wrapper.getInstance().isRemoveTNT()) {
++        		entity = new EntityTNTPrimed(this.field_147300_g, d0, d1, d2, (EntityLivingBase)null);
++        	}
+         }
+         else if (p_147235_1_.func_148993_l() == 78)
+         {
+@@ -453,17 +469,18 @@
+ 
+     public void func_147244_a(S12PacketEntityVelocity p_147244_1_)
+     {
+-        PacketThreadUtil.func_180031_a(p_147244_1_, this, this.field_147299_f);
+-        Entity entity = this.field_147300_g.func_73045_a(p_147244_1_.func_149412_c());
++                PacketThreadUtil.func_180031_a(p_147244_1_, this, this.field_147299_f);
++                Entity entity = this.field_147300_g.func_73045_a(p_147244_1_.func_149412_c());
+ 
+-        if (entity != null)
+-        {
+-            entity.func_70016_h((double)p_147244_1_.func_149411_d() / 8000.0D, (double)p_147244_1_.func_149410_e() / 8000.0D, (double)p_147244_1_.func_149409_f() / 8000.0D);
+-        }
++                if (entity != null)
++                {
++                    entity.func_70016_h((double)p_147244_1_.func_149411_d() / 8000.0D, (double)p_147244_1_.func_149410_e() / 8000.0D, (double)p_147244_1_.func_149409_f() / 8000.0D);
++                }
+     }
+ 
+     public void func_147284_a(S1CPacketEntityMetadata p_147284_1_)
+     {
++    	if (p_147284_1_ != null) {
+         PacketThreadUtil.func_180031_a(p_147284_1_, this, this.field_147299_f);
+         Entity entity = this.field_147300_g.func_73045_a(p_147284_1_.func_149375_d());
+ 
+@@ -471,6 +488,7 @@
+         {
+             entity.func_70096_w().func_75687_a(p_147284_1_.func_149376_c());
+         }
++    	}
+     }
+ 
+     public void func_147237_a(S0CPacketSpawnPlayer p_147237_1_)
+@@ -659,6 +677,9 @@
+ 
+     public void func_147263_a(S21PacketChunkData p_147263_1_)
+     {
++    	if(field_147300_g == null) {
++    		return;
++    	}
+         PacketThreadUtil.func_180031_a(p_147263_1_, this, this.field_147299_f);
+ 
+         if (p_147263_1_.func_149274_i())
+@@ -691,11 +712,35 @@
+ 
+     public void func_147253_a(S40PacketDisconnect p_147253_1_)
+     {
++    	/* WDL >>> */
++		if (wdl.WDL.downloading) {
++			wdl.WDL.stopDownload();
++
++			try {
++				Thread.sleep(2000L);
++			} catch (Exception var3) {
++				;
++			}
++		}
++
++		/* <<< WDL */
+         this.field_147302_e.func_150718_a(p_147253_1_.func_149165_c());
+     }
+ 
+     public void func_147231_a(IChatComponent p_147231_1_)
+     {
++    	/* WDL >>> */
++		if (wdl.WDL.downloading) {
++			wdl.WDL.stopDownload();
++
++			try {
++				Thread.sleep(2000L);
++			} catch (Exception var3) {
++				;
++			}
++		}
++
++		/* <<< WDL */
+         this.field_147299_f.func_71403_a((WorldClient)null);
+ 
+         if (this.field_147307_j != null)
+@@ -744,13 +789,17 @@
+ 
+             this.field_147299_f.field_71452_i.func_78873_a(new EntityPickupFX(this.field_147300_g, entity, entitylivingbase, 0.5F));
+             this.field_147300_g.func_73028_b(p_147246_1_.func_149354_c());
+-        }
++        }        Wrapper.getInstance().post(new ItemPickupEvent(entitylivingbase, entity));  
+     }
+ 
      public void func_147251_a(S02PacketChat p_147251_1_)
      {
          PacketThreadUtil.func_180031_a(p_147251_1_, this, this.field_147299_f);
-+        net.minecraft.util.IChatComponent message = net.minecraftforge.event.ForgeEventFactory.onClientChat(p_147251_1_.func_179841_c(), p_147251_1_.func_148915_c());
-+        if (message == null) return;
- 
+-
++        
++    	if(!Wrapper.getInstance().post(new ChatMessageEvent(p_147251_1_.func_148915_c()))) {
++    		return;
++    	}
++        
          if (p_147251_1_.func_179841_c() == 2)
          {
--            this.field_147299_f.field_71456_v.func_175188_a(p_147251_1_.func_148915_c(), false);
-+            this.field_147299_f.field_71456_v.func_175188_a(message, false);
-         }
-         else
+             this.field_147299_f.field_71456_v.func_175188_a(p_147251_1_.func_148915_c(), false);
+@@ -759,8 +808,10 @@
          {
--            this.field_147299_f.field_71456_v.func_146158_b().func_146227_a(p_147251_1_.func_148915_c());
-+            this.field_147299_f.field_71456_v.func_146158_b().func_146227_a(message);
+             this.field_147299_f.field_71456_v.func_146158_b().func_146227_a(p_147251_1_.func_148915_c());
          }
++        /* WDL >>> */
++     	wdl.WDLHooks.onNHPCHandleChat(this, p_147251_1_);
++     	/* <<< WDL */
      }
+-
+     public void func_147279_a(S0BPacketAnimation p_147279_1_)
+     {
+         PacketThreadUtil.func_180031_a(p_147279_1_, this, this.field_147299_f);
+@@ -801,6 +852,9 @@
  
-@@ -808,6 +810,11 @@
+     public void func_147281_a(S0FPacketSpawnMob p_147281_1_)
+     {
++    	if (Wrapper.getInstance().isNoMobs()) {
++    		return;
++    	}
+         PacketThreadUtil.func_180031_a(p_147281_1_, this, this.field_147299_f);
+         double d0 = (double)p_147281_1_.func_149023_f() / 32.0D;
+         double d1 = (double)p_147281_1_.func_149034_g() / 32.0D;
+@@ -808,6 +862,11 @@
          float f = (float)(p_147281_1_.func_149028_l() * 360) / 256.0F;
          float f1 = (float)(p_147281_1_.func_149030_m() * 360) / 256.0F;
          EntityLivingBase entitylivingbase = (EntityLivingBase)EntityList.func_75616_a(p_147281_1_.func_149025_e(), this.field_147299_f.field_71441_e);
@@ -40,7 +200,17 @@
          entitylivingbase.field_70118_ct = p_147281_1_.func_149023_f();
          entitylivingbase.field_70117_cu = p_147281_1_.func_149034_g();
          entitylivingbase.field_70116_cv = p_147281_1_.func_149029_h();
-@@ -1133,6 +1140,10 @@
+@@ -948,7 +1007,8 @@
+             this.field_147300_g.func_96443_a(scoreboard);
+             this.field_147299_f.func_71403_a(this.field_147300_g);
+             this.field_147299_f.field_71439_g.field_71093_bK = p_147280_1_.func_149082_c();
+-            this.field_147299_f.func_147108_a(new GuiDownloadTerrain(this));
++            //MATT NEW FPS
++            //this.gameController.displayGuiScreen(new GuiDownloadTerrain(this));
+         }
+ 
+         this.field_147299_f.func_71354_a(p_147280_1_.func_149082_c());
+@@ -1133,6 +1193,10 @@
              {
                  tileentity.func_145839_a(p_147273_1_.func_148857_g());
              }
@@ -51,7 +221,27 @@
          }
      }
  
-@@ -1341,7 +1352,7 @@
+@@ -1168,6 +1232,9 @@
+     {
+         PacketThreadUtil.func_180031_a(p_147261_1_, this, this.field_147299_f);
+         this.field_147299_f.field_71441_e.func_175641_c(p_147261_1_.func_179825_a(), p_147261_1_.func_148868_c(), p_147261_1_.func_148869_g(), p_147261_1_.func_148864_h());
++        /* WDL >>> */
++		wdl.WDLHooks.onNHPCHandleBlockAction(this, p_147261_1_);
++		/* <<< WDL */
+     }
+ 
+     public void func_147294_a(S25PacketBlockBreakAnim p_147294_1_)
+@@ -1274,6 +1341,9 @@
+         MapData mapdata = ItemMap.func_150912_a(p_147264_1_.func_149188_c(), this.field_147299_f.field_71441_e);
+         p_147264_1_.func_179734_a(mapdata);
+         this.field_147299_f.field_71460_t.func_147701_i().func_148246_a(mapdata);
++        /* WDL >>> */
++		wdl.WDLHooks.onNHPCHandleMaps(this, p_147264_1_);
++		/* <<< WDL */
+     }
+ 
+     public void func_147277_a(S28PacketEffect p_147277_1_)
+@@ -1341,7 +1411,7 @@
  
          if (entity instanceof EntityLivingBase)
          {
@@ -60,3 +250,34 @@
              potioneffect.func_100012_b(p_147260_1_.func_149429_c());
              ((EntityLivingBase)entity).func_70690_d(potioneffect);
          }
+@@ -1682,6 +1752,11 @@
+                 this.field_147299_f.func_147108_a(new GuiScreenBook(this.field_147299_f.field_71439_g, itemstack, false));
+             }
+         }
++        
++        /* WDL >>> */
++		wdl.WDLHooks.onNHPCHandleCustomPayload(this, p_147240_1_);
++		/* <<< WDL */
++        
+     }
+ 
+     public void func_147291_a(S3BPacketScoreboardObjective p_147291_1_)
+@@ -1765,6 +1840,10 @@
+         {
+             scoreplayerteam = scoreboard.func_96508_e(p_147247_1_.func_149312_c());
+         }
++        
++        if(scoreplayerteam == null) {
++        	return;
++        }
+ 
+         if (p_147247_1_.func_149307_h() == 0 || p_147247_1_.func_149307_h() == 2)
+         {
+@@ -1799,6 +1878,7 @@
+ 
+         if (p_147247_1_.func_149307_h() == 1)
+         {
++        	if (scoreplayerteam != null)
+             scoreboard.func_96511_d(scoreplayerteam);
+         }
+     }

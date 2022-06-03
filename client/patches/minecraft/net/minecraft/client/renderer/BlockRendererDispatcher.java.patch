@@ -1,6 +1,32 @@
 --- ../src-base/minecraft/net/minecraft/client/renderer/BlockRendererDispatcher.java
 +++ ../src-work/minecraft/net/minecraft/client/renderer/BlockRendererDispatcher.java
-@@ -24,7 +24,7 @@
+@@ -1,7 +1,10 @@
+ package net.minecraft.client.renderer;
+ 
++import net.mattbenson.Wrapper;
+ import net.minecraft.block.Block;
++import net.minecraft.block.BlockReed;
+ import net.minecraft.block.state.IBlockState;
++import net.minecraft.client.Minecraft;
+ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+ import net.minecraft.client.resources.IResourceManager;
+ import net.minecraft.client.resources.IResourceManagerReloadListener;
+@@ -11,6 +14,7 @@
+ import net.minecraft.client.settings.GameSettings;
+ import net.minecraft.crash.CrashReport;
+ import net.minecraft.crash.CrashReportCategory;
++import net.minecraft.src.Config;
+ import net.minecraft.util.BlockPos;
+ import net.minecraft.util.MathHelper;
+ import net.minecraft.util.ReportedException;
+@@ -18,13 +22,14 @@
+ import net.minecraft.world.WorldType;
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
++import net.optifine.shaders.SVertexBuilder;
+ 
+ @SideOnly(Side.CLIENT)
+ public class BlockRendererDispatcher implements IResourceManagerReloadListener
  {
      private BlockModelShapes field_175028_a;
      private final GameSettings field_175026_b;
@@ -9,7 +35,7 @@
      private final ChestRenderer field_175024_d = new ChestRenderer();
      private final BlockFluidRenderer field_175025_e = new BlockFluidRenderer();
  
-@@ -48,6 +48,24 @@
+@@ -48,6 +53,24 @@
          {
              p_175020_1_ = block.func_176221_a(p_175020_1_, p_175020_4_, p_175020_2_);
              IBakedModel ibakedmodel = this.field_175028_a.func_178125_b(p_175020_1_);
@@ -34,7 +60,71 @@
              IBakedModel ibakedmodel1 = (new SimpleBakedModel.Builder(ibakedmodel, p_175020_3_)).func_177645_b();
              this.field_175027_c.func_178259_a(p_175020_4_, ibakedmodel1, p_175020_1_, p_175020_2_, Tessellator.func_178181_a().func_178180_c());
          }
-@@ -128,6 +146,12 @@
+@@ -68,12 +91,44 @@
+                 switch (i)
+                 {
+                     case 1:
+-                        return this.field_175025_e.func_178270_a(p_175018_3_, p_175018_1_, p_175018_2_, p_175018_4_);
++                        if (Config.isShaders())
++                        {
++                            SVertexBuilder.pushEntity(p_175018_1_, p_175018_2_, p_175018_3_, p_175018_4_);
++                        }
++
++                        boolean flag1 = this.field_175025_e.func_178270_a(p_175018_3_, p_175018_1_, p_175018_2_, p_175018_4_);
++
++                        if (Config.isShaders())
++                        {
++                            SVertexBuilder.popEntity(p_175018_4_);
++                        }
++
++                        return flag1;
++
+                     case 2:
+                         return false;
++
+                     case 3:
+                         IBakedModel ibakedmodel = this.func_175022_a(p_175018_1_, p_175018_3_, p_175018_2_);
+-                        return this.field_175027_c.func_178259_a(p_175018_3_, ibakedmodel, p_175018_1_, p_175018_2_, p_175018_4_);
++
++                        if (Config.isShaders())
++                        {
++                            SVertexBuilder.pushEntity(p_175018_1_, p_175018_2_, p_175018_3_, p_175018_4_);
++                        }
++                      
++                        boolean flag = this.field_175027_c.func_178259_a(p_175018_3_, ibakedmodel, p_175018_1_, p_175018_2_, p_175018_4_);
++
++                        if (Config.isShaders())
++                        {
++                            SVertexBuilder.popEntity(p_175018_4_);
++                        }
++                    	if(p_175018_1_.func_177230_c() instanceof BlockReed && Wrapper.getInstance().isNoCane()) {
++                        	if(Math.sqrt(Minecraft.func_71410_x().field_71439_g.func_180425_c().func_177954_c(p_175018_2_.func_177958_n(),p_175018_2_.func_177956_o(),p_175018_2_.func_177952_p())) >= 16) {
++                        		return false;
++                        	}
++                        }
++                        return flag;
++
+                     default:
+                         return false;
+                 }
+@@ -81,11 +136,12 @@
+         }
+         catch (Throwable throwable)
+         {
+-            CrashReport crashreport = CrashReport.func_85055_a(throwable, "Tesselating block in world");
+-            CrashReportCategory crashreportcategory = crashreport.func_85058_a("Block being tesselated");
+-            CrashReportCategory.func_180523_a(crashreportcategory, p_175018_2_, p_175018_1_.func_177230_c(), p_175018_1_.func_177230_c().func_176201_c(p_175018_1_));
+-            throw new ReportedException(crashreport);
++            //CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Tesselating block in world");
++            //CrashReportCategory crashreportcategory = crashreport.makeCategory("Block being tesselated");
++            //CrashReportCategory.addBlockInfo(crashreportcategory, pos, state.getBlock(), state.getBlock().getMetaFromState(state));
++            //throw new ReportedException(crashreport);
+         }
++		return false;
+     }
+ 
+     public BlockModelRenderer func_175019_b()
+@@ -128,6 +184,12 @@
              ibakedmodel = ((WeightedBakedModel)ibakedmodel).func_177564_a(MathHelper.func_180186_a(p_175022_3_));
          }
  

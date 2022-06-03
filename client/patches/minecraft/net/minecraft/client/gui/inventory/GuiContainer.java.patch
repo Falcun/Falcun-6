@@ -1,6 +1,111 @@
 --- ../src-base/minecraft/net/minecraft/client/gui/inventory/GuiContainer.java
 +++ ../src-work/minecraft/net/minecraft/client/gui/inventory/GuiContainer.java
-@@ -175,8 +175,11 @@
+@@ -1,15 +1,21 @@
+ package net.minecraft.client.gui.inventory;
+ 
+ import com.google.common.collect.Sets;
++
++import java.awt.Color;
+ import java.io.IOException;
+ import java.util.Set;
++
++import net.mattbenson.Wrapper;
++import net.mattbenson.fonts.Fonts;
++import net.mattbenson.utils.DrawUtils;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.gui.GuiScreen;
++import net.minecraft.client.gui.inventory.GuiContainerCreative.ContainerCreative;
+ import net.minecraft.client.renderer.GlStateManager;
+ import net.minecraft.client.renderer.OpenGlHelper;
+ import net.minecraft.client.renderer.RenderHelper;
+ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+-import net.minecraft.client.renderer.texture.TextureMap;
+ import net.minecraft.entity.player.InventoryPlayer;
+ import net.minecraft.inventory.Container;
+ import net.minecraft.inventory.Slot;
+@@ -52,6 +58,11 @@
+     private int field_146992_L;
+     private boolean field_146993_M;
+     private ItemStack field_146994_N;
++    public static String searchtext = "";
++    public static boolean drawPointer;
++    public static boolean focused;
++	public static int lineRefreshTime = 1000;
++	public static long lineTime = 0;
+ 
+     public GuiContainer(Container p_i1072_1_)
+     {
+@@ -106,7 +117,30 @@
+                 GlStateManager.func_179135_a(true, true, true, true);
+                 GlStateManager.func_179145_e();
+                 GlStateManager.func_179126_j();
+-            }
++            } 
++            
++          
++              if (Wrapper.getInstance().isInventorySearch() && !(field_146297_k.field_71439_g.field_71070_bA instanceof ContainerCreative)) {
++                int j1 = slot.field_75223_e;
++                int k1 = slot.field_75221_f;
++                GlStateManager.func_179135_a(true, true, true, false);
++                GlStateManager.func_179097_i();
++
++            
++                if (slot.func_75211_c() != null)
++                {
++                	
++                if (slot.func_75211_c().func_82833_r().toLowerCase().contains(searchtext.toLowerCase()) && !searchtext.isEmpty()) {
++                    DrawUtils.drawGradientRect(j1, k1, j1 + 16, k1 + 16, new Color(Wrapper.getInstance().getInventorySearchColor().getRed(), Wrapper.getInstance().getInventorySearchColor().getGreen(), Wrapper.getInstance().getInventorySearchColor().getBlue(), 100).getRGB(), new Color(Wrapper.getInstance().getInventorySearchColor().getRed(), Wrapper.getInstance().getInventorySearchColor().getGreen(), Wrapper.getInstance().getInventorySearchColor().getBlue(), 100).getRGB());
++                }
++                }
++
++
++                GlStateManager.func_179135_a(true, true, true, true);
++                GlStateManager.func_179145_e();
++                GlStateManager.func_179126_j();
++              }
++            
+         }
+ 
+         RenderHelper.func_74518_a();
+@@ -168,6 +202,37 @@
+         GlStateManager.func_179145_e();
+         GlStateManager.func_179126_j();
+         RenderHelper.func_74519_b();
++        
++        if (Wrapper.getInstance().isInventorySearch() && !(field_146297_k.field_71439_g.field_71070_bA instanceof ContainerCreative)) {
++        DrawUtils.drawRoundedRect(9,9, 121, 31, 2, new Color(255,255,255,255).getRGB());
++        
++        if (p_73863_1_ > 9 && p_73863_1_ < 121 && p_73863_2_ > 9 && p_73863_2_ < 31) {
++        	DrawUtils.drawRoundedRect(10,10, 120, 30, 2, -15132388);
++        } else {
++        	DrawUtils.drawRoundedRect(10,10, 120, 30, 2, -15593194);
++        }
++        
++        int labelWidth = 5;
++		if (searchtext.isEmpty()) {
++			labelWidth = 5;
++		} else {
++			labelWidth = (int)Fonts.ubuntuFont.getStringWidth(GuiContainer.searchtext + 1);
++		}
++
++		if (searchtext.isEmpty() && !focused) {
++			Fonts.ubuntuFont.drawString("Search", 50, 12, new Color(255, 255, 255, 255).getRGB());
++		} else {
++			Fonts.ubuntuFont.drawString(searchtext, 21, 12, new Color(255, 255, 255, 255).getRGB());
++		}
++
++	
++		if (focused) {
++			if((System.currentTimeMillis() - lineTime) % lineRefreshTime * 2 >= lineRefreshTime) {
++				DrawUtils.drawVerticalLine(16 + labelWidth, 15, 10, 1, 553648127);
++				drawPointer = true;
++			}
++		}
++        }
+     }
+ 
+     private void func_146982_a(ItemStack p_146982_1_, int p_146982_2_, int p_146982_3_, String p_146982_4_)
+@@ -175,8 +240,11 @@
          GlStateManager.func_179109_b(0.0F, 0.0F, 32.0F);
          this.field_73735_i = 200.0F;
          this.field_146296_j.field_77023_b = 200.0F;
@@ -13,7 +118,7 @@
          this.field_73735_i = 0.0F;
          this.field_146296_j.field_77023_b = 0.0F;
      }
-@@ -239,13 +242,12 @@
+@@ -239,13 +307,12 @@
  
          if (itemstack == null)
          {
@@ -30,7 +135,28 @@
                  this.func_175175_a(i, j, textureatlassprite, 16, 16);
                  GlStateManager.func_179145_e();
                  flag1 = true;
-@@ -326,6 +328,7 @@
+@@ -256,7 +323,7 @@
+         {
+             if (flag)
+             {
+-                func_73734_a(i, j, i + 16, j + 16, -2130706433);
++            	drawRectangle(i, j, i + 16, j + 16, -2130706433);
+             }
+ 
+             GlStateManager.func_179126_j();
+@@ -315,6 +382,11 @@
+     protected void func_73864_a(int p_73864_1_, int p_73864_2_, int p_73864_3_) throws IOException
+     {
+         super.func_73864_a(p_73864_1_, p_73864_2_, p_73864_3_);
++        
++        if(Wrapper.getInstance().isMouseBindFix()) {
++        	func_146983_a(p_73864_3_ - 100);
++        }
++        
+         boolean flag = p_73864_3_ == this.field_146297_k.field_71474_y.field_74322_I.func_151463_i() + 100;
+         Slot slot = this.func_146975_c(p_73864_1_, p_73864_2_);
+         long i = Minecraft.func_71386_F();
+@@ -326,6 +398,7 @@
              int j = this.field_147003_i;
              int k = this.field_147009_r;
              boolean flag1 = p_73864_1_ < j || p_73864_2_ < k || p_73864_1_ >= j + this.field_146999_f || p_73864_2_ >= k + this.field_147000_g;
@@ -38,7 +164,21 @@
              int l = -1;
  
              if (slot != null)
-@@ -463,10 +466,12 @@
+@@ -413,6 +486,13 @@
+         this.field_146998_K = slot;
+         this.field_146997_J = i;
+         this.field_146992_L = p_73864_3_;
++        if (Wrapper.getInstance().isInventorySearch() && !(field_146297_k.field_71439_g.field_71070_bA instanceof ContainerCreative)) {
++        if (p_73864_1_ > 9 && p_73864_1_ < 121 && p_73864_2_ > 9 && p_73864_2_ < 31) {
++        	focused = true;
++        } else {
++        	focused = false;
++        }
++        }
+     }
+ 
+     protected void func_146273_a(int p_146273_1_, int p_146273_2_, int p_146273_3_, long p_146273_4_)
+@@ -463,10 +543,12 @@
  
      protected void func_146286_b(int p_146286_1_, int p_146286_2_, int p_146286_3_)
      {
@@ -51,7 +191,36 @@
          int k = -1;
  
          if (slot != null)
-@@ -685,4 +690,16 @@
+@@ -626,6 +708,20 @@
+ 
+     protected void func_73869_a(char p_73869_1_, int p_73869_2_) throws IOException
+     {
++        if (focused && Wrapper.getInstance().isInventorySearch() && !(field_146297_k.field_71439_g.field_71070_bA instanceof ContainerCreative)) {
++	        if (p_73869_2_ == 1) {
++	        	focused = false;
++	        }
++	        	
++	        if((p_73869_1_ + "").matches("[A-Za-z0-9_ -]")) {
++	        	searchtext = searchtext + p_73869_1_;
++	        } 
++	        
++	        if (p_73869_2_ == 14) {
++	        	if (!searchtext.isEmpty())
++	        		searchtext = removeLastChar(searchtext);
++	        }
++        } else {
+         if (p_73869_2_ == 1 || p_73869_2_ == this.field_146297_k.field_71474_y.field_151445_Q.func_151463_i())
+         {
+             this.field_146297_k.field_71439_g.func_71053_j();
+@@ -644,6 +740,7 @@
+                 this.func_146984_a(this.field_147006_u, this.field_147006_u.field_75222_d, func_146271_m() ? 1 : 0, 4);
+             }
+         }
++        }
+     }
+ 
+     protected boolean func_146983_a(int p_146983_1_)
+@@ -685,4 +782,22 @@
              this.field_146297_k.field_71439_g.func_71053_j();
          }
      }
@@ -67,4 +236,10 @@
 +    }
 +
 +    /* ======================================== FORGE END   =====================================*/
++    
++    public static String removeLastChar(String s) {
++        return (s == null || s.length() == 0)
++          ? null 
++          : (s.substring(0, s.length() - 1));
++    }
  }

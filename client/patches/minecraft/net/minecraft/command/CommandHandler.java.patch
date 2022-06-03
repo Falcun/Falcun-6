@@ -1,5 +1,14 @@
 --- ../src-base/minecraft/net/minecraft/command/CommandHandler.java
 +++ ../src-work/minecraft/net/minecraft/command/CommandHandler.java
+@@ -17,7 +17,7 @@
+ public class CommandHandler implements ICommandManager
+ {
+     private static final Logger field_147175_a = LogManager.getLogger();
+-    private final Map<String, ICommand> field_71562_a = Maps.<String, ICommand>newHashMap();
++    public final Map<String, ICommand> field_71562_a = Maps.<String, ICommand>newHashMap();
+     private final Set<ICommand> field_71561_b = Sets.<ICommand>newHashSet();
+ 
+     public int func_71556_a(ICommandSender p_71556_1_, String p_71556_2_)
 @@ -44,6 +44,16 @@
          }
          else if (icommand.func_71519_b(p_71556_1_))
@@ -17,6 +26,15 @@
              if (i > -1)
              {
                  List<Entity> list = PlayerSelector.<Entity>func_179656_b(p_71556_1_, astring[i], Entity.class);
+@@ -83,7 +93,7 @@
+         return j;
+     }
+ 
+-    protected boolean func_175786_a(ICommandSender p_175786_1_, String[] p_175786_2_, ICommand p_175786_3_, String p_175786_4_)
++    public boolean func_175786_a(ICommandSender p_175786_1_, String[] p_175786_2_, ICommand p_175786_3_, String p_175786_4_)
+     {
+         try
+         {
 @@ -107,7 +117,7 @@
              ChatComponentTranslation chatcomponenttranslation = new ChatComponentTranslation("commands.generic.exception", new Object[0]);
              chatcomponenttranslation.func_150256_b().func_150238_a(EnumChatFormatting.RED);

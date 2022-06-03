@@ -1,11 +1,131 @@
 --- ../src-base/minecraft/net/minecraft/block/state/BlockStateBase.java
 +++ ../src-work/minecraft/net/minecraft/block/state/BlockStateBase.java
-@@ -67,4 +67,9 @@
+@@ -2,19 +2,22 @@
+ 
+ import com.google.common.base.Function;
+ import com.google.common.base.Joiner;
++import com.google.common.collect.ImmutableTable;
+ import com.google.common.collect.Iterables;
+ import java.util.Collection;
+ import java.util.Iterator;
+ import java.util.Map.Entry;
+ import net.minecraft.block.Block;
+ import net.minecraft.block.properties.IProperty;
++import net.minecraft.util.ResourceLocation;
+ 
+ public abstract class BlockStateBase implements IBlockState
+ {
+     private static final Joiner field_177234_a = Joiner.on(',');
+-    private static final Function<Entry<IProperty, Comparable>, String> field_177233_b = new Function<Entry<IProperty, Comparable>, String>()
++    private static final Function field_177233_b = new Function()
+     {
+-        public String apply(Entry<IProperty, Comparable> p_apply_1_)
++        private static final String __OBFID = "CL_00002031";
++        public String apply(Entry p_apply_1_)
+         {
+             if (p_apply_1_ == null)
+             {
+@@ -26,31 +29,87 @@
+                 return iproperty.func_177701_a() + "=" + iproperty.func_177702_a((Comparable)p_apply_1_.getValue());
+             }
+         }
++        public Object apply(Object p_apply_1_)
++        {
++            return this.apply((Entry)p_apply_1_);
++        }
+     };
++    private static final String __OBFID = "CL_00002032";
++    private int blockId = -1;
++    private int blockStateId = -1;
++    private int metadata = -1;
++    private ResourceLocation blockLocation = null;
+ 
+-    public <T extends Comparable<T>> IBlockState func_177231_a(IProperty<T> p_177231_1_)
++    public int getBlockId()
+     {
+-        return this.func_177226_a(p_177231_1_, func_177232_a(p_177231_1_.func_177700_c(), this.func_177229_b(p_177231_1_)));
++        if (this.blockId < 0)
++        {
++            this.blockId = Block.func_149682_b(this.func_177230_c());
++        }
++
++        return this.blockId;
+     }
+ 
+-    protected static <T> T func_177232_a(Collection<T> p_177232_0_, T p_177232_1_)
++    public int getBlockStateId()
+     {
+-        Iterator<T> iterator = p_177232_0_.iterator();
++        if (this.blockStateId < 0)
++        {
++            this.blockStateId = Block.func_176210_f(this);
++        }
+ 
++        return this.blockStateId;
++    }
++
++    public int getMetadata()
++    {
++        if (this.metadata < 0)
++        {
++            this.metadata = this.func_177230_c().func_176201_c(this);
++        }
++
++        return this.metadata;
++    }
++
++    public ResourceLocation getBlockLocation()
++    {
++        if (this.blockLocation == null)
++        {
++            this.blockLocation = (ResourceLocation)Block.field_149771_c.func_177774_c(this.func_177230_c());
++        }
++
++        return this.blockLocation;
++    }
++
++    /**
++     * Create a version of this BlockState with the given property cycled to the next value in order. If the property
++     * was at the highest possible value, it is set to the lowest one instead.
++     */
++    public IBlockState func_177231_a(IProperty p_177231_1_)
++    {
++        return this.func_177226_a(p_177231_1_, (Comparable)func_177232_a(p_177231_1_.func_177700_c(), this.func_177229_b(p_177231_1_)));
++    }
++
++    /**
++     * Helper method for cycleProperty.
++     */
++    protected static Object func_177232_a(Collection p_177232_0_, Object p_177232_1_)
++    {
++        Iterator iterator = p_177232_0_.iterator();
++
+         while (iterator.hasNext())
+         {
+             if (iterator.next().equals(p_177232_1_))
+             {
+                 if (iterator.hasNext())
+                 {
+-                    return (T)iterator.next();
++                    return iterator.next();
+                 }
+ 
+-                return (T)p_177232_0_.iterator().next();
++                return p_177232_0_.iterator().next();
+             }
+         }
+ 
+-        return (T)iterator.next();
++        return iterator.next();
+     }
+ 
+     public String toString()
+@@ -67,4 +126,9 @@
  
          return stringbuilder.toString();
      }
-+    
-+    public com.google.common.collect.ImmutableTable<IProperty, Comparable, IBlockState> getPropertyValueTable()
++
++    public ImmutableTable<IProperty, Comparable, IBlockState> getPropertyValueTable()
 +    {
 +        return null;
 +    }

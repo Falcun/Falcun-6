@@ -1,0 +1,15 @@
+--- ../src-base/minecraft/net/minecraft/entity/item/EntityTNTPrimed.java
++++ ../src-work/minecraft/net/minecraft/entity/item/EntityTNTPrimed.java
+@@ -1,10 +1,12 @@
+ package net.minecraft.entity.item;
+ 
++import net.mattbenson.modules.types.fpssettings.FPSSettings;
+ import net.minecraft.entity.Entity;
+ import net.minecraft.entity.EntityLivingBase;
+ import net.minecraft.nbt.NBTTagCompound;
+ import net.minecraft.util.EnumParticleTypes;
+ import net.minecraft.world.World;
++import net.mattbenson.Wrapper;
+ 
+ public class EntityTNTPrimed extends Entity
+ {

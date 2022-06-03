@@ -1,0 +1,22 @@
+--- ../src-base/minecraft/net/minecraft/client/gui/GuiTextField.java
++++ ../src-work/minecraft/net/minecraft/client/gui/GuiTextField.java
+@@ -459,8 +459,8 @@
+         {
+             if (this.func_146181_i())
+             {
+-                func_73734_a(this.field_146209_f - 1, this.field_146210_g - 1, this.field_146209_f + this.field_146218_h + 1, this.field_146210_g + this.field_146219_i + 1, -6250336);
+-                func_73734_a(this.field_146209_f, this.field_146210_g, this.field_146209_f + this.field_146218_h, this.field_146210_g + this.field_146219_i, -16777216);
++                drawRectangle(this.field_146209_f - 1, this.field_146210_g - 1, this.field_146209_f + this.field_146218_h + 1, this.field_146210_g + this.field_146219_i + 1, -6250336);
++                drawRectangle(this.field_146209_f, this.field_146210_g, this.field_146209_f + this.field_146218_h, this.field_146210_g + this.field_146219_i, -16777216);
+             }
+ 
+             int i = this.field_146226_p ? this.field_146222_t : this.field_146221_u;
+@@ -506,7 +506,7 @@
+             {
+                 if (flag2)
+                 {
+-                    Gui.func_73734_a(k1, i1 - 1, k1 + 1, i1 + 1 + this.field_146211_a.field_78288_b, -3092272);
++                    Gui.drawRectangle(k1, i1 - 1, k1 + 1, i1 + 1 + this.field_146211_a.field_78288_b, -3092272);
+                 }
+                 else
+                 {

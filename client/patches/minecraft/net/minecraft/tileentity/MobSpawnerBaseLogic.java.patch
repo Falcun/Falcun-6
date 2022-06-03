@@ -1,0 +1,10 @@
+--- ../src-base/minecraft/net/minecraft/tileentity/MobSpawnerBaseLogic.java
++++ ../src-work/minecraft/net/minecraft/tileentity/MobSpawnerBaseLogic.java
+@@ -344,6 +344,7 @@
+             if (entity != null)
+             {
+                 entity = this.func_180613_a(entity, false);
++                entity.isMobSpawner = true;
+                 this.field_98291_j = entity;
+             }
+         }

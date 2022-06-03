@@ -1,0 +1,24 @@
+--- ../src-base/minecraft/net/minecraft/client/network/NetworkPlayerInfo.java
++++ ../src-work/minecraft/net/minecraft/client/network/NetworkPlayerInfo.java
+@@ -92,11 +92,10 @@
+ 
+     public ResourceLocation func_178861_h()
+     {
+-        if (this.field_178862_f == null)
++    	if (this.field_178862_f == null)
+         {
+             this.func_178841_j();
+         }
+-
+         return this.field_178862_f;
+     }
+ 
+@@ -129,7 +128,7 @@
+ 
+                                 break;
+                             case CAPE:
+-                                NetworkPlayerInfo.this.field_178862_f = p_180521_2_;
++                            	NetworkPlayerInfo.this.field_178862_f = p_180521_2_;
+                         }
+                     }
+                 }, true);

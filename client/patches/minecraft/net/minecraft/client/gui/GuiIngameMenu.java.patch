@@ -1,6 +1,6 @@
 --- ../src-base/minecraft/net/minecraft/client/gui/GuiIngameMenu.java
 +++ ../src-work/minecraft/net/minecraft/client/gui/GuiIngameMenu.java
-@@ -30,8 +30,9 @@
+@@ -30,15 +30,22 @@
  
          this.field_146292_n.add(new GuiButton(4, this.field_146294_l / 2 - 100, this.field_146295_m / 4 + 24 + i, I18n.func_135052_a("menu.returnToGame", new Object[0])));
          this.field_146292_n.add(new GuiButton(0, this.field_146294_l / 2 - 100, this.field_146295_m / 4 + 96 + i, 98, 20, I18n.func_135052_a("menu.options", new Object[0])));
@@ -11,7 +11,20 @@
          this.field_146292_n.add(new GuiButton(5, this.field_146294_l / 2 - 100, this.field_146295_m / 4 + 48 + i, 98, 20, I18n.func_135052_a("gui.achievements", new Object[0])));
          this.field_146292_n.add(new GuiButton(6, this.field_146294_l / 2 + 2, this.field_146295_m / 4 + 48 + i, 98, 20, I18n.func_135052_a("gui.stats", new Object[0])));
          guibutton.field_146124_l = this.field_146297_k.func_71356_B() && !this.field_146297_k.func_71401_C().func_71344_c();
-@@ -74,13 +75,19 @@
++        /* WDL >>> */
++		wdl.WDLHooks.injectWDLButtons(this, field_146292_n);
++		/* <<< WDL */
+     }
+ 
+     protected void func_146284_a(GuiButton p_146284_1_) throws IOException
+     {
++    	/* WDL >>> */
++		wdl.WDLHooks.handleWDLButtonClick(this, p_146284_1_);
++		/* <<< WDL */
+         switch (p_146284_1_.field_146127_k)
+         {
+             case 0:
+@@ -74,13 +81,19 @@
                  this.field_146297_k.func_71381_h();
                  break;
              case 5:

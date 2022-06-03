@@ -1,0 +1,11 @@
+--- ../src-base/minecraft/net/minecraft/client/gui/GuiLabel.java
++++ ../src-work/minecraft/net/minecraft/client/gui/GuiLabel.java
+@@ -88,7 +88,7 @@
+             int j = this.field_146161_f + this.field_146163_s * 2;
+             int k = this.field_146162_g - this.field_146163_s;
+             int l = this.field_146174_h - this.field_146163_s;
+-            func_73734_a(k, l, k + i, l + j, this.field_146169_o);
++            drawRectangle(k, l, k + i, l + j, this.field_146169_o);
+             this.func_73730_a(k, k + i, l, this.field_146166_p);
+             this.func_73730_a(k, k + i, l + j, this.field_146165_q);
+             this.func_73728_b(k, l, l + j, this.field_146166_p);

@@ -1,13 +1,88 @@
 --- ../src-base/minecraft/net/minecraft/client/model/TexturedQuad.java
 +++ ../src-work/minecraft/net/minecraft/client/model/TexturedQuad.java
-@@ -4,10 +4,7 @@
+@@ -1,18 +1,19 @@
+ package net.minecraft.client.model;
+ 
++import net.mattbenson.patcher.TexturedQuadHook;
++import net.mattbenson.patcher.transformers.ModelRendererTransformer;
+ import net.minecraft.client.renderer.Tessellator;
  import net.minecraft.client.renderer.WorldRenderer;
  import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
++import net.minecraft.src.Config;
  import net.minecraft.util.Vec3;
 -import net.minecraftforge.fml.relauncher.Side;
 -import net.minecraftforge.fml.relauncher.SideOnly;
++import net.optifine.shaders.SVertexFormat;
  
 -@SideOnly(Side.CLIENT)
  public class TexturedQuad
  {
      public PositionTextureVertex[] field_78239_a;
+     public int field_78237_b;
+-    private boolean field_78238_c;
++    public boolean field_78238_c;
+ 
+     public TexturedQuad(PositionTextureVertex[] p_i46364_1_)
+     {
+@@ -20,15 +21,15 @@
+         this.field_78237_b = p_i46364_1_.length;
+     }
+ 
+-    public TexturedQuad(PositionTextureVertex[] p_i1153_1_, int p_i1153_2_, int p_i1153_3_, int p_i1153_4_, int p_i1153_5_, float p_i1153_6_, float p_i1153_7_)
++    public TexturedQuad(PositionTextureVertex[] vertices, float texcoordU1, float texcoordV1, float texcoordU2, float texcoordV2, float textureWidth, float textureHeight)
+     {
+-        this(p_i1153_1_);
+-        float f = 0.0F / p_i1153_6_;
+-        float f1 = 0.0F / p_i1153_7_;
+-        p_i1153_1_[0] = p_i1153_1_[0].func_78240_a((float)p_i1153_4_ / p_i1153_6_ - f, (float)p_i1153_3_ / p_i1153_7_ + f1);
+-        p_i1153_1_[1] = p_i1153_1_[1].func_78240_a((float)p_i1153_2_ / p_i1153_6_ + f, (float)p_i1153_3_ / p_i1153_7_ + f1);
+-        p_i1153_1_[2] = p_i1153_1_[2].func_78240_a((float)p_i1153_2_ / p_i1153_6_ + f, (float)p_i1153_5_ / p_i1153_7_ - f1);
+-        p_i1153_1_[3] = p_i1153_1_[3].func_78240_a((float)p_i1153_4_ / p_i1153_6_ - f, (float)p_i1153_5_ / p_i1153_7_ - f1);
++        this(vertices);
++        float f = 0.0F / textureWidth;
++        float f1 = 0.0F / textureHeight;
++        vertices[0] = vertices[0].func_78240_a((float)texcoordU2 / textureWidth - f, (float)texcoordV1 / textureHeight + f1);
++        vertices[1] = vertices[1].func_78240_a((float)texcoordU1 / textureWidth + f, (float)texcoordV1 / textureHeight + f1);
++        vertices[2] = vertices[2].func_78240_a((float)texcoordU1 / textureWidth + f, (float)texcoordV2 / textureHeight - f1);
++        vertices[3] = vertices[3].func_78240_a((float)texcoordU2 / textureWidth - f, (float)texcoordV2 / textureHeight - f1);
+     }
+ 
+     public void func_78235_a()
+@@ -43,8 +44,21 @@
+         this.field_78239_a = apositiontexturevertex;
+     }
+ 
++    /**
++     * Draw this primitve. This is typically called only once as the generated drawing instructions are saved by the
++     * renderer and reused later.
++     *  
++     * @param renderer The renderer instance
++     * @param scale The amount of scale to apply to this object
++     */
+     public void func_178765_a(WorldRenderer p_178765_1_, float p_178765_2_)
+     {
++    	//TODO: Falcun patcher
++    	if(ModelRendererTransformer.batchModelRendering) {
++    		TexturedQuadHook.draw(this, p_178765_1_, p_178765_2_);
++    		return;
++    	}
++    	
+         Vec3 vec3 = this.field_78239_a[1].field_78243_a.func_72444_a(this.field_78239_a[0].field_78243_a);
+         Vec3 vec31 = this.field_78239_a[1].field_78243_a.func_72444_a(this.field_78239_a[2].field_78243_a);
+         Vec3 vec32 = vec31.func_72431_c(vec3).func_72432_b();
+@@ -59,7 +73,14 @@
+             f2 = -f2;
+         }
+ 
+-        p_178765_1_.func_181668_a(7, DefaultVertexFormats.field_181703_c);
++        if (Config.isShaders())
++        {
++            p_178765_1_.func_181668_a(7, SVertexFormat.defVertexFormatTextured);
++        }
++        else
++        {
++            p_178765_1_.func_181668_a(7, DefaultVertexFormats.field_181703_c);
++        }
+ 
+         for (int i = 0; i < 4; ++i)
+         {

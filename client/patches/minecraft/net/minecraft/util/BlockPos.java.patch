@@ -1,6 +1,120 @@
 --- ../src-base/minecraft/net/minecraft/util/BlockPos.java
 +++ ../src-work/minecraft/net/minecraft/util/BlockPos.java
-@@ -257,6 +257,21 @@
+@@ -60,72 +60,60 @@
+     {
+         return p_177973_1_.func_177958_n() == 0 && p_177973_1_.func_177956_o() == 0 && p_177973_1_.func_177952_p() == 0 ? this : new BlockPos(this.func_177958_n() - p_177973_1_.func_177958_n(), this.func_177956_o() - p_177973_1_.func_177956_o(), this.func_177952_p() - p_177973_1_.func_177952_p());
+     }
+-
+-    public BlockPos func_177984_a()
+-    {
+-        return this.func_177981_b(1);
++    
++    //MATT NEW FPS
++    public BlockPos func_177984_a() {
++        return new BlockPos(this.func_177958_n(), this.func_177956_o() + 1, this.func_177952_p());
+     }
+-
+-    public BlockPos func_177981_b(int p_177981_1_)
+-    {
+-        return this.func_177967_a(EnumFacing.UP, p_177981_1_);
++    
++    public BlockPos func_177981_b(final int p_177981_1_) {
++        return (BlockPos)((p_177981_1_ == 0) ? this : new BlockPos(this.func_177958_n(), this.func_177956_o() + p_177981_1_, this.func_177952_p()));
+     }
+-
+-    public BlockPos func_177977_b()
+-    {
+-        return this.func_177979_c(1);
++    
++    public BlockPos func_177977_b() {
++        return new BlockPos(this.func_177958_n(), this.func_177956_o() - 1, this.func_177952_p());
+     }
+-
+-    public BlockPos func_177979_c(int p_177979_1_)
+-    {
+-        return this.func_177967_a(EnumFacing.DOWN, p_177979_1_);
++    
++    public BlockPos func_177979_c(final int p_177979_1_) {
++        return (BlockPos)((p_177979_1_ == 0) ? this : new BlockPos(this.func_177958_n(), this.func_177956_o() - p_177979_1_, this.func_177952_p()));
+     }
+-
+-    public BlockPos func_177978_c()
+-    {
+-        return this.func_177964_d(1);
++    
++    public BlockPos func_177978_c() {
++        return new BlockPos(this.func_177958_n(), this.func_177956_o(), this.func_177952_p() - 1);
+     }
+-
+-    public BlockPos func_177964_d(int p_177964_1_)
+-    {
+-        return this.func_177967_a(EnumFacing.NORTH, p_177964_1_);
++    
++    public BlockPos func_177964_d(final int p_177964_1_) {
++        return (BlockPos)((p_177964_1_ == 0) ? this : new BlockPos(this.func_177958_n(), this.func_177956_o(), this.func_177952_p() - p_177964_1_));
+     }
+-
+-    public BlockPos func_177968_d()
+-    {
+-        return this.func_177970_e(1);
++    
++    public BlockPos func_177968_d() {
++        return new BlockPos(this.func_177958_n(), this.func_177956_o(), this.func_177952_p() + 1);
+     }
+-
+-    public BlockPos func_177970_e(int p_177970_1_)
+-    {
+-        return this.func_177967_a(EnumFacing.SOUTH, p_177970_1_);
++    
++    public BlockPos func_177970_e(final int p_177970_1_) {
++        return (BlockPos)((p_177970_1_ == 0) ? this : new BlockPos(this.func_177958_n(), this.func_177956_o(), this.func_177952_p() + p_177970_1_));
+     }
+-
+-    public BlockPos func_177976_e()
+-    {
+-        return this.func_177985_f(1);
++    
++    public BlockPos func_177976_e() {
++        return new BlockPos(this.func_177958_n() - 1, this.func_177956_o(), this.func_177952_p());
+     }
+-
+-    public BlockPos func_177985_f(int p_177985_1_)
+-    {
+-        return this.func_177967_a(EnumFacing.WEST, p_177985_1_);
++    
++    public BlockPos func_177985_f(final int p_177985_1_) {
++        return (BlockPos)((p_177985_1_ == 0) ? this : new BlockPos(this.func_177958_n() - p_177985_1_, this.func_177956_o(), this.func_177952_p()));
+     }
+-
+-    public BlockPos func_177974_f()
+-    {
+-        return this.func_177965_g(1);
++    
++    public BlockPos func_177974_f() {
++        return new BlockPos(this.func_177958_n() + 1, this.func_177956_o(), this.func_177952_p());
+     }
+-
+-    public BlockPos func_177965_g(int p_177965_1_)
+-    {
+-        return this.func_177967_a(EnumFacing.EAST, p_177965_1_);
++    
++    public BlockPos func_177965_g(final int p_177965_1_) {
++        return (BlockPos)((p_177965_1_ == 0) ? this : new BlockPos(this.func_177958_n() + p_177965_1_, this.func_177956_o(), this.func_177952_p()));
+     }
+-
+-    public BlockPos func_177972_a(EnumFacing p_177972_1_)
+-    {
+-        return this.func_177967_a(p_177972_1_, 1);
++    
++    public BlockPos func_177972_a(final EnumFacing p_177972_1_) {
++        return new BlockPos(this.func_177958_n() + p_177972_1_.func_82601_c(), this.func_177956_o() + p_177972_1_.func_96559_d(), this.func_177952_p() + p_177972_1_.func_82599_e());
+     }
+-
++    
+     public BlockPos func_177967_a(EnumFacing p_177967_1_, int p_177967_2_)
+     {
+         return p_177967_2_ == 0 ? this : new BlockPos(this.func_177958_n() + p_177967_1_.func_82601_c() * p_177967_2_, this.func_177956_o() + p_177967_1_.func_96559_d() * p_177967_2_, this.func_177952_p() + p_177967_1_.func_82599_e() * p_177967_2_);
+@@ -257,6 +245,21 @@
          };
      }
  
@@ -22,7 +136,7 @@
      public static final class MutableBlockPos extends BlockPos
          {
              private int field_177997_b;
-@@ -298,5 +313,7 @@
+@@ -298,5 +301,7 @@
                  this.field_177996_d = p_181079_3_;
                  return this;
              }

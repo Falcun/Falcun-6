@@ -1,139 +1,1066 @@
 --- ../src-base/minecraft/net/minecraft/client/gui/FontRenderer.java
 +++ ../src-work/minecraft/net/minecraft/client/gui/FontRenderer.java
-@@ -57,7 +57,7 @@
+@@ -9,7 +9,10 @@
+ import java.util.Arrays;
+ import java.util.List;
+ import java.util.Locale;
++import java.util.Properties;
+ import java.util.Random;
++
++import net.mattbenson.Wrapper;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.renderer.GlStateManager;
+ import net.minecraft.client.renderer.Tessellator;
+@@ -20,44 +23,105 @@
+ import net.minecraft.client.resources.IResourceManager;
+ import net.minecraft.client.resources.IResourceManagerReloadListener;
+ import net.minecraft.client.settings.GameSettings;
++import net.minecraft.src.Config;
+ import net.minecraft.util.ResourceLocation;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import net.optifine.CustomColors;
++import net.optifine.render.GlBlendState;
++import net.optifine.util.FontUtils;
+ import org.apache.commons.io.IOUtils;
+ import org.lwjgl.opengl.GL11;
+ 
+-@SideOnly(Side.CLIENT)
+ public class FontRenderer implements IResourceManagerReloadListener
+ {
+     private static final ResourceLocation[] field_111274_c = new ResourceLocation[256];
+-    protected int[] field_78286_d = new int[256];
++
++    /** Array of width of all the characters in default.png */
++    private final int[] field_78286_d = new int[256];
++
++    /** the height in pixels of default text */
+     public int field_78288_b = 9;
+     public Random field_78289_c = new Random();
+-    protected byte[] field_78287_e = new byte[65536];
+-    private int[] field_78285_g = new int[32];
+-    protected final ResourceLocation field_111273_g;
+-    private final TextureManager field_78298_i;
+-    protected float field_78295_j;
+-    protected float field_78296_k;
+-    private boolean field_78293_l;
++
++    /**
++     * Array of the start/end column (in upper/lower nibble) for every glyph in the /font directory.
++     */
++    public byte[] field_78287_e = new byte[65536];
++
++    /**
++     * Array of RGB triplets defining the 16 standard chat colors followed by 16 darker version of the same colors for
++     * drop shadows.
++     */
++    public int[] field_78285_g = new int[32];
++    public ResourceLocation field_111273_g;
++
++    /** The RenderEngine used to load and setup glyph textures. */
++    public final TextureManager field_78298_i;
++
++    /** Current X coordinate at which to draw the next character. */
++    public float field_78295_j;
++
++    /** Current Y coordinate at which to draw the next character. */
++    public float field_78296_k;
++
++    /**
++     * If true, strings should be rendered with Unicode fonts instead of the default.png font
++     */
++    public boolean field_78293_l;
++
++    /**
++     * If true, the Unicode Bidirectional Algorithm should be run before rendering any string.
++     */
+     private boolean field_78294_m;
+-    private float field_78291_n;
+-    private float field_78292_o;
+-    private float field_78306_p;
+-    private float field_78305_q;
+-    private int field_78304_r;
+-    private boolean field_78303_s;
+-    private boolean field_78302_t;
+-    private boolean field_78301_u;
+-    private boolean field_78300_v;
+-    private boolean field_78299_w;
+ 
++    /** Used to specify new red value for the current color. */
++    public float field_78291_n;
++
++    /** Used to specify new blue value for the current color. */
++    public float field_78292_o;
++
++    /** Used to specify new green value for the current color. */
++    public float field_78306_p;
++
++    /** Used to speify new alpha value for the current color. */
++    public float field_78305_q;
++
++    /** Text color of the currently rendering string. */
++    public int field_78304_r;
++
++    /** Set if the "k" style (random) is active in currently rendering string */
++    public boolean field_78303_s;
++
++    /** Set if the "l" style (bold) is active in currently rendering string */
++    public boolean field_78302_t;
++
++    /** Set if the "o" style (italic) is active in currently rendering string */
++    public boolean field_78301_u;
++
++    /**
++     * Set if the "n" style (underlined) is active in currently rendering string
++     */
++    public boolean field_78300_v;
++
++    /**
++     * Set if the "m" style (strikethrough) is active in currently rendering string
++     */
++    public boolean field_78299_w;
++    public GameSettings gameSettings;
++    public ResourceLocation locationFontTextureBase;
++    public float offsetBold = 1.0F;
++    private float[] charWidthFloat = new float[256];
++    private boolean blend = false;
++    private GlBlendState oldBlendState = new GlBlendState();
++
+     public FontRenderer(GameSettings p_i1035_1_, ResourceLocation p_i1035_2_, TextureManager p_i1035_3_, boolean p_i1035_4_)
+     {
++        this.gameSettings = p_i1035_1_;
++        this.locationFontTextureBase = p_i1035_2_;
          this.field_111273_g = p_i1035_2_;
          this.field_78298_i = p_i1035_3_;
          this.field_78293_l = p_i1035_4_;
 -        p_i1035_3_.func_110577_a(this.field_111273_g);
-+        bindTexture(this.field_111273_g);
++        this.field_111273_g = FontUtils.getHdFontLocation(this.locationFontTextureBase);
++        this.bindTexture(this.field_111273_g);
  
          for (int i = 0; i < 32; ++i)
          {
-@@ -97,6 +97,7 @@
+@@ -96,7 +160,15 @@
+ 
      public void func_110549_a(IResourceManager p_110549_1_)
      {
++        this.field_111273_g = FontUtils.getHdFontLocation(this.locationFontTextureBase);
++
++        for (int i = 0; i < field_111274_c.length; ++i)
++        {
++            field_111274_c[i] = null;
++        }
++
          this.func_111272_d();
 +        this.func_98306_d();
      }
  
      private void func_111272_d()
-@@ -105,7 +106,7 @@
+@@ -105,44 +177,50 @@
  
          try
          {
 -            bufferedimage = TextureUtil.func_177053_a(Minecraft.func_71410_x().func_110442_L().func_110536_a(this.field_111273_g).func_110527_b());
-+            bufferedimage = TextureUtil.func_177053_a(getResourceInputStream(this.field_111273_g));
++            bufferedimage = TextureUtil.func_177053_a(this.getResourceInputStream(this.field_111273_g));
          }
-         catch (IOException ioexception)
+-        catch (IOException ioexception)
++        catch (IOException ioexception1)
          {
-@@ -165,7 +166,7 @@
+-            throw new RuntimeException(ioexception);
++            throw new RuntimeException(ioexception1);
+         }
+ 
++        Properties properties = FontUtils.readFontProperties(this.field_111273_g);
++        this.blend = FontUtils.readBoolean(properties, "blend", false);
+         int i = bufferedimage.getWidth();
+         int j = bufferedimage.getHeight();
++        int k = i / 16;
++        int l = j / 16;
++        float f = (float)i / 128.0F;
++        float f1 = Config.limit(f, 1.0F, 2.0F);
++        this.offsetBold = 1.0F / f1;
++        float f2 = FontUtils.readFloat(properties, "offsetBold", -1.0F);
++
++        if (f2 >= 0.0F)
++        {
++            this.offsetBold = f2;
++        }
++
+         int[] aint = new int[i * j];
+         bufferedimage.getRGB(0, 0, i, j, aint, 0, i);
+-        int k = j / 16;
+-        int l = i / 16;
+-        int i1 = 1;
+-        float f = 8.0F / (float)l;
+ 
+-        for (int j1 = 0; j1 < 256; ++j1)
++        for (int i1 = 0; i1 < 256; ++i1)
+         {
+-            int k1 = j1 % 16;
+-            int l1 = j1 / 16;
++            int j1 = i1 % 16;
++            int k1 = i1 / 16;
++            int l1 = 0;
+ 
+-            if (j1 == 32)
++            for (l1 = k - 1; l1 >= 0; --l1)
+             {
+-                this.field_78286_d[j1] = 3 + i1;
+-            }
+-
+-            int i2;
+-
+-            for (i2 = l - 1; i2 >= 0; --i2)
+-            {
+-                int j2 = k1 * l + i2;
++                int i2 = j1 * k + l1;
+                 boolean flag = true;
+ 
+-                for (int k2 = 0; k2 < k && flag; ++k2)
++                for (int j2 = 0; j2 < l && flag; ++j2)
+                 {
+-                    int l2 = (l1 * l + k2) * i;
++                    int k2 = (k1 * l + j2) * i;
++                    int l2 = aint[i2 + k2];
++                    int i3 = l2 >> 24 & 255;
+ 
+-                    if ((aint[j2 + l2] >> 24 & 255) != 0)
++                    if (i3 > 16)
+                     {
+                         flag = false;
+                     }
+@@ -153,10 +231,28 @@
+                     break;
+                 }
+             }
++            
++            if (i1 == 32)
++            {
++                if (k <= 8)
++                {
++                    l1 = (int)(2.0F * f);
++                }
++                else
++                {
++                    l1 = (int)(1.5F * f);
++                }
++            }
+ 
+-            ++i2;
+-            this.field_78286_d[j1] = (int)(0.5D + (double)((float)i2 * f)) + i1;
++            this.charWidthFloat[i1] = (float)(l1 + 1) / f + 1.0F;
+         }
++
++        FontUtils.readCustomCharWidths(properties, this.charWidthFloat);
++
++        for (int j3 = 0; j3 < this.field_78286_d.length; ++j3)
++        {
++            this.field_78286_d[j3] = Math.round(this.charWidthFloat[j3]);
++        }
+     }
+ 
+     private void func_98306_d()
+@@ -165,7 +261,7 @@
  
          try
          {
 -            inputstream = Minecraft.func_71410_x().func_110442_L().func_110536_a(new ResourceLocation("font/glyph_sizes.bin")).func_110527_b();
-+            inputstream = getResourceInputStream(new ResourceLocation("font/glyph_sizes.bin"));
++            inputstream = this.getResourceInputStream(new ResourceLocation("font/glyph_sizes.bin"));
              inputstream.read(this.field_78287_e);
          }
          catch (IOException ioexception)
-@@ -196,7 +197,7 @@
+@@ -180,36 +276,39 @@
+ 
+     private float func_181559_a(char p_181559_1_, boolean p_181559_2_)
+     {
+-        if (p_181559_1_ == 32)
++        if (p_181559_1_ != 32 && p_181559_1_ != 160)
+         {
+-            return 4.0F;
++            int i = "\u00c0\u00c1\u00c2\u00c8\u00ca\u00cb\u00cd\u00d3\u00d4\u00d5\u00da\u00df\u00e3\u00f5\u011f\u0130\u0131\u0152\u0153\u015e\u015f\u0174\u0175\u017e\u0207\u0000\u0000\u0000\u0000\u0000\u0000\u0000 !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u0000\u00c7\u00fc\u00e9\u00e2\u00e4\u00e0\u00e5\u00e7\u00ea\u00eb\u00e8\u00ef\u00ee\u00ec\u00c4\u00c5\u00c9\u00e6\u00c6\u00f4\u00f6\u00f2\u00fb\u00f9\u00ff\u00d6\u00dc\u00f8\u00a3\u00d8\u00d7\u0192\u00e1\u00ed\u00f3\u00fa\u00f1\u00d1\u00aa\u00ba\u00bf\u00ae\u00ac\u00bd\u00bc\u00a1\u00ab\u00bb\u2591\u2592\u2593\u2502\u2524\u2561\u2562\u2556\u2555\u2563\u2551\u2557\u255d\u255c\u255b\u2510\u2514\u2534\u252c\u251c\u2500\u253c\u255e\u255f\u255a\u2554\u2569\u2566\u2560\u2550\u256c\u2567\u2568\u2564\u2565\u2559\u2558\u2552\u2553\u256b\u256a\u2518\u250c\u2588\u2584\u258c\u2590\u2580\u03b1\u03b2\u0393\u03c0\u03a3\u03c3\u03bc\u03c4\u03a6\u0398\u03a9\u03b4\u221e\u2205\u2208\u2229\u2261\u00b1\u2265\u2264\u2320\u2321\u00f7\u2248\u00b0\u2219\u00b7\u221a\u207f\u00b2\u25a0\u0000".indexOf(p_181559_1_);
++            return i != -1 && !this.field_78293_l ? this.func_78266_a(i, p_181559_2_) : this.func_78277_a(p_181559_1_, p_181559_2_);
+         }
+         else
+         {
+-            int i = "\u00c0\u00c1\u00c2\u00c8\u00ca\u00cb\u00cd\u00d3\u00d4\u00d5\u00da\u00df\u00e3\u00f5\u011f\u0130\u0131\u0152\u0153\u015e\u015f\u0174\u0175\u017e\u0207\u0000\u0000\u0000\u0000\u0000\u0000\u0000 !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u0000\u00c7\u00fc\u00e9\u00e2\u00e4\u00e0\u00e5\u00e7\u00ea\u00eb\u00e8\u00ef\u00ee\u00ec\u00c4\u00c5\u00c9\u00e6\u00c6\u00f4\u00f6\u00f2\u00fb\u00f9\u00ff\u00d6\u00dc\u00f8\u00a3\u00d8\u00d7\u0192\u00e1\u00ed\u00f3\u00fa\u00f1\u00d1\u00aa\u00ba\u00bf\u00ae\u00ac\u00bd\u00bc\u00a1\u00ab\u00bb\u2591\u2592\u2593\u2502\u2524\u2561\u2562\u2556\u2555\u2563\u2551\u2557\u255d\u255c\u255b\u2510\u2514\u2534\u252c\u251c\u2500\u253c\u255e\u255f\u255a\u2554\u2569\u2566\u2560\u2550\u256c\u2567\u2568\u2564\u2565\u2559\u2558\u2552\u2553\u256b\u256a\u2518\u250c\u2588\u2584\u258c\u2590\u2580\u03b1\u03b2\u0393\u03c0\u03a3\u03c3\u03bc\u03c4\u03a6\u0398\u03a9\u03b4\u221e\u2205\u2208\u2229\u2261\u00b1\u2265\u2264\u2320\u2321\u00f7\u2248\u00b0\u2219\u00b7\u221a\u207f\u00b2\u25a0\u0000".indexOf(p_181559_1_);
+-            return i != -1 && !this.field_78293_l ? this.func_78266_a(i, p_181559_2_) : this.func_78277_a(p_181559_1_, p_181559_2_);
++            return !this.field_78293_l ? this.charWidthFloat[p_181559_1_] : 4.0F;
+         }
+     }
+ 
+-    protected float func_78266_a(int p_78266_1_, boolean p_78266_2_)
++    /**
++     * Render a single character with the default.png font at current (posX,posY) location...
++     */
++    private float func_78266_a(int p_78266_1_, boolean p_78266_2_)
+     {
          int i = p_78266_1_ % 16 * 8;
          int j = p_78266_1_ / 16 * 8;
          int k = p_78266_2_ ? 1 : 0;
 -        this.field_78298_i.func_110577_a(this.field_111273_g);
-+        bindTexture(this.field_111273_g);
-         int l = this.field_78286_d[p_78266_1_];
-         float f = (float)l - 0.01F;
+-        int l = this.field_78286_d[p_78266_1_];
+-        float f = (float)l - 0.01F;
++        this.bindTexture(this.field_111273_g);
++        float f = this.charWidthFloat[p_78266_1_];
++        float f1 = 7.99F;
          GL11.glBegin(GL11.GL_TRIANGLE_STRIP);
-@@ -224,7 +225,7 @@
+         GL11.glTexCoord2f((float)i / 128.0F, (float)j / 128.0F);
+         GL11.glVertex3f(this.field_78295_j + (float)k, this.field_78296_k, 0.0F);
+         GL11.glTexCoord2f((float)i / 128.0F, ((float)j + 7.99F) / 128.0F);
+         GL11.glVertex3f(this.field_78295_j - (float)k, this.field_78296_k + 7.99F, 0.0F);
+-        GL11.glTexCoord2f(((float)i + f - 1.0F) / 128.0F, (float)j / 128.0F);
+-        GL11.glVertex3f(this.field_78295_j + f - 1.0F + (float)k, this.field_78296_k, 0.0F);
+-        GL11.glTexCoord2f(((float)i + f - 1.0F) / 128.0F, ((float)j + 7.99F) / 128.0F);
+-        GL11.glVertex3f(this.field_78295_j + f - 1.0F - (float)k, this.field_78296_k + 7.99F, 0.0F);
++        GL11.glTexCoord2f(((float)i + f1 - 1.0F) / 128.0F, (float)j / 128.0F);
++        GL11.glVertex3f(this.field_78295_j + f1 - 1.0F + (float)k, this.field_78296_k, 0.0F);
++        GL11.glTexCoord2f(((float)i + f1 - 1.0F) / 128.0F, ((float)j + 7.99F) / 128.0F);
++        GL11.glVertex3f(this.field_78295_j + f1 - 1.0F - (float)k, this.field_78296_k + 7.99F, 0.0F);
+         GL11.glEnd();
+-        return (float)l;
++        return f;
+     }
  
+     private ResourceLocation func_111271_a(int p_111271_1_)
+@@ -217,17 +316,24 @@
+         if (field_111274_c[p_111271_1_] == null)
+         {
+             field_111274_c[p_111271_1_] = new ResourceLocation(String.format("textures/font/unicode_page_%02x.png", new Object[] {Integer.valueOf(p_111271_1_)}));
++            field_111274_c[p_111271_1_] = FontUtils.getHdFontLocation(field_111274_c[p_111271_1_]);
+         }
+ 
+         return field_111274_c[p_111271_1_];
+     }
+ 
++    /**
++     * Load one of the /font/glyph_XX.png into a new GL texture and store the texture ID in glyphTextureName array.
++     */
      private void func_78257_a(int p_78257_1_)
      {
 -        this.field_78298_i.func_110577_a(this.func_111271_a(p_78257_1_));
-+        bindTexture(this.func_111271_a(p_78257_1_));
++        this.bindTexture(this.func_111271_a(p_78257_1_));
      }
  
-     protected float func_78277_a(char p_78277_1_, boolean p_78277_2_)
-@@ -271,7 +272,7 @@
+-    protected float func_78277_a(char p_78277_1_, boolean p_78277_2_)
++    /**
++     * Render a single Unicode character at current (posX,posY) location using one of the /font/glyph_XX.png files...
++     */
++    private float func_78277_a(char p_78277_1_, boolean p_78277_2_)
+     {
+         if (this.field_78287_e[p_78277_1_] == 0)
+         {
+@@ -259,23 +365,47 @@
+         }
+     }
  
++    /**
++     * Draws the specified string with a shadow.
++     */
+     public int func_175063_a(String p_175063_1_, float p_175063_2_, float p_175063_3_, int p_175063_4_)
+     {
+         return this.func_175065_a(p_175063_1_, p_175063_2_, p_175063_3_, p_175063_4_, true);
+     }
+ 
++    /**
++     * Draws the specified string.
++     */
+     public int func_78276_b(String p_78276_1_, int p_78276_2_, int p_78276_3_, int p_78276_4_)
+     {
+         return this.func_175065_a(p_78276_1_, (float)p_78276_2_, (float)p_78276_3_, p_78276_4_, false);
+     }
+ 
++    /**
++     * Draws the specified string.
++     */
      public int func_175065_a(String p_175065_1_, float p_175065_2_, float p_175065_3_, int p_175065_4_, boolean p_175065_5_)
      {
 -        GlStateManager.func_179141_d();
-+        enableAlpha();
++        this.enableAlpha();
++
++        if (this.blend)
++        {
++            GlStateManager.getBlendState(this.oldBlendState);
++            GlStateManager.func_179147_l();
++            GlStateManager.func_179112_b(770, 771);
++        }
++
          this.func_78265_b();
          int i;
+-
+-        if (p_175065_5_)
++        
++        
++        boolean override = false;
++        
++        if(Wrapper.getInstance().getModuleManager() != null && Wrapper.getInstance().isRemoveTextShadows()) {
++        	override = true;
++        }
++        
++        if (p_175065_5_ && !override)
+         {
+             i = this.func_180455_b(p_175065_1_, p_175065_2_ + 1.0F, p_175065_3_ + 1.0F, p_175065_4_, true);
+             i = Math.max(i, this.func_180455_b(p_175065_1_, p_175065_2_, p_175065_3_, p_175065_4_, false));
+@@ -285,9 +415,17 @@
+             i = this.func_180455_b(p_175065_1_, p_175065_2_, p_175065_3_, p_175065_4_, false);
+         }
  
-@@ -341,7 +342,7 @@
++        if (this.blend)
++        {
++            GlStateManager.setBlendState(this.oldBlendState);
++        }
++
+         return i;
+     }
  
-                     int j1 = this.field_78285_g[i1];
-                     this.field_78304_r = j1;
--                    GlStateManager.func_179131_c((float)(j1 >> 16) / 255.0F, (float)(j1 >> 8 & 255) / 255.0F, (float)(j1 & 255) / 255.0F, this.field_78305_q);
-+                    setColor((float)(j1 >> 16) / 255.0F, (float)(j1 >> 8 & 255) / 255.0F, (float)(j1 & 255) / 255.0F, this.field_78305_q);
-                 }
-                 else if (i1 == 16)
++    /**
++     * Apply Unicode Bidirectional Algorithm to string and return a new possibly reordered string for visual rendering.
++     */
+     private String func_147647_b(String p_147647_1_)
+     {
+         try
+@@ -302,6 +440,9 @@
+         }
+     }
+ 
++    /**
++     * Reset all style flag fields in the class to false; called at the start of string rendering
++     */
+     private void func_78265_b()
+     {
+         this.field_78303_s = false;
+@@ -311,6 +452,9 @@
+         this.field_78299_w = false;
+     }
+ 
++    /**
++     * Render a single line string at the current (posX,posY) and update posX
++     */
+     private void func_78255_a(String p_78255_1_, boolean p_78255_2_)
+     {
+         for (int i = 0; i < p_78255_1_.length(); ++i)
+@@ -319,9 +463,9 @@
+ 
+             if (c0 == 167 && i + 1 < p_78255_1_.length())
+             {
+-                int i1 = "0123456789abcdefklmnor".indexOf(p_78255_1_.toLowerCase(Locale.ENGLISH).charAt(i + 1));
++                int l = "0123456789abcdefklmnor".indexOf(p_78255_1_.toLowerCase(Locale.ENGLISH).charAt(i + 1));
+ 
+-                if (i1 < 16)
++                if (l < 16)
                  {
-@@ -370,7 +371,7 @@
+                     this.field_78303_s = false;
+                     this.field_78302_t = false;
+@@ -329,48 +473,54 @@
+                     this.field_78300_v = false;
+                     this.field_78301_u = false;
+ 
+-                    if (i1 < 0 || i1 > 15)
++                    if (l < 0 || l > 15)
+                     {
+-                        i1 = 15;
++                        l = 15;
+                     }
+ 
+                     if (p_78255_2_)
+                     {
+-                        i1 += 16;
++                        l += 16;
+                     }
+ 
+-                    int j1 = this.field_78285_g[i1];
+-                    this.field_78304_r = j1;
+-                    GlStateManager.func_179131_c((float)(j1 >> 16) / 255.0F, (float)(j1 >> 8 & 255) / 255.0F, (float)(j1 & 255) / 255.0F, this.field_78305_q);
++                    int i1 = this.field_78285_g[l];
++
++                    if (Config.isCustomColors())
++                    {
++                        i1 = CustomColors.getTextColor(l, i1);
++                    }
++
++                    this.field_78304_r = i1;
++                    this.setColor((float)(i1 >> 16) / 255.0F, (float)(i1 >> 8 & 255) / 255.0F, (float)(i1 & 255) / 255.0F, this.field_78305_q);
+                 }
+-                else if (i1 == 16)
++                else if (l == 16)
+                 {
+                     this.field_78303_s = true;
+                 }
+-                else if (i1 == 17)
++                else if (l == 17)
+                 {
+                     this.field_78302_t = true;
+                 }
+-                else if (i1 == 18)
++                else if (l == 18)
+                 {
+                     this.field_78299_w = true;
+                 }
+-                else if (i1 == 19)
++                else if (l == 19)
+                 {
+                     this.field_78300_v = true;
+                 }
+-                else if (i1 == 20)
++                else if (l == 20)
+                 {
+                     this.field_78301_u = true;
+                 }
+-                else if (i1 == 21)
++                else if (l == 21)
+                 {
+                     this.field_78303_s = false;
+                     this.field_78302_t = false;
                      this.field_78299_w = false;
                      this.field_78300_v = false;
                      this.field_78301_u = false;
 -                    GlStateManager.func_179131_c(this.field_78291_n, this.field_78292_o, this.field_78306_p, this.field_78305_q);
-+                    setColor(this.field_78291_n, this.field_78292_o, this.field_78306_p, this.field_78305_q);
++                    this.setColor(this.field_78291_n, this.field_78292_o, this.field_78306_p, this.field_78305_q);
                  }
  
                  ++i;
-@@ -398,7 +399,7 @@
+@@ -398,7 +548,7 @@
                      c0 = c1;
                  }
  
 -                float f1 = this.field_78293_l ? 0.5F : 1.0F;
-+                float f1 = j == -1 || this.field_78293_l ? 0.5f : 1f;
++                float f1 = j != -1 && !this.field_78293_l ? this.offsetBold : 0.5F;
                  boolean flag = (c0 == 0 || j == -1 || this.field_78293_l) && p_78255_2_;
  
                  if (flag)
-@@ -436,7 +437,16 @@
+@@ -434,43 +584,51 @@
+                         this.field_78296_k += f1;
+                     }
  
-                     ++f;
+-                    ++f;
++                    f += f1;
                  }
-+                doDraw(f);
+ 
+-                if (this.field_78299_w)
+-                {
+-                    Tessellator tessellator = Tessellator.func_178181_a();
+-                    WorldRenderer worldrenderer = tessellator.func_178180_c();
+-                    GlStateManager.func_179090_x();
+-                    worldrenderer.func_181668_a(7, DefaultVertexFormats.field_181705_e);
+-                    worldrenderer.func_181662_b((double)this.field_78295_j, (double)(this.field_78296_k + (float)(this.field_78288_b / 2)), 0.0D).func_181675_d();
+-                    worldrenderer.func_181662_b((double)(this.field_78295_j + f), (double)(this.field_78296_k + (float)(this.field_78288_b / 2)), 0.0D).func_181675_d();
+-                    worldrenderer.func_181662_b((double)(this.field_78295_j + f), (double)(this.field_78296_k + (float)(this.field_78288_b / 2) - 1.0F), 0.0D).func_181675_d();
+-                    worldrenderer.func_181662_b((double)this.field_78295_j, (double)(this.field_78296_k + (float)(this.field_78288_b / 2) - 1.0F), 0.0D).func_181675_d();
+-                    tessellator.func_78381_a();
+-                    GlStateManager.func_179098_w();
+-                }
++                this.doDraw(f);
 +            }
 +        }
 +    }
  
-+    protected void doDraw(float f)
+-                if (this.field_78300_v)
+-                {
+-                    Tessellator tessellator1 = Tessellator.func_178181_a();
+-                    WorldRenderer worldrenderer1 = tessellator1.func_178180_c();
+-                    GlStateManager.func_179090_x();
+-                    worldrenderer1.func_181668_a(7, DefaultVertexFormats.field_181705_e);
+-                    int l = this.field_78300_v ? -1 : 0;
+-                    worldrenderer1.func_181662_b((double)(this.field_78295_j + (float)l), (double)(this.field_78296_k + (float)this.field_78288_b), 0.0D).func_181675_d();
+-                    worldrenderer1.func_181662_b((double)(this.field_78295_j + f), (double)(this.field_78296_k + (float)this.field_78288_b), 0.0D).func_181675_d();
+-                    worldrenderer1.func_181662_b((double)(this.field_78295_j + f), (double)(this.field_78296_k + (float)this.field_78288_b - 1.0F), 0.0D).func_181675_d();
+-                    worldrenderer1.func_181662_b((double)(this.field_78295_j + (float)l), (double)(this.field_78296_k + (float)this.field_78288_b - 1.0F), 0.0D).func_181675_d();
+-                    tessellator1.func_78381_a();
+-                    GlStateManager.func_179098_w();
+-                }
++    protected void doDraw(float p_doDraw_1_)
 +    {
++        if (this.field_78299_w)
 +        {
-+            {
++            Tessellator tessellator = Tessellator.func_178181_a();
++            WorldRenderer worldrenderer = tessellator.func_178180_c();
++            GlStateManager.func_179090_x();
++            worldrenderer.func_181668_a(7, DefaultVertexFormats.field_181705_e);
++            worldrenderer.func_181662_b((double)this.field_78295_j, (double)(this.field_78296_k + (float)(this.field_78288_b / 2)), 0.0D).func_181675_d();
++            worldrenderer.func_181662_b((double)(this.field_78295_j + p_doDraw_1_), (double)(this.field_78296_k + (float)(this.field_78288_b / 2)), 0.0D).func_181675_d();
++            worldrenderer.func_181662_b((double)(this.field_78295_j + p_doDraw_1_), (double)(this.field_78296_k + (float)(this.field_78288_b / 2) - 1.0F), 0.0D).func_181675_d();
++            worldrenderer.func_181662_b((double)this.field_78295_j, (double)(this.field_78296_k + (float)(this.field_78288_b / 2) - 1.0F), 0.0D).func_181675_d();
++            tessellator.func_78381_a();
++            GlStateManager.func_179098_w();
++        }
+ 
+-                this.field_78295_j += (float)((int)f);
+-            }
++        if (this.field_78300_v)
++        {
++            Tessellator tessellator1 = Tessellator.func_178181_a();
++            WorldRenderer worldrenderer1 = tessellator1.func_178180_c();
++            GlStateManager.func_179090_x();
++            worldrenderer1.func_181668_a(7, DefaultVertexFormats.field_181705_e);
++            int i = this.field_78300_v ? -1 : 0;
++            worldrenderer1.func_181662_b((double)(this.field_78295_j + (float)i), (double)(this.field_78296_k + (float)this.field_78288_b), 0.0D).func_181675_d();
++            worldrenderer1.func_181662_b((double)(this.field_78295_j + p_doDraw_1_), (double)(this.field_78296_k + (float)this.field_78288_b), 0.0D).func_181675_d();
++            worldrenderer1.func_181662_b((double)(this.field_78295_j + p_doDraw_1_), (double)(this.field_78296_k + (float)this.field_78288_b - 1.0F), 0.0D).func_181675_d();
++            worldrenderer1.func_181662_b((double)(this.field_78295_j + (float)i), (double)(this.field_78296_k + (float)this.field_78288_b - 1.0F), 0.0D).func_181675_d();
++            tessellator1.func_78381_a();
++            GlStateManager.func_179098_w();
+         }
 +
-                 if (this.field_78299_w)
-                 {
-                     Tessellator tessellator = Tessellator.func_178181_a();
-@@ -509,7 +519,7 @@
++        this.field_78295_j += p_doDraw_1_;
+     }
+ 
++    /**
++     * Render string either left or right aligned depending on bidiFlag
++     */
+     private int func_78274_b(String p_78274_1_, int p_78274_2_, int p_78274_3_, int p_78274_4_, int p_78274_5_, boolean p_78274_6_)
+     {
+         if (this.field_78294_m)
+@@ -482,6 +640,9 @@
+         return this.func_180455_b(p_78274_1_, (float)p_78274_2_, (float)p_78274_3_, p_78274_5_, p_78274_6_);
+     }
+ 
++    /**
++     * Render single line string by setting GL color, current (posX,posY), and calling renderStringAtPos()
++     */
+     private int func_180455_b(String p_180455_1_, float p_180455_2_, float p_180455_3_, int p_180455_4_, boolean p_180455_5_)
+     {
+         if (p_180455_1_ == null)
+@@ -509,7 +670,7 @@
              this.field_78292_o = (float)(p_180455_4_ >> 8 & 255) / 255.0F;
              this.field_78306_p = (float)(p_180455_4_ & 255) / 255.0F;
              this.field_78305_q = (float)(p_180455_4_ >> 24 & 255) / 255.0F;
 -            GlStateManager.func_179131_c(this.field_78291_n, this.field_78292_o, this.field_78306_p, this.field_78305_q);
-+            setColor(this.field_78291_n, this.field_78292_o, this.field_78306_p, this.field_78305_q);
++            this.setColor(this.field_78291_n, this.field_78292_o, this.field_78306_p, this.field_78305_q);
              this.field_78295_j = p_180455_2_;
              this.field_78296_k = p_180455_3_;
              this.func_78255_a(p_180455_1_, p_180455_5_);
-@@ -588,11 +598,6 @@
-                 int j = this.field_78287_e[p_78263_1_] >>> 4;
-                 int k = this.field_78287_e[p_78263_1_] & 15;
- 
--                if (k > 7)
--                {
--                    k = 15;
--                    j = 0;
--                }
- 
-                 ++k;
-                 return (k - j) / 2 + 1;
-@@ -846,6 +851,26 @@
-         return this.field_78294_m;
+@@ -517,6 +678,9 @@
+         }
      }
  
-+    protected void setColor(float r, float g, float b, float a)
++    /**
++     * Returns the width of this string. Equivalent of FontMetrics.stringWidth(String s).
++     */
+     public int func_78256_a(String p_78256_1_)
+     {
+         if (p_78256_1_ == null)
+@@ -525,18 +689,18 @@
+         }
+         else
+         {
+-            int i = 0;
++            float f = 0.0F;
+             boolean flag = false;
+ 
+-            for (int j = 0; j < p_78256_1_.length(); ++j)
++            for (int i = 0; i < p_78256_1_.length(); ++i)
+             {
+-                char c0 = p_78256_1_.charAt(j);
+-                int k = this.func_78263_a(c0);
++                char c0 = p_78256_1_.charAt(i);
++                float f1 = this.getCharWidthFloat(c0);
+ 
+-                if (k < 0 && j < p_78256_1_.length() - 1)
++                if (f1 < 0.0F && i < p_78256_1_.length() - 1)
+                 {
+-                    ++j;
+-                    c0 = p_78256_1_.charAt(j);
++                    ++i;
++                    c0 = p_78256_1_.charAt(i);
+ 
+                     if (c0 != 108 && c0 != 76)
+                     {
+@@ -550,43 +714,47 @@
+                         flag = true;
+                     }
+ 
+-                    k = 0;
++                    f1 = 0.0F;
+                 }
+ 
+-                i += k;
++                f += f1;
+ 
+-                if (flag && k > 0)
++                if (flag && f1 > 0.0F)
+                 {
+-                    ++i;
++                    f += this.field_78293_l ? 1.0F : this.offsetBold;
+                 }
+             }
+ 
+-            return i;
++            return Math.round(f);
+         }
+     }
+ 
++    /**
++     * Returns the width of this character as rendered.
++     */
+     public int func_78263_a(char p_78263_1_)
+     {
+-        if (p_78263_1_ == 167)
++        return Math.round(this.getCharWidthFloat(p_78263_1_));
++    }
++
++    private float getCharWidthFloat(char p_getCharWidthFloat_1_)
 +    {
-+        GlStateManager.func_179131_c(r,g,b,a);
++        if (p_getCharWidthFloat_1_ == 167)
+         {
+-            return -1;
++            return -1.0F;
+         }
+-        else if (p_78263_1_ == 32)
++        else if (p_getCharWidthFloat_1_ != 32 && p_getCharWidthFloat_1_ != 160)
+         {
+-            return 4;
+-        }
+-        else
+-        {
+-            int i = "\u00c0\u00c1\u00c2\u00c8\u00ca\u00cb\u00cd\u00d3\u00d4\u00d5\u00da\u00df\u00e3\u00f5\u011f\u0130\u0131\u0152\u0153\u015e\u015f\u0174\u0175\u017e\u0207\u0000\u0000\u0000\u0000\u0000\u0000\u0000 !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u0000\u00c7\u00fc\u00e9\u00e2\u00e4\u00e0\u00e5\u00e7\u00ea\u00eb\u00e8\u00ef\u00ee\u00ec\u00c4\u00c5\u00c9\u00e6\u00c6\u00f4\u00f6\u00f2\u00fb\u00f9\u00ff\u00d6\u00dc\u00f8\u00a3\u00d8\u00d7\u0192\u00e1\u00ed\u00f3\u00fa\u00f1\u00d1\u00aa\u00ba\u00bf\u00ae\u00ac\u00bd\u00bc\u00a1\u00ab\u00bb\u2591\u2592\u2593\u2502\u2524\u2561\u2562\u2556\u2555\u2563\u2551\u2557\u255d\u255c\u255b\u2510\u2514\u2534\u252c\u251c\u2500\u253c\u255e\u255f\u255a\u2554\u2569\u2566\u2560\u2550\u256c\u2567\u2568\u2564\u2565\u2559\u2558\u2552\u2553\u256b\u256a\u2518\u250c\u2588\u2584\u258c\u2590\u2580\u03b1\u03b2\u0393\u03c0\u03a3\u03c3\u03bc\u03c4\u03a6\u0398\u03a9\u03b4\u221e\u2205\u2208\u2229\u2261\u00b1\u2265\u2264\u2320\u2321\u00f7\u2248\u00b0\u2219\u00b7\u221a\u207f\u00b2\u25a0\u0000".indexOf(p_78263_1_);
++            int i = "\u00c0\u00c1\u00c2\u00c8\u00ca\u00cb\u00cd\u00d3\u00d4\u00d5\u00da\u00df\u00e3\u00f5\u011f\u0130\u0131\u0152\u0153\u015e\u015f\u0174\u0175\u017e\u0207\u0000\u0000\u0000\u0000\u0000\u0000\u0000 !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u0000\u00c7\u00fc\u00e9\u00e2\u00e4\u00e0\u00e5\u00e7\u00ea\u00eb\u00e8\u00ef\u00ee\u00ec\u00c4\u00c5\u00c9\u00e6\u00c6\u00f4\u00f6\u00f2\u00fb\u00f9\u00ff\u00d6\u00dc\u00f8\u00a3\u00d8\u00d7\u0192\u00e1\u00ed\u00f3\u00fa\u00f1\u00d1\u00aa\u00ba\u00bf\u00ae\u00ac\u00bd\u00bc\u00a1\u00ab\u00bb\u2591\u2592\u2593\u2502\u2524\u2561\u2562\u2556\u2555\u2563\u2551\u2557\u255d\u255c\u255b\u2510\u2514\u2534\u252c\u251c\u2500\u253c\u255e\u255f\u255a\u2554\u2569\u2566\u2560\u2550\u256c\u2567\u2568\u2564\u2565\u2559\u2558\u2552\u2553\u256b\u256a\u2518\u250c\u2588\u2584\u258c\u2590\u2580\u03b1\u03b2\u0393\u03c0\u03a3\u03c3\u03bc\u03c4\u03a6\u0398\u03a9\u03b4\u221e\u2205\u2208\u2229\u2261\u00b1\u2265\u2264\u2320\u2321\u00f7\u2248\u00b0\u2219\u00b7\u221a\u207f\u00b2\u25a0\u0000".indexOf(p_getCharWidthFloat_1_);
+ 
+-            if (p_78263_1_ > 0 && i != -1 && !this.field_78293_l)
++            if (p_getCharWidthFloat_1_ > 0 && i != -1 && !this.field_78293_l)
+             {
+-                return this.field_78286_d[i];
++                return this.charWidthFloat[i];
+             }
+-            else if (this.field_78287_e[p_78263_1_] != 0)
++            else if (this.field_78287_e[p_getCharWidthFloat_1_] != 0)
+             {
+-                int j = this.field_78287_e[p_78263_1_] >>> 4;
+-                int k = this.field_78287_e[p_78263_1_] & 15;
++                int j = this.field_78287_e[p_getCharWidthFloat_1_] >>> 4;
++                int k = this.field_78287_e[p_getCharWidthFloat_1_] & 15;
+ 
+                 if (k > 7)
+                 {
+@@ -595,33 +763,43 @@
+                 }
+ 
+                 ++k;
+-                return (k - j) / 2 + 1;
++                return (float)((k - j) / 2 + 1);
+             }
+             else
+             {
+-                return 0;
++                return 0.0F;
+             }
+         }
++        else
++        {
++            return this.charWidthFloat[32];
++        }
+     }
+ 
++    /**
++     * Trims a string to fit a specified Width.
++     */
+     public String func_78269_a(String p_78269_1_, int p_78269_2_)
+     {
+         return this.func_78262_a(p_78269_1_, p_78269_2_, false);
+     }
+ 
++    /**
++     * Trims a string to a specified width, and will reverse it if par3 is set.
++     */
+     public String func_78262_a(String p_78262_1_, int p_78262_2_, boolean p_78262_3_)
+     {
+         StringBuilder stringbuilder = new StringBuilder();
+-        int i = 0;
+-        int j = p_78262_3_ ? p_78262_1_.length() - 1 : 0;
+-        int k = p_78262_3_ ? -1 : 1;
++        float f = 0.0F;
++        int i = p_78262_3_ ? p_78262_1_.length() - 1 : 0;
++        int j = p_78262_3_ ? -1 : 1;
+         boolean flag = false;
+         boolean flag1 = false;
+ 
+-        for (int l = j; l >= 0 && l < p_78262_1_.length() && i < p_78262_2_; l += k)
++        for (int k = i; k >= 0 && k < p_78262_1_.length() && f < (float)p_78262_2_; k += j)
+         {
+-            char c0 = p_78262_1_.charAt(l);
+-            int i1 = this.func_78263_a(c0);
++            char c0 = p_78262_1_.charAt(k);
++            float f1 = this.getCharWidthFloat(c0);
+ 
+             if (flag)
+             {
+@@ -639,21 +817,21 @@
+                     flag1 = true;
+                 }
+             }
+-            else if (i1 < 0)
++            else if (f1 < 0.0F)
+             {
+                 flag = true;
+             }
+             else
+             {
+-                i += i1;
++                f += f1;
+ 
+                 if (flag1)
+                 {
+-                    ++i;
++                    ++f;
+                 }
+             }
+ 
+-            if (i > p_78262_2_)
++            if (f > (float)p_78262_2_)
+             {
+                 break;
+             }
+@@ -671,6 +849,9 @@
+         return stringbuilder.toString();
+     }
+ 
++    /**
++     * Remove all newline characters from the end of the string
++     */
+     private String func_78273_d(String p_78273_1_)
+     {
+         while (p_78273_1_ != null && p_78273_1_.endsWith("\n"))
+@@ -681,14 +862,33 @@
+         return p_78273_1_;
+     }
+ 
++    /**
++     * Splits and draws a String with wordwrap (maximum length is parameter k)
++     */
+     public void func_78279_b(String p_78279_1_, int p_78279_2_, int p_78279_3_, int p_78279_4_, int p_78279_5_)
+     {
++        if (this.blend)
++        {
++            GlStateManager.getBlendState(this.oldBlendState);
++            GlStateManager.func_179147_l();
++            GlStateManager.func_179112_b(770, 771);
++        }
++
+         this.func_78265_b();
+         this.field_78304_r = p_78279_5_;
+         p_78279_1_ = this.func_78273_d(p_78279_1_);
+         this.func_78268_b(p_78279_1_, p_78279_2_, p_78279_3_, p_78279_4_, false);
++
++        if (this.blend)
++        {
++            GlStateManager.setBlendState(this.oldBlendState);
++        }
+     }
+ 
++    /**
++     * Perform actual work of rendering a multi-line string with wordwrap and with darker drop shadow color if flag is
++     * set
++     */
+     private void func_78268_b(String p_78268_1_, int p_78268_2_, int p_78268_3_, int p_78268_4_, boolean p_78268_5_)
+     {
+         for (String s : this.func_78271_c(p_78268_1_, p_78268_4_))
+@@ -698,21 +898,35 @@
+         }
+     }
+ 
++    /**
++     * Returns the width of the wordwrapped String (maximum length is parameter k)
++     */
+     public int func_78267_b(String p_78267_1_, int p_78267_2_)
+     {
+         return this.field_78288_b * this.func_78271_c(p_78267_1_, p_78267_2_).size();
+     }
+ 
++    /**
++     * Set unicodeFlag controlling whether strings should be rendered with Unicode fonts instead of the default.png
++     * font.
++     */
+     public void func_78264_a(boolean p_78264_1_)
+     {
+         this.field_78293_l = p_78264_1_;
+     }
+ 
++    /**
++     * Get unicodeFlag controlling whether strings should be rendered with Unicode fonts instead of the default.png
++     * font.
++     */
+     public boolean func_82883_a()
+     {
+         return this.field_78293_l;
+     }
+ 
++    /**
++     * Set bidiFlag to control if the Unicode Bidirectional Algorithm should be run before rendering any string.
++     */
+     public void func_78275_b(boolean p_78275_1_)
+     {
+         this.field_78294_m = p_78275_1_;
+@@ -723,57 +937,72 @@
+         return Arrays.<String>asList(this.func_78280_d(p_78271_1_, p_78271_2_).split("\n"));
+     }
+ 
++    /**
++     * Inserts newline and formatting into a string to wrap it within the specified width.
++     */
+     String func_78280_d(String p_78280_1_, int p_78280_2_)
+     {
+-        int i = this.func_78259_e(p_78280_1_, p_78280_2_);
+-
+-        if (p_78280_1_.length() <= i)
++        if (p_78280_1_.length() <= 1)
+         {
+             return p_78280_1_;
+         }
+         else
+         {
+-            String s = p_78280_1_.substring(0, i);
+-            char c0 = p_78280_1_.charAt(i);
+-            boolean flag = c0 == 32 || c0 == 10;
+-            String s1 = func_78282_e(s) + p_78280_1_.substring(i + (flag ? 1 : 0));
+-            return s + "\n" + this.func_78280_d(s1, p_78280_2_);
++            int i = this.func_78259_e(p_78280_1_, p_78280_2_);
++
++            if (p_78280_1_.length() <= i)
++            {
++                return p_78280_1_;
++            }
++            else
++            {
++                String s = p_78280_1_.substring(0, i);
++                char c0 = p_78280_1_.charAt(i);
++                boolean flag = c0 == 32 || c0 == 10;
++                String s1 = func_78282_e(s) + p_78280_1_.substring(i + (flag ? 1 : 0));
++                return s + "\n" + this.func_78280_d(s1, p_78280_2_);
++            }
+         }
+     }
+ 
++    /**
++     * Determines how many characters from the string will fit into the specified width.
++     */
+     private int func_78259_e(String p_78259_1_, int p_78259_2_)
+     {
+         int i = p_78259_1_.length();
++        float f = 0.0F;
+         int j = 0;
+-        int k = 0;
+-        int l = -1;
++        int k = -1;
+ 
+-        for (boolean flag = false; k < i; ++k)
++        for (boolean flag = false; j < i; ++j)
+         {
+-            char c0 = p_78259_1_.charAt(k);
++            char c0 = p_78259_1_.charAt(j);
+ 
+             switch (c0)
+             {
+                 case '\n':
+-                    --k;
++                    --j;
+                     break;
++
+                 case ' ':
+-                    l = k;
++                    k = j;
++
+                 default:
+-                    j += this.func_78263_a(c0);
++                    f += (float)this.func_78263_a(c0);
+ 
+                     if (flag)
+                     {
+-                        ++j;
++                        ++f;
+                     }
+ 
+                     break;
+-                case '\u00a7':
+ 
+-                    if (k < i - 1)
++                case '\u00a7':
++                    if (j < i - 1)
+                     {
+-                        ++k;
+-                        char c1 = p_78259_1_.charAt(k);
++                        ++j;
++                        char c1 = p_78259_1_.charAt(j);
+ 
+                         if (c1 != 108 && c1 != 76)
+                         {
+@@ -791,30 +1020,39 @@
+ 
+             if (c0 == 10)
+             {
+-                ++k;
+-                l = k;
++                ++j;
++                k = j;
+                 break;
+             }
+ 
+-            if (j > p_78259_2_)
++            if (Math.round(f) > p_78259_2_)
+             {
+                 break;
+             }
+         }
+ 
+-        return k != i && l != -1 && l < k ? l : k;
++        return j != i && k != -1 && k < j ? k : j;
+     }
+ 
++    /**
++     * Checks if the char code is a hexadecimal character, used to set colour.
++     */
+     private static boolean func_78272_b(char p_78272_0_)
+     {
+         return p_78272_0_ >= 48 && p_78272_0_ <= 57 || p_78272_0_ >= 97 && p_78272_0_ <= 102 || p_78272_0_ >= 65 && p_78272_0_ <= 70;
+     }
+ 
++    /**
++     * Checks if the char code is O-K...lLrRk-o... used to set special formatting.
++     */
+     private static boolean func_78270_c(char p_78270_0_)
+     {
+         return p_78270_0_ >= 107 && p_78270_0_ <= 111 || p_78270_0_ >= 75 && p_78270_0_ <= 79 || p_78270_0_ == 114 || p_78270_0_ == 82;
+     }
+ 
++    /**
++     * Digests a string for nonprinting formatting characters then returns a string containing only that formatting.
++     */
+     public static String func_78282_e(String p_78282_0_)
+     {
+         String s = "";
+@@ -841,6 +1079,9 @@
+         return s;
+     }
+ 
++    /**
++     * Get bidiFlag that controls if the Unicode Bidirectional Algorithm should be run before rendering any string
++     */
+     public boolean func_78260_a()
+     {
+         return this.field_78294_m;
+@@ -848,6 +1089,42 @@
+ 
+     public int func_175064_b(char p_175064_1_)
+     {
+-        return this.field_78285_g["0123456789abcdef".indexOf(p_175064_1_)];
++        int i = "0123456789abcdef".indexOf(p_175064_1_);
++
++        if (i >= 0 && i < this.field_78285_g.length)
++        {
++            int j = this.field_78285_g[i];
++
++            if (Config.isCustomColors())
++            {
++                j = CustomColors.getTextColor(i, j);
++            }
++
++            return j;
++        }
++        else
++        {
++            return 16777215;
++        }
+     }
++
++    protected void setColor(float p_setColor_1_, float p_setColor_2_, float p_setColor_3_, float p_setColor_4_)
++    {
++        GlStateManager.func_179131_c(p_setColor_1_, p_setColor_2_, p_setColor_3_, p_setColor_4_);
 +    }
 +
 +    protected void enableAlpha()
@@ -141,16 +1068,13 @@
 +        GlStateManager.func_179141_d();
 +    }
 +
-+    protected void bindTexture(ResourceLocation location)
++    protected void bindTexture(ResourceLocation p_bindTexture_1_)
 +    {
-+        field_78298_i.func_110577_a(location);
++        this.field_78298_i.func_110577_a(p_bindTexture_1_);
 +    }
 +
-+    protected InputStream getResourceInputStream(ResourceLocation location) throws IOException
++    protected InputStream getResourceInputStream(ResourceLocation p_getResourceInputStream_1_) throws IOException
 +    {
-+        return Minecraft.func_71410_x().func_110442_L().func_110536_a(location).func_110527_b();
++        return Minecraft.func_71410_x().func_110442_L().func_110536_a(p_getResourceInputStream_1_).func_110527_b();
 +    }
-+
-     public int func_175064_b(char p_175064_1_)
-     {
-         return this.field_78285_g["0123456789abcdef".indexOf(p_175064_1_)];
+ }

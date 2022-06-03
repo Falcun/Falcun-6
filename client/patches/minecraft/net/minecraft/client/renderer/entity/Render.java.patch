@@ -1,0 +1,465 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/entity/Render.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/entity/Render.java
+@@ -1,34 +1,54 @@
+ package net.minecraft.client.renderer.entity;
+ 
++import net.mattbenson.Wrapper;
++import net.mattbenson.chat.ChatColor;
+ import net.minecraft.block.Block;
+ import net.minecraft.client.Minecraft;
++import net.minecraft.client.entity.AbstractClientPlayer;
+ import net.minecraft.client.gui.FontRenderer;
++import net.minecraft.client.model.ModelBiped;
+ import net.minecraft.client.renderer.GlStateManager;
+ import net.minecraft.client.renderer.Tessellator;
+ import net.minecraft.client.renderer.WorldRenderer;
+ import net.minecraft.client.renderer.culling.ICamera;
++import net.minecraft.client.renderer.texture.DynamicTexture;
+ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+ import net.minecraft.client.renderer.texture.TextureMap;
+ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+ import net.minecraft.entity.Entity;
+ import net.minecraft.entity.EntityLiving;
+ import net.minecraft.entity.player.EntityPlayer;
++import net.minecraft.src.Config;
+ import net.minecraft.util.AxisAlignedBB;
+ import net.minecraft.util.BlockPos;
++import net.minecraft.util.EnumWorldBlockLayer;
+ import net.minecraft.util.MathHelper;
+ import net.minecraft.util.ResourceLocation;
+ import net.minecraft.world.World;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import net.optifine.entity.model.IEntityRenderer;
++import net.optifine.shaders.Shaders;
++
++import java.awt.Color;
++import java.io.File;
++import java.io.IOException;
++
++import javax.imageio.ImageIO;
++
+ import org.lwjgl.opengl.GL11;
+ 
+-@SideOnly(Side.CLIENT)
+-public abstract class Render<T extends Entity>
++public abstract class Render<T extends Entity> implements IEntityRenderer
+ {
+     private static final ResourceLocation field_110778_a = new ResourceLocation("textures/misc/shadow.png");
+     protected final RenderManager field_76990_c;
+-    protected float field_76989_e;
++    public float field_76989_e;
++
++    /**
++     * Determines the darkness of the object's shadow. Higher value makes a darker shadow.
++     */
+     protected float field_76987_f = 1.0F;
++    private Class entityClass = null;
++    private ResourceLocation locationTextureCustom = null;
++	public static final ResourceLocation FALCUNLOGO = getResourceFromFile(Minecraft.func_71410_x().field_71412_D + "/falcunassets/falcun/falcunwings.png");
+ 
+     protected Render(RenderManager p_i46179_1_)
+     {
+@@ -47,8 +67,33 @@
+         return p_177071_1_.func_145770_h(p_177071_3_, p_177071_5_, p_177071_7_) && (p_177071_1_.field_70158_ak || p_177071_2_.func_78546_a(axisalignedbb));
+     }
+ 
++    /**
++     * Actually renders the given argument. This is a synthetic bridge method, always casting down its argument and then
++     * handing it off to a worker function which does the actual work. In all probabilty, the class Render is generic
++     * (Render<T extends Entity>) and this method has signature public void doRender(T entity, double d, double d1,
++     * double d2, float f, float f1). But JAD is pre 1.5 so doe
++     *  
++     * @param entityYaw The yaw rotation of the passed entity
++     */
+     public void func_76986_a(T p_76986_1_, double p_76986_2_, double p_76986_4_, double p_76986_6_, float p_76986_8_, float p_76986_9_)
+     {
++    	if(p_76986_1_.dontRenderNameTag) {
++    		return;
++    	}
++    	if(Wrapper.getInstance().isPerspectiveModEnable()) {
++    		if(!Wrapper.getInstance().isPerspectiveOwnName()) {
++    			if(p_76986_1_ == Minecraft.func_71410_x().field_71439_g) {
++    				return;
++    			}
++    		}
++    	} else {
++    		if(!Wrapper.getInstance().isF5Nametags()) {
++    			if(p_76986_1_ == Minecraft.func_71410_x().field_71439_g) {
++    				return;
++    			}    	
++    		}
++    	}
++    	
+         this.func_177067_a(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_);
+     }
+ 
+@@ -70,12 +115,20 @@
+         this.func_147906_a(p_177069_1_, p_177069_8_, p_177069_2_, p_177069_4_, p_177069_6_, 64);
+     }
+ 
++    /**
++     * Returns the location of an entity's texture. Doesn't seem to be called unless you call Render.bindEntityTexture.
++     */
+     protected abstract ResourceLocation func_110775_a(T p_110775_1_);
+ 
+     protected boolean func_180548_c(T p_180548_1_)
+     {
+         ResourceLocation resourcelocation = this.func_110775_a(p_180548_1_);
+ 
++        if (this.locationTextureCustom != null)
++        {
++            resourcelocation = this.locationTextureCustom;
++        }
++
+         if (resourcelocation == null)
+         {
+             return false;
+@@ -92,6 +145,9 @@
+         this.field_76990_c.field_78724_e.func_110577_a(p_110776_1_);
+     }
+ 
++    /**
++     * Renders fire on top of the entity. Args: entity, x, y, z, partialTickTime
++     */
+     private void func_76977_a(Entity p_76977_1_, double p_76977_2_, double p_76977_4_, double p_76977_6_, float p_76977_8_)
+     {
+         GlStateManager.func_179140_f();
+@@ -113,11 +169,19 @@
+         GlStateManager.func_179131_c(1.0F, 1.0F, 1.0F, 1.0F);
+         float f5 = 0.0F;
+         int i = 0;
++        boolean flag = Config.isMultiTexture();
++
++        if (flag)
++        {
++            worldrenderer.setBlockLayer(EnumWorldBlockLayer.SOLID);
++        }
++
+         worldrenderer.func_181668_a(7, DefaultVertexFormats.field_181707_g);
+ 
+         while (f3 > 0.0F)
+         {
+             TextureAtlasSprite textureatlassprite2 = i % 2 == 0 ? textureatlassprite : textureatlassprite1;
++            worldrenderer.setSprite(textureatlassprite2);
+             this.func_110776_a(TextureMap.field_110575_b);
+             float f6 = textureatlassprite2.func_94209_e();
+             float f7 = textureatlassprite2.func_94206_g();
+@@ -143,62 +207,83 @@
+         }
+ 
+         tessellator.func_78381_a();
++
++        if (flag)
++        {
++            worldrenderer.setBlockLayer((EnumWorldBlockLayer)null);
++            GlStateManager.bindCurrentTexture();
++        }
++
+         GlStateManager.func_179121_F();
+         GlStateManager.func_179145_e();
+     }
+ 
++    /**
++     * Renders the entity shadows at the position, shadow alpha and partialTickTime. Args: entity, x, y, z, shadowAlpha,
++     * partialTickTime
++     */
+     private void func_76975_c(Entity p_76975_1_, double p_76975_2_, double p_76975_4_, double p_76975_6_, float p_76975_8_, float p_76975_9_)
+     {
+-        GlStateManager.func_179147_l();
+-        GlStateManager.func_179112_b(770, 771);
+-        this.field_76990_c.field_78724_e.func_110577_a(field_110778_a);
+-        World world = this.func_76982_b();
+-        GlStateManager.func_179132_a(false);
+-        float f = this.field_76989_e;
+-
+-        if (p_76975_1_ instanceof EntityLiving)
++    	if (Wrapper.getInstance().isRemoveLightCalculations()) {
++    		return;
++    	}
++    	
++        if (!Config.isShaders() || !Shaders.shouldSkipDefaultShadow)
+         {
+-            EntityLiving entityliving = (EntityLiving)p_76975_1_;
+-            f *= entityliving.func_70603_bj();
++            GlStateManager.func_179147_l();
++            GlStateManager.func_179112_b(770, 771);
++            this.field_76990_c.field_78724_e.func_110577_a(field_110778_a);
++            World world = this.func_76982_b();
++            GlStateManager.func_179132_a(false);
++            float f = this.field_76989_e;
+ 
+-            if (entityliving.func_70631_g_())
++            if (p_76975_1_ instanceof EntityLiving)
+             {
+-                f *= 0.5F;
++                EntityLiving entityliving = (EntityLiving)p_76975_1_;
++                f *= entityliving.func_70603_bj();
++
++                if (entityliving.func_70631_g_())
++                {
++                    f *= 0.5F;
++                }
+             }
+-        }
+ 
+-        double d5 = p_76975_1_.field_70142_S + (p_76975_1_.field_70165_t - p_76975_1_.field_70142_S) * (double)p_76975_9_;
+-        double d0 = p_76975_1_.field_70137_T + (p_76975_1_.field_70163_u - p_76975_1_.field_70137_T) * (double)p_76975_9_;
+-        double d1 = p_76975_1_.field_70136_U + (p_76975_1_.field_70161_v - p_76975_1_.field_70136_U) * (double)p_76975_9_;
+-        int i = MathHelper.func_76128_c(d5 - (double)f);
+-        int j = MathHelper.func_76128_c(d5 + (double)f);
+-        int k = MathHelper.func_76128_c(d0 - (double)f);
+-        int l = MathHelper.func_76128_c(d0);
+-        int i1 = MathHelper.func_76128_c(d1 - (double)f);
+-        int j1 = MathHelper.func_76128_c(d1 + (double)f);
+-        double d2 = p_76975_2_ - d5;
+-        double d3 = p_76975_4_ - d0;
+-        double d4 = p_76975_6_ - d1;
+-        Tessellator tessellator = Tessellator.func_178181_a();
+-        WorldRenderer worldrenderer = tessellator.func_178180_c();
+-        worldrenderer.func_181668_a(7, DefaultVertexFormats.field_181709_i);
++            double d5 = p_76975_1_.field_70142_S + (p_76975_1_.field_70165_t - p_76975_1_.field_70142_S) * (double)p_76975_9_;
++            double d0 = p_76975_1_.field_70137_T + (p_76975_1_.field_70163_u - p_76975_1_.field_70137_T) * (double)p_76975_9_;
++            double d1 = p_76975_1_.field_70136_U + (p_76975_1_.field_70161_v - p_76975_1_.field_70136_U) * (double)p_76975_9_;
++            int i = MathHelper.func_76128_c(d5 - (double)f);
++            int j = MathHelper.func_76128_c(d5 + (double)f);
++            int k = MathHelper.func_76128_c(d0 - (double)f);
++            int l = MathHelper.func_76128_c(d0);
++            int i1 = MathHelper.func_76128_c(d1 - (double)f);
++            int j1 = MathHelper.func_76128_c(d1 + (double)f);
++            double d2 = p_76975_2_ - d5;
++            double d3 = p_76975_4_ - d0;
++            double d4 = p_76975_6_ - d1;
++            Tessellator tessellator = Tessellator.func_178181_a();
++            WorldRenderer worldrenderer = tessellator.func_178180_c();
++            worldrenderer.func_181668_a(7, DefaultVertexFormats.field_181709_i);
+ 
+-        for (BlockPos blockpos : BlockPos.func_177975_b(new BlockPos(i, k, i1), new BlockPos(j, l, j1)))
+-        {
+-            Block block = world.func_180495_p(blockpos.func_177977_b()).func_177230_c();
+-
+-            if (block.func_149645_b() != -1 && world.func_175671_l(blockpos) > 3)
++            for (BlockPos blockpos : BlockPos.func_177975_b(new BlockPos(i, k, i1), new BlockPos(j, l, j1)))
+             {
+-                this.func_180549_a(block, p_76975_2_, p_76975_4_, p_76975_6_, blockpos, p_76975_8_, f, d2, d3, d4);
++                Block block = world.func_180495_p(blockpos.func_177977_b()).func_177230_c();
++
++                if (block.func_149645_b() != -1 && world.func_175671_l(blockpos) > 3)
++                {
++                    this.func_180549_a(block, p_76975_2_, p_76975_4_, p_76975_6_, blockpos, p_76975_8_, f, d2, d3, d4);
++                }
+             }
+-        }
+ 
+-        tessellator.func_78381_a();
+-        GlStateManager.func_179131_c(1.0F, 1.0F, 1.0F, 1.0F);
+-        GlStateManager.func_179084_k();
+-        GlStateManager.func_179132_a(true);
++            tessellator.func_78381_a();
++            GlStateManager.func_179131_c(1.0F, 1.0F, 1.0F, 1.0F);
++            GlStateManager.func_179084_k();
++            GlStateManager.func_179132_a(true);
++        }
+     }
+ 
++    /**
++     * Returns the render manager's world object
++     */
+     private World func_76982_b()
+     {
+         return this.field_76990_c.field_78722_g;
+@@ -236,6 +321,9 @@
+         }
+     }
+ 
++    /**
++     * Renders a white box with the bounds of the AABB translated by the offset. Args: aabb, x, y, z
++     */
+     public static void func_76978_a(AxisAlignedBB p_76978_0_, double p_76978_1_, double p_76978_3_, double p_76978_5_)
+     {
+         GlStateManager.func_179090_x();
+@@ -273,6 +361,9 @@
+         GlStateManager.func_179098_w();
+     }
+ 
++    /**
++     * Renders the entity's shadow and fire (if its on fire). Args: entity, x, y, z, yaw, partialTickTime
++     */
+     public void func_76979_b(Entity p_76979_1_, double p_76979_2_, double p_76979_4_, double p_76979_6_, float p_76979_8_, float p_76979_9_)
+     {
+         if (this.field_76990_c.field_78733_k != null)
+@@ -295,13 +386,23 @@
+         }
+     }
+ 
++    /**
++     * Returns the font renderer from the set render manager
++     */
+     public FontRenderer func_76983_a()
+     {
+         return this.field_76990_c.func_78716_a();
+     }
+ 
++    /**
++     * Renders an entity's name above its head
++     */
+     protected void func_147906_a(T p_147906_1_, String p_147906_2_, double p_147906_3_, double p_147906_5_, double p_147906_7_, int p_147906_9_)
+     {
++    	
++    	
++    	if (p_147906_1_.func_70089_S()) {
++    	
+         double d0 = p_147906_1_.func_70068_e(this.field_76990_c.field_78734_h);
+ 
+         if (d0 <= (double)(p_147906_9_ * p_147906_9_))
+@@ -313,7 +414,11 @@
+             GlStateManager.func_179109_b((float)p_147906_3_ + 0.0F, (float)p_147906_5_ + p_147906_1_.field_70131_O + 0.5F, (float)p_147906_7_);
+             GL11.glNormal3f(0.0F, 1.0F, 0.0F);
+             GlStateManager.func_179114_b(-this.field_76990_c.field_78735_i, 0.0F, 1.0F, 0.0F);
+-            GlStateManager.func_179114_b(this.field_76990_c.field_78732_j, 1.0F, 0.0F, 0.0F);
++            if(Minecraft.func_71410_x().field_71474_y.field_74320_O  == 2 && Wrapper.getInstance().isF5Nametags()) {
++            	GlStateManager.func_179114_b(-this.field_76990_c.field_78732_j, 1.0F, 0.0F, 0.0F);
++            } else {
++            	GlStateManager.func_179114_b(this.field_76990_c.field_78732_j, 1.0F, 0.0F, 0.0F);
++            }
+             GlStateManager.func_179152_a(-f1, -f1, f1);
+             GlStateManager.func_179140_f();
+             GlStateManager.func_179132_a(false);
+@@ -323,34 +428,124 @@
+             Tessellator tessellator = Tessellator.func_178181_a();
+             WorldRenderer worldrenderer = tessellator.func_178180_c();
+             int i = 0;
+-
+-            if (p_147906_2_.equals("deadmau5"))
+-            {
+-                i = -10;
++            
++            boolean renderLogo = p_147906_1_ instanceof AbstractClientPlayer && ((AbstractClientPlayer)p_147906_1_).func_175155_b() != null && Wrapper.usesFalcun(((AbstractClientPlayer)p_147906_1_).func_146103_bH().getId()) && p_147906_2_.contains(p_147906_1_.func_70005_c_());
++            boolean renderTalkIcon = false;
++            
++            int position = 0; 
++            if(renderLogo) {
++            	position = -10;
+             }
+-
+-            int j = fontrenderer.func_78256_a(p_147906_2_) / 2;
++            
++            int j = (fontrenderer.func_78256_a(p_147906_2_) / 2);
+             GlStateManager.func_179090_x();
+             worldrenderer.func_181668_a(7, DefaultVertexFormats.field_181706_f);
+-            worldrenderer.func_181662_b((double)(-j - 1), (double)(-1 + i), 0.0D).func_181666_a(0.0F, 0.0F, 0.0F, 0.25F).func_181675_d();
+-            worldrenderer.func_181662_b((double)(-j - 1), (double)(8 + i), 0.0D).func_181666_a(0.0F, 0.0F, 0.0F, 0.25F).func_181675_d();
++            worldrenderer.func_181662_b((double)(-j - 1 + position), (double)(-1 + i), 0.0D).func_181666_a(0.0F, 0.0F, 0.0F, 0.25F).func_181675_d();
++            worldrenderer.func_181662_b((double)(-j - 1 + position), (double)(8 + i), 0.0D).func_181666_a(0.0F, 0.0F, 0.0F, 0.25F).func_181675_d();
+             worldrenderer.func_181662_b((double)(j + 1), (double)(8 + i), 0.0D).func_181666_a(0.0F, 0.0F, 0.0F, 0.25F).func_181675_d();
+             worldrenderer.func_181662_b((double)(j + 1), (double)(-1 + i), 0.0D).func_181666_a(0.0F, 0.0F, 0.0F, 0.25F).func_181675_d();
+             tessellator.func_78381_a();
+-            GlStateManager.func_179098_w();
+-            fontrenderer.func_78276_b(p_147906_2_, -fontrenderer.func_78256_a(p_147906_2_) / 2, i, 553648127);
+-            GlStateManager.func_179126_j();
+-            GlStateManager.func_179132_a(true);
+-            fontrenderer.func_78276_b(p_147906_2_, -fontrenderer.func_78256_a(p_147906_2_) / 2, i, -1);
++            
++     
++        	Color color = Wrapper.getInstance().getHighlightColor(p_147906_1_.func_110124_au());
++        	
++        	if(color != null) {
++        		GL11.glColor4f((float)color.getRed() / 255, (float)color.getGreen() / 255, (float)color.getBlue() / 255, (float)color.getAlpha() / 255);
++        		   p_147906_2_ = ChatColor.stripColors(p_147906_2_);
++                   GlStateManager.func_179098_w();
++                   fontrenderer.func_78276_b(p_147906_2_, -fontrenderer.func_78256_a(p_147906_2_) / 2, i, color.getRGB());
++                  
++                   renderLogos(renderLogo, renderTalkIcon, i, j, worldrenderer, tessellator);
++                   
++                   GlStateManager.func_179126_j();
++                   GlStateManager.func_179132_a(true);
++                   fontrenderer.func_78276_b(p_147906_2_, -fontrenderer.func_78256_a(p_147906_2_) / 2, i, color.getRGB());
++        	} else {
++                GlStateManager.func_179098_w();
++                fontrenderer.func_78276_b(p_147906_2_, -fontrenderer.func_78256_a(p_147906_2_) / 2, i, 553648127);
++               
++                renderLogos(renderLogo, renderTalkIcon, i, j, worldrenderer, tessellator);
++                
++                GlStateManager.func_179126_j();
++                GlStateManager.func_179132_a(true);
++                fontrenderer.func_78276_b(p_147906_2_, -fontrenderer.func_78256_a(p_147906_2_) / 2, i, -1);
++        	}
++            renderLogos(renderLogo, renderTalkIcon, i, j, worldrenderer, tessellator);
++            
+             GlStateManager.func_179145_e();
+             GlStateManager.func_179084_k();
+             GlStateManager.func_179131_c(1.0F, 1.0F, 1.0F, 1.0F);
+             GlStateManager.func_179121_F();
+         }
+     }
++    }
++    
++    public void renderLogos(boolean renderFalcun, boolean renderSpeaker, int i, int j, WorldRenderer worldrenderer, Tessellator tessellator) {
++    	if(renderFalcun) {
++        	Minecraft.func_71410_x().func_110434_K().func_110577_a(FALCUNLOGO);
++        	worldrenderer.func_181668_a(7, DefaultVertexFormats.field_181707_g);
++            int size = (renderSpeaker ? 3:  5);
++            //we can play around with the size here i guess as well
++            double xpos = j + 5.5;
++            double ypos = i - 3.6;
++            worldrenderer.func_181662_b((double)size - xpos, (double)size -ypos, 0.0).func_181673_a(1.0, 1.0).func_181675_d();
++            worldrenderer.func_181662_b((double)size -xpos, (double)(-size -ypos), 0.0).func_181673_a(1.0, 0.0).func_181675_d();
++            worldrenderer.func_181662_b((double)(-size -xpos), (double)(-size -ypos), 0.0).func_181673_a(0.0, 0.0).func_181675_d();
++            worldrenderer.func_181662_b((double)(-size -xpos), (double)size -ypos, 0.0).func_181673_a(0.0, 1.0).func_181675_d();
++            tessellator.func_78381_a();
++        }
++    }
+ 
+     public RenderManager func_177068_d()
+     {
+         return this.field_76990_c;
+     }
++
++    public boolean isMultipass()
++    {
++        return false;
++    }
++
++    public void renderMultipass(T p_renderMultipass_1_, double p_renderMultipass_2_, double p_renderMultipass_4_, double p_renderMultipass_6_, float p_renderMultipass_8_, float p_renderMultipass_9_)
++    {
++    }
++
++    public Class getEntityClass()
++    {
++        return this.entityClass;
++    }
++
++    public void setEntityClass(Class p_setEntityClass_1_)
++    {
++        this.entityClass = p_setEntityClass_1_;
++    }
++
++    public ResourceLocation getLocationTextureCustom()
++    {
++        return this.locationTextureCustom;
++    }
++
++    public void setLocationTextureCustom(ResourceLocation p_setLocationTextureCustom_1_)
++    {
++        this.locationTextureCustom = p_setLocationTextureCustom_1_;
++    }
++
++    public static void setModelBipedMain(RenderBiped p_setModelBipedMain_0_, ModelBiped p_setModelBipedMain_1_)
++    {
++        p_setModelBipedMain_0_.field_77071_a = p_setModelBipedMain_1_;
++    }
++    
++    private static ResourceLocation getResourceFromFile(String path) {
++		try {
++	        File file = new File(path);
++	        DynamicTexture dynamicTexture = new DynamicTexture(ImageIO.read(file));
++			return Minecraft.func_71410_x().func_110434_K().func_110578_a(file.getName(), dynamicTexture);
++		} catch (IOException e) {
++			System.out.println("error: " + path);
++			e.printStackTrace();
++		}
++		
++		return null;
++    }
++    
+ }

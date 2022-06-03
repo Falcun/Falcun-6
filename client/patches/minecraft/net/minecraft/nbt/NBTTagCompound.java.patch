@@ -1,5 +1,14 @@
 --- ../src-base/minecraft/net/minecraft/nbt/NBTTagCompound.java
 +++ ../src-work/minecraft/net/minecraft/nbt/NBTTagCompound.java
+@@ -382,7 +382,7 @@
+         return super.hashCode() ^ this.field_74784_a.hashCode();
+     }
+ 
+-    private static void func_150298_a(String p_150298_0_, NBTBase p_150298_1_, DataOutput p_150298_2_) throws IOException
++    public static void func_150298_a(String p_150298_0_, NBTBase p_150298_1_, DataOutput p_150298_2_) throws IOException
+     {
+         p_150298_2_.writeByte(p_150298_1_.func_74732_a());
+ 
 @@ -395,6 +395,7 @@
  
      private static byte func_152447_a(DataInput p_152447_0_, NBTSizeTracker p_152447_1_) throws IOException

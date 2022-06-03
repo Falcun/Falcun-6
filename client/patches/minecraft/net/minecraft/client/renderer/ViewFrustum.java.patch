@@ -1,0 +1,164 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/ViewFrustum.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/ViewFrustum.java
+@@ -1,14 +1,18 @@
+ package net.minecraft.client.renderer;
+ 
++import java.util.HashMap;
++import java.util.Map;
+ import net.minecraft.client.renderer.chunk.IRenderChunkFactory;
+ import net.minecraft.client.renderer.chunk.RenderChunk;
++import net.minecraft.src.Config;
+ import net.minecraft.util.BlockPos;
++import net.minecraft.util.EnumFacing;
++import net.minecraft.util.EnumWorldBlockLayer;
+ import net.minecraft.util.MathHelper;
++import net.minecraft.world.ChunkCoordIntPair;
+ import net.minecraft.world.World;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
++import net.optifine.render.VboRegion;
+ 
+-@SideOnly(Side.CLIENT)
+ public class ViewFrustum
+ {
+     protected final RenderGlobal field_178169_a;
+@@ -17,6 +21,7 @@
+     protected int field_178165_d;
+     protected int field_178166_e;
+     public RenderChunk[] field_178164_f;
++    private Map<ChunkCoordIntPair, VboRegion[]> mapVboRegions = new HashMap();
+ 
+     public ViewFrustum(World p_i46246_1_, int p_i46246_2_, RenderGlobal p_i46246_3_, IRenderChunkFactory p_i46246_4_)
+     {
+@@ -41,9 +46,27 @@
+                     int j1 = (i1 * this.field_178168_c + l) * this.field_178165_d + k;
+                     BlockPos blockpos = new BlockPos(k * 16, l * 16, i1 * 16);
+                     this.field_178164_f[j1] = p_178158_1_.func_178602_a(this.field_178167_b, this.field_178169_a, blockpos, j++);
++                    //Matt
++                    //if (Config.isVbo() && Config.isRenderRegions())
++                    //{
++                    //    this.updateVboRegion(this.renderChunks[j1]);
++                    //}
+                 }
+             }
+         }
++
++        for (int k1 = 0; k1 < this.field_178164_f.length; ++k1)
++        {
++            RenderChunk renderchunk1 = this.field_178164_f[k1];
++
++            for (int l1 = 0; l1 < EnumFacing.field_82609_l.length; ++l1)
++            {
++                EnumFacing enumfacing = EnumFacing.field_82609_l[l1];
++                BlockPos blockpos1 = renderchunk1.func_181701_a(enumfacing);
++                RenderChunk renderchunk = this.func_178161_a(blockpos1);
++                renderchunk1.setRenderChunkNeighbour(enumfacing, renderchunk);
++            }
++        }
+     }
+ 
+     public void func_178160_a()
+@@ -52,6 +75,8 @@
+         {
+             renderchunk.func_178566_a();
+         }
++
++        this.deleteVboRegions();
+     }
+ 
+     protected void func_178159_a(int p_178159_1_)
+@@ -80,11 +105,16 @@
+                 {
+                     int i2 = l1 * 16;
+                     RenderChunk renderchunk = this.field_178164_f[(j1 * this.field_178168_c + l1) * this.field_178165_d + l];
+-                    BlockPos blockpos = new BlockPos(i1, i2, k1);
++                    BlockPos blockpos = renderchunk.func_178568_j();
+ 
+-                    if (!blockpos.equals(renderchunk.func_178568_j()))
++                    if (blockpos.func_177958_n() != i1 || blockpos.func_177956_o() != i2 || blockpos.func_177952_p() != k1)
+                     {
+-                        renderchunk.func_178576_a(blockpos);
++                        BlockPos blockpos1 = new BlockPos(i1, i2, k1);
++
++                        if (!blockpos1.equals(renderchunk.func_178568_j()))
++                        {
++                            renderchunk.func_178576_a(blockpos1);
++                        }
+                     }
+                 }
+             }
+@@ -148,11 +178,11 @@
+         }
+     }
+ 
+-    protected RenderChunk func_178161_a(BlockPos p_178161_1_)
++    public RenderChunk func_178161_a(BlockPos p_178161_1_)
+     {
+-        int i = MathHelper.func_76137_a(p_178161_1_.func_177958_n(), 16);
+-        int j = MathHelper.func_76137_a(p_178161_1_.func_177956_o(), 16);
+-        int k = MathHelper.func_76137_a(p_178161_1_.func_177952_p(), 16);
++        int i = p_178161_1_.func_177958_n() >> 4;
++        int j = p_178161_1_.func_177956_o() >> 4;
++        int k = p_178161_1_.func_177952_p() >> 4;
+ 
+         if (j >= 0 && j < this.field_178168_c)
+         {
+@@ -178,4 +208,58 @@
+             return null;
+         }
+     }
++
++    private void updateVboRegion(RenderChunk p_updateVboRegion_1_)
++    {
++        BlockPos blockpos = p_updateVboRegion_1_.func_178568_j();
++        int i = blockpos.func_177958_n() >> 8 << 8;
++        int j = blockpos.func_177952_p() >> 8 << 8;
++        ChunkCoordIntPair chunkcoordintpair = new ChunkCoordIntPair(i, j);
++        EnumWorldBlockLayer[] aenumworldblocklayer = RenderChunk.ENUM_WORLD_BLOCK_LAYERS;
++        VboRegion[] avboregion = (VboRegion[])this.mapVboRegions.get(chunkcoordintpair);
++
++        if (avboregion == null)
++        {
++            avboregion = new VboRegion[aenumworldblocklayer.length];
++
++            for (int k = 0; k < aenumworldblocklayer.length; ++k)
++            {
++                avboregion[k] = new VboRegion(aenumworldblocklayer[k]);
++            }
++
++            this.mapVboRegions.put(chunkcoordintpair, avboregion);
++        }
++
++        for (int l = 0; l < aenumworldblocklayer.length; ++l)
++        {
++            VboRegion vboregion = avboregion[l];
++
++            if (vboregion != null)
++            {
++                p_updateVboRegion_1_.func_178565_b(l).setVboRegion(vboregion);
++            }
++        }
++    }
++
++    public void deleteVboRegions()
++    {
++        for (ChunkCoordIntPair chunkcoordintpair : this.mapVboRegions.keySet())
++        {
++            VboRegion[] avboregion = (VboRegion[])this.mapVboRegions.get(chunkcoordintpair);
++
++            for (int i = 0; i < avboregion.length; ++i)
++            {
++                VboRegion vboregion = avboregion[i];
++
++                if (vboregion != null)
++                {
++                    vboregion.deleteGlBuffers();
++                }
++
++                avboregion[i] = null;
++            }
++        }
++
++        this.mapVboRegions.clear();
++    }
+ }

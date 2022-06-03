@@ -1,0 +1,234 @@
+--- ../src-base/minecraft/net/minecraft/client/renderer/ThreadDownloadImageData.java
++++ ../src-work/minecraft/net/minecraft/client/renderer/ThreadDownloadImageData.java
+@@ -1,34 +1,50 @@
+ package net.minecraft.client.renderer;
+ 
+ import java.awt.image.BufferedImage;
++
++import net.minecraft.client.Minecraft;
++import net.minecraft.client.renderer.texture.TextureUtil;
++import net.minecraft.client.resources.IResourceManager;
++import net.minecraft.util.ResourceLocation;
++
++import java.io.ByteArrayInputStream;
+ import java.io.File;
+ import java.io.IOException;
+ import java.net.HttpURLConnection;
++import java.net.Proxy;
++import java.net.Proxy.Type;
+ import java.net.URL;
+ import java.util.concurrent.atomic.AtomicInteger;
++
+ import javax.imageio.ImageIO;
++
++import org.apache.commons.io.FileUtils;
++import org.apache.logging.log4j.LogManager;
++import org.apache.logging.log4j.Logger;
++
++import net.mattbenson.Wrapper;
++import net.mattbenson.cosmetics.cape.CapeImageBuffer;
++import net.mattbenson.modules.types.fpssettings.cruches.ThreadDownloadImageDataHook;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.renderer.texture.SimpleTexture;
+ import net.minecraft.client.renderer.texture.TextureUtil;
+ import net.minecraft.client.resources.IResourceManager;
++import net.minecraft.src.Config;
+ import net.minecraft.util.ResourceLocation;
+-import net.minecraftforge.fml.relauncher.Side;
+-import net.minecraftforge.fml.relauncher.SideOnly;
+-import org.apache.commons.io.FileUtils;
+-import org.apache.logging.log4j.LogManager;
+-import org.apache.logging.log4j.Logger;
++import net.optifine.shaders.ShadersTex;
+ 
+-@SideOnly(Side.CLIENT)
+ public class ThreadDownloadImageData extends SimpleTexture
+ {
+-    private static final Logger field_147644_c = LogManager.getLogger();
++    public static final Logger field_147644_c = LogManager.getLogger();
+     private static final AtomicInteger field_147643_d = new AtomicInteger(0);
+-    private final File field_152434_e;
++    public final File field_152434_e;
+     private final String field_110562_b;
+-    private final IImageBuffer field_110563_c;
+-    private BufferedImage field_110560_d;
+-    private Thread field_110561_e;
++    public final IImageBuffer field_110563_c;
++    public BufferedImage field_110560_d;
++    public Thread field_110561_e;
+     private boolean field_110559_g;
++    public Boolean imageFound = null;
++    public boolean pipeline = false;
+ 
+     public ThreadDownloadImageData(File p_i1049_1_, String p_i1049_2_, ResourceLocation p_i1049_3_, IImageBuffer p_i1049_4_)
+     {
+@@ -40,17 +56,22 @@
+ 
+     private void func_147640_e()
+     {
+-        if (!this.field_110559_g)
++        if (!this.field_110559_g && this.field_110560_d != null)
+         {
+-            if (this.field_110560_d != null)
++            this.field_110559_g = true;
++
++            if (this.field_110568_b != null)
+             {
+-                if (this.field_110568_b != null)
+-                {
+-                    this.func_147631_c();
+-                }
++                this.func_147631_c();
++            }
+ 
++            if (Config.isShaders())
++            {
++                ShadersTex.loadSimpleTexture(super.func_110552_b(), this.field_110560_d, false, false, Config.getResourceManager(), this.field_110568_b, this.getMultiTexID());
++            }
++            else
++            {
+                 TextureUtil.func_110987_a(super.func_110552_b(), this.field_110560_d);
+-                this.field_110559_g = true;
+             }
+         }
+     }
+@@ -69,12 +90,19 @@
+         {
+             this.field_110563_c.func_152634_a();
+         }
++
++        this.imageFound = Boolean.valueOf(this.field_110560_d != null);
+     }
+ 
+     public void func_110551_a(IResourceManager p_110551_1_) throws IOException
+     {
+         if (this.field_110560_d == null && this.field_110568_b != null)
+         {
++        	if(Wrapper.getInstance().isSkinLoading()) {
++        		ThreadDownloadImageDataHook.getImprovedCacheLoading(this);
++        		return;
++        	}
++        	
+             super.func_110551_a(p_110551_1_);
+         }
+ 
+@@ -92,6 +120,8 @@
+                     {
+                         this.func_147641_a(this.field_110563_c.func_78432_a(this.field_110560_d));
+                     }
++
++                    this.loadingFinished();
+                 }
+                 catch (IOException ioexception)
+                 {
+@@ -106,7 +136,7 @@
+         }
+     }
+ 
+-    protected void func_152433_a()
++    public void func_152433_a()
+     {
+         this.field_110561_e = new Thread("Texture Downloader #" + field_147643_d.incrementAndGet())
+         {
+@@ -115,15 +145,29 @@
+                 HttpURLConnection httpurlconnection = null;
+                 ThreadDownloadImageData.field_147644_c.debug("Downloading http texture from {} to {}", new Object[] {ThreadDownloadImageData.this.field_110562_b, ThreadDownloadImageData.this.field_152434_e});
+ 
+-                try
++                if (ThreadDownloadImageData.this.shouldPipeline())
+                 {
+-                    httpurlconnection = (HttpURLConnection)(new URL(ThreadDownloadImageData.this.field_110562_b)).openConnection(Minecraft.func_71410_x().func_110437_J());
+-                    httpurlconnection.setDoInput(true);
+-                    httpurlconnection.setDoOutput(false);
+-                    httpurlconnection.connect();
+-
+-                    if (httpurlconnection.getResponseCode() / 100 == 2)
++                    ThreadDownloadImageData.this.loadPipelined();
++                }
++                else
++                {
++                    try
+                     {
++                        httpurlconnection = (HttpURLConnection)(new URL(ThreadDownloadImageData.this.field_110562_b)).openConnection(Minecraft.func_71410_x().func_110437_J());
++                        httpurlconnection.setDoInput(true);
++                        httpurlconnection.setDoOutput(false);
++                        httpurlconnection.connect();
++
++                        if (httpurlconnection.getResponseCode() / 100 != 2)
++                        {
++                            if (httpurlconnection.getErrorStream() != null)
++                            {
++                                Config.readAll(httpurlconnection.getErrorStream());
++                            }
++
++                            return;
++                        }
++
+                         BufferedImage bufferedimage;
+ 
+                         if (ThreadDownloadImageData.this.field_152434_e != null)
+@@ -142,19 +186,20 @@
+                         }
+ 
+                         ThreadDownloadImageData.this.func_147641_a(bufferedimage);
++                    }
++                    catch (Exception exception)
++                    {
++                        ThreadDownloadImageData.field_147644_c.error("Couldn\'t download http texture: " + exception.getClass().getName() + ": " + exception.getMessage());
+                         return;
+                     }
+-                }
+-                catch (Exception exception)
+-                {
+-                    ThreadDownloadImageData.field_147644_c.error((String)"Couldn\'t download http texture", (Throwable)exception);
+-                    return;
+-                }
+-                finally
+-                {
+-                    if (httpurlconnection != null)
++                    finally
+                     {
+-                        httpurlconnection.disconnect();
++                        if (httpurlconnection != null)
++                        {
++                            httpurlconnection.disconnect();
++                        }
++
++                        ThreadDownloadImageData.this.loadingFinished();
+                     }
+                 }
+             }
+@@ -162,4 +207,33 @@
+         this.field_110561_e.setDaemon(true);
+         this.field_110561_e.start();
+     }
++
++    private boolean shouldPipeline()
++    {
++        if (!this.pipeline)
++        {
++            return false;
++        }
++        else
++        {
++            Proxy proxy = Minecraft.func_71410_x().func_110437_J();
++            return proxy.type() != Type.DIRECT && proxy.type() != Type.SOCKS ? false : this.field_110562_b.startsWith("http://");
++        }
++    }
++
++    private void loadPipelined()
++    {
++            this.loadingFinished();
++    }
++
++    private void loadingFinished()
++    {
++        this.imageFound = Boolean.valueOf(this.field_110560_d != null);
++
++    }
++
++    public IImageBuffer getImageBuffer()
++    {
++        return this.field_110563_c;
++    }
+ }

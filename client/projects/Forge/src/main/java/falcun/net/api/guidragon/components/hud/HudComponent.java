@@ -22,6 +22,7 @@ public class HudComponent extends Component {
 
 	@Override
 	public void draw(int mX, int mY) {
+
 		hudElement.renderPreview();
 	}
 

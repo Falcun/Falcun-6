@@ -16,6 +16,15 @@
              BlockPos blockpos = null;
  
              if (this.field_146297_k.field_71476_x != null && this.field_146297_k.field_71476_x.field_72313_a == MovingObjectPosition.MovingObjectType.BLOCK)
+@@ -262,7 +263,7 @@
+ 
+     public void func_73863_a(int p_73863_1_, int p_73863_2_, float p_73863_3_)
+     {
+-        func_73734_a(2, this.field_146295_m - 14, this.field_146294_l - 2, this.field_146295_m - 2, Integer.MIN_VALUE);
++        drawRectangle(2, this.field_146295_m - 14, this.field_146294_l - 2, this.field_146295_m - 2, Integer.MIN_VALUE);
+         this.field_146415_a.func_146194_f();
+         IChatComponent ichatcomponent = this.field_146297_k.field_71456_v.func_146158_b().func_146236_a(Mouse.getX(), Mouse.getY());
+ 
 @@ -281,6 +282,12 @@
              this.field_146417_i = false;
              this.field_146412_t.clear();

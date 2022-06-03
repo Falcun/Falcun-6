@@ -1,6 +1,16 @@
 --- ../src-base/minecraft/net/minecraft/server/integrated/IntegratedServer.java
 +++ ../src-work/minecraft/net/minecraft/server/integrated/IntegratedServer.java
-@@ -71,8 +71,6 @@
+@@ -7,6 +7,9 @@
+ import java.net.InetAddress;
+ import java.util.concurrent.Callable;
+ import java.util.concurrent.FutureTask;
++
++import net.mattbenson.Wrapper;
++import net.mattbenson.events.types.world.WorldLoadEvent;
+ import net.minecraft.client.ClientBrandRetriever;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.multiplayer.ThreadLanServerPing;
+@@ -71,8 +74,6 @@
      protected void func_71247_a(String p_71247_1_, String p_71247_2_, long p_71247_3_, WorldType p_71247_5_, String p_71247_6_)
      {
          this.func_71237_c(p_71247_1_);
@@ -9,7 +19,7 @@
          ISaveHandler isavehandler = this.func_71254_M().func_75804_a(p_71247_1_, true);
          this.func_175584_a(this.func_71270_I(), isavehandler);
          WorldInfo worldinfo = isavehandler.func_75757_d();
-@@ -86,44 +84,24 @@
+@@ -86,44 +87,25 @@
              worldinfo.func_76062_a(p_71247_2_);
          }
  
@@ -56,6 +66,7 @@
 -
 -            this.field_71305_c[i].func_72954_a(new WorldManager(this, this.field_71305_c[i]));
 +            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.WorldEvent.Load(world));
++            Wrapper.getInstance().post(new WorldLoadEvent(world));
          }
  
 -        this.func_71203_ab().func_72364_a(this.field_71305_c);
@@ -66,7 +77,7 @@
          {
              this.func_147139_a(this.field_71349_l.field_71474_y.field_74318_M);
          }
-@@ -141,9 +119,10 @@
+@@ -141,9 +123,10 @@
          this.func_71245_h(true);
          field_147148_h.info("Generating keypair");
          this.func_71253_a(CryptManager.func_75891_b());
@@ -78,7 +89,7 @@
      }
  
      public void func_71217_p()
-@@ -216,6 +195,7 @@
+@@ -216,6 +199,7 @@
  
      public EnumDifficulty func_147135_j()
      {

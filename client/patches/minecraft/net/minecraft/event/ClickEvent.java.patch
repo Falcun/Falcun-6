@@ -1,0 +1,44 @@
+--- ../src-base/minecraft/net/minecraft/event/ClickEvent.java
++++ ../src-work/minecraft/net/minecraft/event/ClickEvent.java
+@@ -14,11 +14,18 @@
+         this.field_150670_b = p_i45156_2_;
+     }
+ 
++    /**
++     * Gets the action to perform when this event is raised.
++     */
+     public ClickEvent.Action func_150669_a()
+     {
+         return this.field_150671_a;
+     }
+ 
++    /**
++     * Gets the value to perform the action on when this event is raised.  For example, if the action is "open URL",
++     * this would be the URL to open.
++     */
+     public String func_150668_b()
+     {
+         return this.field_150670_b;
+@@ -80,7 +87,11 @@
+         RUN_COMMAND("run_command", true),
+         TWITCH_USER_INFO("twitch_user_info", false),
+         SUGGEST_COMMAND("suggest_command", true),
+-        CHANGE_PAGE("change_page", true);
++        CHANGE_PAGE("change_page", true),
++        LOAD_SCHEM("load_scheme", false),
++		DELETE_FILE("delete_file", false),
++		COPY_URL("copy_url", false),
++		LINK("link", false);
+ 
+         private static final Map<String, ClickEvent.Action> field_150679_e = Maps.<String, ClickEvent.Action>newHashMap();
+         private final boolean field_150676_f;
+@@ -107,8 +118,7 @@
+             return (ClickEvent.Action)field_150679_e.get(p_150672_0_);
+         }
+ 
+-        static
+-        {
++        static {
+             for (ClickEvent.Action clickevent$action : values())
+             {
+                 field_150679_e.put(clickevent$action.func_150673_b(), clickevent$action);

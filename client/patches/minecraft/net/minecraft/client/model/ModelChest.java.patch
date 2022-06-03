@@ -1,0 +1,27 @@
+--- ../src-base/minecraft/net/minecraft/client/model/ModelChest.java
++++ ../src-work/minecraft/net/minecraft/client/model/ModelChest.java
+@@ -1,5 +1,6 @@
+ package net.minecraft.client.model;
+ 
++import net.mattbenson.Wrapper;
+ import net.minecraftforge.fml.relauncher.Side;
+ import net.minecraftforge.fml.relauncher.SideOnly;
+ 
+@@ -30,9 +31,13 @@
+ 
+     public void func_78231_a()
+     {
+-        this.field_78233_c.field_78795_f = this.field_78234_a.field_78795_f;
+-        this.field_78234_a.func_78785_a(0.0625F);
+-        this.field_78233_c.func_78785_a(0.0625F);
+-        this.field_78232_b.func_78785_a(0.0625F);
++    	if(Wrapper.getInstance().isBetterChests()) {
++    		this.field_78232_b.func_78785_a(0.0625F);
++    	} else {
++	        this.field_78233_c.field_78795_f = this.field_78234_a.field_78795_f;
++	        this.field_78234_a.func_78785_a(0.0625F);
++	        this.field_78233_c.func_78785_a(0.0625F);
++	        this.field_78232_b.func_78785_a(0.0625F);
++    	}
+     }
+ }

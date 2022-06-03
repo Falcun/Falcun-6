@@ -112,10 +112,10 @@ public class MapItemRenderer
             GlStateManager.tryBlendFuncSeparate(1, 771, 0, 1);
             GlStateManager.disableAlpha();
             worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX);
-            worldrenderer.pos((double)((float)(i + 0) + f), (double)((float)(j + 128) - f), -0.009999999776482582D).tex(0.0D, 1.0D).endVertex();
-            worldrenderer.pos((double)((float)(i + 128) - f), (double)((float)(j + 128) - f), -0.009999999776482582D).tex(1.0D, 1.0D).endVertex();
-            worldrenderer.pos((double)((float)(i + 128) - f), (double)((float)(j + 0) + f), -0.009999999776482582D).tex(1.0D, 0.0D).endVertex();
-            worldrenderer.pos((double)((float)(i + 0) + f), (double)((float)(j + 0) + f), -0.009999999776482582D).tex(0.0D, 0.0D).endVertex();
+            worldrenderer.pos((float)(0) + f, (float)(j + 128) - f, -0.009999999776482582D).tex(0.0D, 1.0D).endVertex();
+            worldrenderer.pos((float)(i + 128) - f, (float)(j + 128) - f, -0.009999999776482582D).tex(1.0D, 1.0D).endVertex();
+            worldrenderer.pos((float)(i + 128) - f, (float)(j + 0) + f, -0.009999999776482582D).tex(1.0D, 0.0D).endVertex();
+            worldrenderer.pos((float)(i + 0) + f, (float)(j + 0) + f, -0.009999999776482582D).tex(0.0D, 0.0D).endVertex();
             tessellator.draw();
             GlStateManager.enableAlpha();
             GlStateManager.disableBlend();

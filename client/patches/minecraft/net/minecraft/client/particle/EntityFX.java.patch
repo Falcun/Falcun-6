@@ -1,0 +1,37 @@
+--- ../src-base/minecraft/net/minecraft/client/particle/EntityFX.java
++++ ../src-work/minecraft/net/minecraft/client/particle/EntityFX.java
+@@ -1,5 +1,7 @@
+ package net.minecraft.client.particle;
+ 
++import net.mattbenson.Wrapper;
++import net.mattbenson.modules.types.fpssettings.cruches.ParticleCulling;
+ import net.minecraft.client.Minecraft;
+ import net.minecraft.client.renderer.WorldRenderer;
+ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+@@ -151,6 +153,12 @@
+ 
+     public void func_180434_a(WorldRenderer p_180434_1_, Entity p_180434_2_, float p_180434_3_, float p_180434_4_, float p_180434_5_, float p_180434_6_, float p_180434_7_, float p_180434_8_)
+     {
++    	if(Wrapper.getInstance().isParticleCulling()) {
++    		if(!ParticleCulling.shouldRender(this)) {
++    			return;
++    		}
++    	}
++    	
+         float f = (float)this.field_94054_b / 16.0F;
+         float f1 = f + 0.0624375F;
+         float f2 = (float)this.field_94055_c / 16.0F;
+@@ -168,7 +176,12 @@
+         float f5 = (float)(this.field_70169_q + (this.field_70165_t - this.field_70169_q) * (double)p_180434_3_ - field_70556_an);
+         float f6 = (float)(this.field_70167_r + (this.field_70163_u - this.field_70167_r) * (double)p_180434_3_ - field_70554_ao);
+         float f7 = (float)(this.field_70166_s + (this.field_70161_v - this.field_70166_s) * (double)p_180434_3_ - field_70555_ap);
+-        int i = this.func_70070_b(p_180434_3_);
++        int i = 15728880;
++        
++        if(!Wrapper.getInstance().isStaticParticleColor()) {
++        	i = this.func_70070_b(p_180434_3_);
++        }
++        
+         int j = i >> 16 & 65535;
+         int k = i & 65535;
+         p_180434_1_.func_181662_b((double)(f5 - p_180434_4_ * f4 - p_180434_7_ * f4), (double)(f6 - p_180434_5_ * f4), (double)(f7 - p_180434_6_ * f4 - p_180434_8_ * f4)).func_181673_a((double)f1, (double)f3).func_181666_a(this.field_70552_h, this.field_70553_i, this.field_70551_j, this.field_82339_as).func_181671_a(j, k).func_181675_d();

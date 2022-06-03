@@ -1,0 +1,13 @@
+--- ../src-base/minecraft/net/minecraft/client/resources/model/WeightedBakedModel.java
++++ ../src-work/minecraft/net/minecraft/client/resources/model/WeightedBakedModel.java
+@@ -122,4 +122,10 @@
+                 return "MyWeighedRandomItem{weight=" + this.field_76292_a + ", model=" + this.field_177636_b + '}';
+             }
+         }
++
++	@Override
++	public TextureAtlasSprite getTexture() {
++		// TODO Auto-generated method stub
++		return null;
++	}
+ }
