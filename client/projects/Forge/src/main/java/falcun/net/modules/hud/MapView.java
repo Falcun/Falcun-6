@@ -103,10 +103,10 @@ public class MapView extends FalcunHudModule {
 				} catch (Throwable err) {
 					err.printStackTrace();
 				}
-				break;
+				return;
 			}
 		}
-
+		
 
 	}
 
